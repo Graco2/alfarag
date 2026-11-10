@@ -46,8 +46,8 @@ async function icone(nome, cor) {
     title: "ESCURO",
     background: { color: HEX.tinta },
     objects: [
-      { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 1.25, w: 6.2, h: 1.3, fontSize: 40, bold: true, color: "FFFFFF", fontFace: "Cambria", valign: "bottom", margin: 0 }, text: "" } },
-      { placeholder: { options: { name: "body", type: "body", x: 0.6, y: 2.65, w: 6.2, h: 1.0, fontSize: 18, color: "F2D9C2", valign: "top", margin: 0 }, text: "" } },
+      { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 1.05, w: 6.6, h: 1.5, fontSize: 36, bold: true, color: "FFFFFF", fontFace: "Cambria", valign: "bottom", align: "left", margin: 0 }, text: "" } },
+      { placeholder: { options: { name: "body", type: "body", x: 0.6, y: 2.65, w: 6.6, h: 1.1, fontSize: 18, color: "F2D9C2", valign: "top", align: "left", margin: 0 }, text: "" } },
     ],
   });
   pres.defineSlideMaster({
@@ -88,7 +88,7 @@ async function icone(nome, cor) {
   // 2. Problema ------------------------------------------------------------
   pres.addSection({ title: "Problema" });
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Problema" });
-  s.addText("O problema: o que fazer em sala com quem não acompanha", { placeholder: "title" });
+  s.addText("O problema: o que fazer com quem não acompanha", { placeholder: "title" });
   const stats = [["7 de 7", "professoras têm alunos com dificuldade persistente sem avaliação concluída"],
     ["7 de 7", "apontam dificuldade de compreender o que se lê"], ["2 de 7", "não dispõem de apoio regular"]];
   stats.forEach(([n, l], i) => {
@@ -187,10 +187,10 @@ async function icone(nome, cor) {
   pres.addSection({ title: "Execução" });
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Execução" });
   s.addText("Execução: um caso que responde", { placeholder: "title" });
-  const resp = path.join(DIR, "screens", "resposta.png");
+  const resp = path.join(DIR, "screens", "resposta_chat.png");
   if (fs.existsSync(resp)) {
     const m = await sharp(resp).metadata();
-    const h = 4.05, w = Math.min(5.0, h * m.width / m.height);
+    const w = 5.0, h = Math.min(4.05, w * m.height / m.width);
     s.addImage({ path: resp, x: 0.5, y: 1.1, w, h, altText: "Resposta do AlfaRAG à pergunta B03 com citações" });
   }
   const v = D.b03.verificacao;
@@ -201,7 +201,7 @@ async function icone(nome, cor) {
     { text: `${v.citacoes_validas.length} citações conferidas pelo harness`, options: { bullet: true, breakLine: true } },
     { text: `${v.codigos_removidos.length} código(s) BNCC removido(s)`, options: { bullet: true, breakLine: true } },
     { text: `${D.b03.tokens.prompt_tokens} tokens de entrada, ${D.b03.tokens.resposta_tokens} de saída`, options: { bullet: true, breakLine: true } },
-    { text: `${br(D.b03.latencia, 0)} s no M4 (temperatura 0)`, options: { bullet: true } },
+    { text: `${br(D.b03.latencia, 0)} s no M4 · traço ${D.b03.traco || "-"}`, options: { bullet: true } },
   ], { x: 5.95, y: 1.7, w: 3.4, h: 1.35, fontSize: 13, paraSpaceAfter: 3 });
   txt(s, "Fontes citadas", { x: 5.95, y: 3.1, w: 3.4, h: 0.32, fontSize: 13, bold: true, color: HEX.laranja });
   txt(s, usados.slice(0, 4).map((t, i, a) => ({ text: `[${t.n}] ${t.rotulo}, ${t.pagina}`, options: { breakLine: i < a.length - 1 } })),
@@ -260,7 +260,7 @@ async function icone(nome, cor) {
     [cel("Com citação válida", { align: "left" }), cel(`${q.cit_ok}/${q.respondidas}`), cel(`${g.cit_ok}/${g.respondidas}`), cel(`${q1.cit_ok}/${q1.respondidas}`)],
     [cel("Códigos BNCC removidos", { align: "left" }), cel(q.cod_rem), cel(g.cod_rem), cel(q1.cod_rem)],
     [cel("Latência média (s, M4)", { align: "left" }), cel(br(q.lat, 1)), cel(br(g.lat, 1)), cel(br(q1.lat, 1))],
-  ], { x: 5.25, y: 1.15, w: 4.25, colW: [1.75, 0.83, 0.84, 0.83], rowH: 0.42, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
+  ], { x: 5.25, y: 1.15, w: 4.25, colW: [1.9, 0.78, 0.79, 0.78], rowH: 0.42, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
   txt(s, "Nota de 0 a 10 dada por outro modelo (rubrica do projeto). Indicador descritivo, não prova de eficácia pedagógica.", { x: 5.25, y: 4.25, w: 4.25, h: 0.6, fontSize: 10, italic: true, color: HEX.cinza2 });
   s.addNotes(`Resultados (1 min 30). Recuperação: com só a BNCC, Recall@5 de ${br(R.E2_C1.recall)}; com o corpus completo, ${br(R.E2_C4.recall)}. Os artigos em inglês sozinhos não ajudam a achar o trecho da BNCC. Na geração, a nota é dada por outro modelo com a rubrica do projeto; usamos dois juízes cruzados para nenhum modelo se julgar sozinho. Não são medidas clínicas.`);
 
@@ -268,7 +268,7 @@ async function icone(nome, cor) {
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Resultados" });
   s.addText("O que o modelo decide e o que o sistema força", { placeholder: "title" });
   const col = (x, titulo, ic, cor, fill, itens) => {
-    card(s, x, 1.15, 4.4, 3.85, fill, "col_" + titulo);
+    card(s, x, 1.15, 4.4, 3.3, fill, "col_" + titulo);
     s.addImage({ data: ic, x: x + 0.25, y: 1.35, w: 0.38, h: 0.38 });
     txt(s, titulo, { x: x + 0.8, y: 1.33, w: 3.4, h: 0.42, fontSize: 18, bold: true, color: cor, valign: "middle" });
     txt(s, itens.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < itens.length - 1 } })), { x: x + 0.3, y: 1.95, w: 3.9, h: 2.9, fontSize: 14, paraSpaceAfter: 6 });

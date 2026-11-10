@@ -1,0 +1,170 @@
+{
+ "modelo": "qwen3.5:4b-q4_K_M",
+ "gemma": "gemma4:e4b-it-q4_K_M",
+ "versao_prompt": "v1.2",
+ "orcamento": 3200,
+ "limiar": 0.55,
+ "recuperacao": {
+  "E1_C1": {
+   "recall": 0.5,
+   "mrr": 0.424
+  },
+  "E1_C2": {
+   "recall": 0.417,
+   "mrr": 0.313
+  },
+  "E1_C3": {
+   "recall": 0.417,
+   "mrr": 0.272
+  },
+  "E1_C4": {
+   "recall": 0.667,
+   "mrr": 0.452
+  },
+  "E2_C1": {
+   "recall": 0.583,
+   "mrr": 0.49
+  },
+  "E2_C2": {
+   "recall": 0.5,
+   "mrr": 0.421
+  },
+  "E2_C3": {
+   "recall": 0.458,
+   "mrr": 0.364
+  },
+  "E2_C4": {
+   "recall": 0.75,
+   "mrr": 0.474
+  },
+  "E3_C1": {
+   "recall": 0.625,
+   "mrr": 0.477
+  },
+  "E3_C2": {
+   "recall": 0.667,
+   "mrr": 0.473
+  },
+  "E3_C3": {
+   "recall": 0.542,
+   "mrr": 0.385
+  },
+  "E3_C4": {
+   "recall": 0.833,
+   "mrr": 0.519
+  },
+  "E4_C1": {
+   "recall": 0.625,
+   "mrr": 0.485
+  },
+  "E4_C2": {
+   "recall": 0.625,
+   "mrr": 0.525
+  },
+  "E4_C3": {
+   "recall": 0.583,
+   "mrr": 0.409
+  },
+  "E4_C4": {
+   "recall": 0.708,
+   "mrr": 0.531
+  }
+ },
+ "qwen_c4": {
+  "n": 18,
+  "respondidas": 18,
+  "cit_ok": 18,
+  "cod_rem": 0,
+  "forc": 0,
+  "lat": 49.8,
+  "digest": "d8b0f5e9760c",
+  "juiz_gemma": null,
+  "juiz_qwen": null
+ },
+ "gemma_c4": {
+  "n": 0,
+  "respondidas": 0,
+  "cit_ok": 0,
+  "cod_rem": 0,
+  "forc": 0,
+  "lat": null,
+  "digest": null,
+  "juiz_gemma": null,
+  "juiz_qwen": null
+ },
+ "qwen_c1": {
+  "n": 0,
+  "respondidas": 0,
+  "cit_ok": 0,
+  "cod_rem": 0,
+  "forc": 0,
+  "lat": null,
+  "digest": null,
+  "juiz_gemma": null,
+  "juiz_qwen": null
+ },
+ "b03": {
+  "pergunta": "Meu aluno lê palavras como “pato”, mas não consegue ler “prato” ou “porta”. Como posso ajudá-lo?",
+  "resposta": "**Orientação**\nO aluno apresenta dificuldade com sílabas complexas (palavras com mais de um grafema por fonema, como \"pr\" em prato), sugerindo que a prática focada em palavras regulares e frequentes é necessária para consolidar a decodificação [1]. É fundamental observar se o problema reside na consciência fonológica ou na memória de trabalho, sem realizar diagnóstico formal, mas orientando o encaminhamento profissional caso persistam dificuldades significativas [4].\n\n**Atividade em sala**\nRealize uma atividade de leitura repetida com palavras regulares e frequentes do currículo (ex: gato, pato, sol), alternando com a criação de pseudopalavras baseadas nessas palavras para treinar a decodificação sem depender da memória visual [1]. Em seguida, proponha que o aluno identifique e leia sílabas complexas em contextos familiares, incentivando-o a aplicar as regras aprendidas explicitamente [2].\n\n**Acompanhamento**\nRegistre sistematicamente o tempo de leitura e a precisão na identificação de palavras regulares versus irregulares durante atividades orais. Observe se o aluno utiliza estratégias metacognitivas para monitorar sua própria compreensão, ajustando-se quando identifica erros de decodificação [3][4].\n\n**Fontes**\n[1] Manual ABC (2021), p. 350.\n[2] Manual ABC (2021), p. 252–257.\n[3] Manual ABC (2021), p. 370–371.\n[4] Manual ABC (2021), p. 275.",
+  "verificacao": {
+   "citacoes_validas": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "citacoes_invalidas": [],
+   "codigos_ok": [],
+   "codigos_removidos": [],
+   "sem_citacao": false,
+   "modo_ressalva": false,
+   "ressalva_forcada": false,
+   "truncada": false,
+   "veredito": "ok",
+   "alertas": []
+  },
+  "trechos": [
+   {
+    "n": 1,
+    "rotulo": "Manual ABC (2021)",
+    "pagina": "p. 350",
+    "secao": "Parte C, Cap. 16 — Fluência na Leitura Oral"
+   },
+   {
+    "n": 2,
+    "rotulo": "Manual ABC (2021)",
+    "pagina": "p. 252–257",
+    "secao": "Parte B, Cap. 12 — Aprender a Escrever Palavras"
+   },
+   {
+    "n": 3,
+    "rotulo": "Manual ABC (2021)",
+    "pagina": "p. 370–371",
+    "secao": "Parte C, Cap. 17 — A Compreensão na Leitura: Investigação e Ensino"
+   },
+   {
+    "n": 4,
+    "rotulo": "Manual ABC (2021)",
+    "pagina": "p. 275",
+    "secao": "Parte C, Cap. 13 — Compreendendo o Ato de Ler: o Modelo Simples de Leitura"
+   },
+   {
+    "n": 5,
+    "rotulo": "Cadernos PNEEI v. 10",
+    "pagina": "s/p",
+    "secao": "Seção: Alfabetização e letramento dos estudantes com deficiência"
+   }
+  ],
+  "latencia": 38.44,
+  "tokens": {
+   "prompt_tokens": 2914,
+   "resposta_tokens": 358,
+   "duracao_s": 37.34,
+   "tok_s": 14.34,
+   "done_reason": "stop"
+  },
+  "traco": "3603f9655a67"
+ },
+ "limites": {},
+ "cpu": null
+}

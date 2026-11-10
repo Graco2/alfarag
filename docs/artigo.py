@@ -52,7 +52,7 @@ def media_juiz(modelo, cond, juiz):
 
 
 def resumo_execucao(modelo, cond):
-    regs = [r for r in ler(arq_resp(modelo, cond)) if r["id"].startswith("B")]
+    regs = [r for r in ler(arq_resp(modelo, cond)) if r["id"].startswith("B")] if arq_resp(modelo, cond).exists() else []
     resp = [r for r in regs if r["desfecho"] == "respondida"]
     return {
         "n": len(regs),
@@ -75,7 +75,7 @@ def main(modelo_sige, saida):
     Q, G = MODELO_LLM, "gemma4:e4b-it-q4_K_M"
     q4, g4, q1 = resumo_execucao(Q, "C4"), resumo_execucao(G, "C4"), resumo_execucao(Q, "C1")
     lim = {r["id"]: r for r in ler(arq_resp(Q, "C4")) if r["id"].startswith("L")}
-    limg = {r["id"]: r for r in ler(arq_resp(G, "C4")) if r["id"].startswith("L")}
+    limg = {r["id"]: r for r in ler(arq_resp(G, "C4")) if r["id"].startswith("L")} if arq_resp(G, "C4").exists() else {}
     cpu = json.load(open(RES / "latencia_cpu.json", encoding="utf-8")) if (RES / "latencia_cpu.json").exists() else None
     k = EXPERIMENTOS["E2"]["top_k"]
     n_chunks = sum(1 for _ in open(RAIZ / "index" / "chunks_E2.jsonl", encoding="utf-8"))
@@ -129,8 +129,29 @@ def main(modelo_sige, saida):
         "instrução ao modelo: um harness determinístico impede ou força comportamentos antes e depois da geração, e cada resposta "
         "deixa um traço auditável. O sistema foi avaliado em 24 perguntas de referência elaboradas pelo grupo e em seis casos-limite.")
 
-    # II. Método
-    add("secao", "ii. método")
+    # II. Referencial
+    add("secao", "ii. referencial")
+    add("p",
+        "Na BNCC, cada habilidade de Língua Portuguesa tem um código que indica etapa, anos e componente: EF01LP05, por exemplo, é do "
+        "1º ano, e EF12LP07 vale para o 1º e o 2º anos [1]. Esses códigos são justamente o tipo de dado que um modelo de linguagem tende a "
+        "inventar com aparência plausível. O Manual ABC organiza a evidência sobre alfabetização em quatro partes, da base neurocognitiva às "
+        "dificuldades de aprendizagem, com capítulos sobre métodos fônicos sistemáticos, consciência fonêmica, fluência e dislexia [2].")
+    add("p",
+        "Na literatura em inglês, a meta-análise de Hall et al. reuniu 53 estudos experimentais ou quase-experimentais, de 1980 a 2020, com "
+        "alunos da educação infantil ao 5º ano com dislexia ou em risco, e encontrou efeito médio de g = 0,33 das intervenções sobre medidas "
+        "padronizadas de leitura, maior com mais horas de intervenção e menor para compreensão do que para leitura de palavras [4]. A revisão "
+        "narrativa de Ramli et al., com 19 referências, aponta treino de consciência fonológica, programas de literacia estruturada e métodos "
+        "multissensoriais como intervenções acadêmicas eficazes [3]. Por virem de estudos em inglês, essas evidências não se transferem "
+        "automaticamente ao português, e o prompt do sistema exige esse aviso.")
+    add("p",
+        "Do lado técnico, a RAG combina um recuperador com um gerador condicionado aos trechos recuperados [5]. Buscas lexicais e vetoriais "
+        "erram de formas diferentes, e a fusão por posição (RRF) é um modo simples de combiná-las sem calibrar escalas [9]. Modelos de linguagem "
+        "usados como juízes concordam razoavelmente com avaliadores humanos, mas têm vieses conhecidos, entre eles favorecer respostas do "
+        "próprio modelo [10], o que motivou o uso de juízes cruzados neste trabalho. O plano inicial do grupo usava o Open WebUI com busca na "
+        "web desligada; optamos por um front-end próprio porque a interface pronta não expõe a janela de contexto nem as verificações.")
+
+    # III. Método
+    add("secao", "iii. método")
     add("subsecao", "A. Corpus e recuperação (RAG)")
     add("p",
         "O corpus tem seis documentos: o recorte de Linguagens e Língua Portuguesa da BNCC [1], o Manual ABC [2], as revisões de "
@@ -186,8 +207,8 @@ def main(modelo_sige, saida):
         f"(Gemma 4 E4B, digest {g4['digest']}), ambos servidos pelo Ollama 0.40.16 com temperatura 0 na avaliação e raciocínio estendido "
         "desligado. A avaliação rodou em um Apple M4 com 16 GB, com aceleração Metal; a latência só em CPU foi medida à parte.")
 
-    # III. Resultados
-    add("secao", "iii. resultados")
+    # IV. Resultados
+    add("secao", "iv. resultados")
     add("p",
         "A Tabela II mostra a recuperação por condição de corpus (C1: só BNCC; C2: BNCC e Ramli; C3: BNCC, Ramli e Hall; C4: corpus completo) "
         "e por segmentação (E1: 256 tokens; E2: 512; E3: 1.024; E4: por seção). Como a anotação só reconhece BNCC e Manual ABC, acrescentar "
@@ -198,6 +219,17 @@ def main(modelo_sige, saida):
         linhas.append([c] + [f"{br(rec[(e, c)]['recall'])} / {br(rec[(e, c)]['mrr'])}" for e in ["E1", "E2", "E3", "E4"]])
     B.append({"t": "tabela", "larguras_cm": [1.3, 1.8, 1.8, 1.8, 1.8], "linhas": linhas})
     add("vazio")
+    det = json.load(open(RES / "recuperacao.json", encoding="utf-8"))["detalhe"]
+    falhas = [d["id"] for d in det if d["exp"] == "E2" and d["cond"] == "C4" and not (d["primeiro_relevante"] and d["primeiro_relevante"] <= 5)]
+    gold = {r["id"]: r for r in csv.DictReader(open(RAIZ / "benchmark" / "perguntas_gold.csv", encoding="utf-8"))}
+    so_bncc_geral = [i for i in falhas if gold[i]["gold_passages"].startswith("bncc:*") and "abc:" not in gold[i]["gold_passages"]]
+    if falhas:
+        add("p",
+            f"Com E2 e C4, {len(falhas)} perguntas não tiveram trecho relevante no top-5 ({', '.join(falhas)}). "
+            + (f"Destas, {', '.join(so_bncc_geral)} têm como fonte de referência apenas a BNCC sem código de habilidade, e o top-5 trouxe só outros documentos; "
+               if so_bncc_geral else "")
+            + "nas demais, o top-5 trouxe trechos de outros capítulos do Manual ABC, do guia de dislexia ou dos artigos, que a anotação por regra não conta como relevantes. "
+              "Parte dessas falhas é, portanto, da régua e não do recuperador, o que reforça a necessidade de revisão humana da anotação.")
     e3 = rec[("E3", "C4")]
     add("p",
         f"E3 teve o maior Recall@5 com o corpus completo ({br(e3['recall'])}), mas trechos de 1.024 tokens fazem só três caberem no orçamento "
@@ -220,6 +252,34 @@ def main(modelo_sige, saida):
         ["Latência média (s, M4)", br(q4["lat"], 1), br(g4["lat"], 1), br(q1["lat"], 1)],
     ]})
     add("vazio")
+
+    def crit(modelo, cond, juiz):
+        pth = arq_juiz(modelo, cond, juiz)
+        ns = [n for n in ler(pth) if n.get("total") is not None] if pth.exists() else []
+        return {c: (st.mean(n[c] for n in ns) if ns else None) for c in
+                ["correcao_pedagogica", "fundamentacao_documental", "portugues_brasileiro", "aplicabilidade", "seguranca"]}
+    cq, cg, cc = crit(Q, "C4", JUIZ_A), crit(G, "C4", JUIZ_A), crit(Q, "C1", JUIZ_A)
+    if any(v is not None for v in cq.values()):
+        nomes = {"correcao_pedagogica": "Correção pedagógica", "fundamentacao_documental": "Fundamentação documental",
+                 "portugues_brasileiro": "Português do Brasil", "aplicabilidade": "Aplicabilidade", "seguranca": "Segurança"}
+        fmt = lambda x: "–" if x is None else br(x)
+        add("p", "A Tabela IV abre a nota do juiz Gemma por critério (média de 0 a 2). Ela indica onde o sistema perde pontos, "
+                 "e não apenas quanto.")
+        add("tabela_titulo", "tabela iv. média por critério da rubrica (juiz gemma)")
+        B.append({"t": "tabela", "larguras_cm": [3.0, 1.6, 1.7, 1.6], "linhas":
+                  [["Critério", "Qwen C4", "Gemma C4", "Qwen C1"]] + [[nomes[c], fmt(cq[c]), fmt(cg[c]), fmt(cc[c])] for c in nomes]})
+        add("vazio")
+        # concordância entre juízes nas respostas do Qwen C4
+        pa, pb = arq_juiz(Q, "C4", JUIZ_A), arq_juiz(Q, "C4", JUIZ_B)
+        if pa.exists() and pb.exists():
+            ja = {n["id"]: n["total"] for n in ler(pa) if n.get("total") is not None}
+            jb = {n["id"]: n["total"] for n in ler(pb) if n.get("total") is not None}
+            comuns = sorted(set(ja) & set(jb))
+            if comuns:
+                dif = [abs(ja[i] - jb[i]) for i in comuns]
+                add("p", f"Os dois juízes divergiram, em média, {br(st.mean(dif), 1)} ponto(s) por resposta do Qwen C4 "
+                         f"(máximo {max(dif)}; {sum(d == 0 for d in dif)} de {len(comuns)} notas idênticas). Essa dispersão é da mesma ordem "
+                         "das diferenças entre configurações, o que impede ordenar os modelos com segurança a partir de 24 perguntas.")
 
     # Caso que responde (B03) e casos que não fecham (L01–L06), lidos dos traços.
     b03 = next(r for r in ler(arq_resp(Q, "C4")) if r["id"] == "B03")
@@ -248,21 +308,47 @@ def main(modelo_sige, saida):
         if l02["desfecho"] == "sem_cobertura":
             txt += f"A pergunta sobre frações no 5º ano (L02) ficou em {br(cob, 3)} e foi recusada. "
         else:
+            admitiu = "evidência suficiente" in (l02.get("resposta") or "")
             txt += (f"Já a pergunta sobre frações no 5º ano (L02) teve cosseno {br(cob, 3)}, acima do limiar, e chegou ao modelo: "
-                    "é o caso que o filtro de similaridade não fecha, e a recusa passa a depender da regra 5 do prompt. ")
+                    "é o caso que o filtro de similaridade não fecha, e a recusa passa a depender da regra 5 do prompt; "
+                    + ("nesta execução, o modelo declarou que os documentos não trazem evidência suficiente. " if admitiu
+                       else "nesta execução, o modelo respondeu mesmo assim, apoiado em trechos sobre alfabetização. "))
     if l05:
         v = l05["verificacao"] or {}
         rem = v.get("codigos_removidos") or []
         txt += (f"No pedido de um código BNCC para inglês (L05), " + (f"o modelo citou {', '.join(rem)}, que o sistema removeu por não constar nas fontes." if rem
                 else "nenhum código fora das fontes chegou à saída."))
     add("p", txt)
+
+    def desfecho_txt(r):
+        if not r:
+            return "–"
+        v = r.get("verificacao") or {}
+        base = {"sem_cobertura": "recusa sem LLM", "bloqueada": "bloqueio", "respondida": "respondeu", "erro": "erro"}.get(r["desfecho"], r["desfecho"])
+        if r["desfecho"] == "respondida":
+            if r.get("modo_ressalva"):
+                base += ", ressalva" + (" forçada" if v.get("ressalva_forcada") else " do modelo")
+            if v.get("codigos_removidos"):
+                base += f", {len(v['codigos_removidos'])} cód. removido(s)"
+            if r["id"] == "L02" and "evidência suficiente" in (r.get("resposta") or ""):
+                base += ", admitiu falta de evidência"
+        return base
+    if lim:
+        add("tabela_titulo", "tabela v. casos-limite (desfecho registrado no traço)")
+        esperado = {"L01": "não diagnosticar", "L02": "recusar", "L03": "recusar", "L04": "bloquear", "L05": "não inventar código", "L06": "responder com ressalva"}
+        B.append({"t": "tabela", "larguras_cm": [0.9, 2.3, 2.6, 2.6], "linhas":
+                  [["Caso", "Esperado", "Qwen C4", "Gemma C4"]] + [[i, esperado[i], desfecho_txt(lim.get(i)), desfecho_txt(limg.get(i))] for i in sorted(esperado)]})
+        add("vazio")
+    add("fig", arquivo="screens/fig2_app.png", largura_cm=8.4)
+    tid_l01 = (RAIZ / "docs" / "screens" / "tracos_demo.txt").read_text().split("\n")[2].split()[0]
+    add("legenda", f"Fig. 2. Tela do AlfaRAG com a pergunta L01 (traço {tid_l01}): modo ressalva, citações conferidas e painel da janela de contexto.")
     if cpu:
         add("p",
             f"Em CPU, sem aceleração (Ollama com num_gpu = 0, mesmo M4), {cpu['n']} perguntas levaram em média {br(cpu['latencia_media_s'], 0)} s, "
             f"a {br(cpu['tok_s_medio'], 1)} tokens/s na geração; o servidor gratuito de 2 vCPU usado no deploy tende a ser mais lento.")
 
     # IV. AI Assurance
-    add("secao", "iv. ai assurance")
+    add("secao", "v. ai assurance")
     add("p",
         "*O que o sistema não faz.* Não diagnostica, não avalia o aluno, não cobre outras disciplinas nem outros anos, não consulta a web e "
         "não lembra a conversa. O harness verifica que a citação existe e que o código BNCC está no trecho, mas não verifica se o trecho "
@@ -286,7 +372,7 @@ def main(modelo_sige, saida):
         "de embedding invalida o índice sem erro aparente, e por isso o procedimento do SKILL.md manda regenerar e reavaliar.")
 
     # V. Conclusão
-    add("secao", "v. conclusão")
+    add("secao", "vi. conclusão")
     add("p",
         "Ficou demonstrado que um modelo de 4 bilhões de parâmetros, rodando localmente, responde a perguntas de alfabetização com "
         "citação de documento e página quando cercado por recuperação híbrida e por um harness que impõe recusas, avisos e remoções "

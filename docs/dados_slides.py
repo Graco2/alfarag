@@ -32,7 +32,7 @@ def juiz(modelo, cond, j):
 
 
 def execucao(modelo, cond):
-    regs = [r for r in ler(resp(modelo, cond)) if r["id"].startswith("B")]
+    regs = [r for r in ler(resp(modelo, cond)) if r["id"].startswith("B")] if resp(modelo, cond).exists() else []
     ok = [r for r in regs if r["desfecho"] == "respondida"]
     return {
         "n": len(regs), "respondidas": len(ok),
@@ -49,6 +49,16 @@ def main():
     rec = json.load(open(RES / "recuperacao.json", encoding="utf-8"))["tabela"]
     regs = {r["id"]: r for r in ler(resp(MODELO_LLM, "C4"))}
     b03 = regs["B03"]
+    # O slide 6 mostra a captura do traço de demonstração: usa os números DESSE traço.
+    demo = (RAIZ / "docs" / "screens" / "tracos_demo.txt")
+    if demo.exists():
+        tid = demo.read_text().split()[0]
+        for arq in sorted((RES / "tracos").glob("tracos_*.jsonl")):
+            for l in arq.open(encoding="utf-8"):
+                if f'"id": "{tid}"' in l:
+                    t = json.loads(l)
+                    b03 = {"pergunta": t["pergunta"], "resposta": t["resposta"], "verificacao": t["verificacao"],
+                           "trechos": t["janela"]["trechos"], "latencia_s": t["latencia_s"], "ollama": t["ollama"], "traco": tid}
     lim = {k: {"desfecho": v["desfecho"], "cos": (v.get("cobertura") or {}).get("melhor_cos"),
                "verificacao": v.get("verificacao"), "resposta": (v.get("resposta") or "")[:600]} for k, v in regs.items() if k.startswith("L")}
     cpu = json.load(open(RES / "latencia_cpu.json", encoding="utf-8")) if (RES / "latencia_cpu.json").exists() else None
@@ -59,7 +69,7 @@ def main():
         "qwen_c4": execucao(MODELO_LLM, "C4"), "gemma_c4": execucao(G, "C4"), "qwen_c1": execucao(MODELO_LLM, "C1"),
         "b03": {"pergunta": b03["pergunta"], "resposta": b03["resposta"], "verificacao": b03["verificacao"],
                 "trechos": [{k: t[k] for k in ("n", "rotulo", "pagina", "secao")} for t in b03["trechos"]],
-                "latencia": b03["latencia_s"], "tokens": b03["ollama"]},
+                "latencia": b03["latencia_s"], "tokens": b03["ollama"], "traco": b03.get("traco")},
         "limites": lim, "cpu": cpu,
     }
     json.dump(dados, open(RAIZ / "docs" / "slides_data.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
