@@ -1,0 +1,3 @@
+{'id': 'B03', 'desfecho': 'respondida', 'latencia_s': 94.8, 'prompt_tokens': 2789, 'resposta_tokens': 295, 'tok_s': 10.61}
+{'id': 'B08', 'desfecho': 'respondida', 'latencia_s': 103.96, 'prompt_tokens': 2837, 'resposta_tokens': 338, 'tok_s': 7.74}
+{'id': 'B16', 'desfecho': 'respondida', 'latencia_s': 106.66, 'prompt_tokens': 2842, 'resposta_tokens': 264, 'tok_s': 9.27}

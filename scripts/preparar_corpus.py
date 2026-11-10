@@ -2,7 +2,9 @@
 
 Lê os PDFs (e o Markdown do PNEEI), extrai o texto POR PÁGINA, guarda o número
 de página impresso quando ele existe, remove ruído (páginas iniciais do Manual
-ABC, listas de referências) e corta em chunks com sobreposição.
+ABC, listas de referências) e corta em chunks com sobreposição. Os quadros de
+Habilidades Essenciais (HE1–HE3) são lidos célula a célula: cada linha da
+tabela vira um registro com ano, bimestre e código da habilidade.
 
 Cada chunk carrega metadados suficientes para a citação: documento, página
 inicial/final, seção (capítulo/parte do Manual ABC) e os códigos BNCC que
@@ -30,7 +32,15 @@ sys.path.insert(0, str(RAIZ))
 from app.config import EXPERIMENTOS, INDEX_DIR, aprox_tokens  # noqa: E402
 
 CORPUS = RAIZ / "corpus"
-BNCC_RE = re.compile(r"\b(EF\d{2}LP\d{2})\b")
+# Código BNCC; os quadros de Habilidades Essenciais desdobram alguns com uma letra (EF02LP01A).
+BNCC_RE = re.compile(r"\b(EF\d{2}LP\d{2}[A-Z]?)\b")
+COD_HE = re.compile(r"\(\s*(E[FI]\d{2}LP\d{2}[A-Z]?)\s*\)")
+
+
+def codigos(texto: str) -> list[str]:
+    """Códigos citados no texto; um código desdobrado (EF02LP01A) também registra o código BNCC de origem."""
+    achados = set(BNCC_RE.findall(texto))
+    return sorted(achados | {c[:8] for c in achados})
 
 # Manual ABC: capítulo -> (página impressa inicial, título). Fonte: índice do manual (p. XIV–XVI).
 ABC_CAPITULOS = {
@@ -145,6 +155,82 @@ def extrair_pdf(doc_id: str, arquivo: Path) -> list[Pagina]:
     return paginas
 
 
+def _celula(texto: str | None) -> str:
+    t = unicodedata.normalize("NFC", texto or "")
+    t = t.replace("", "•").replace("AnáliseAnálise", "Análise")
+    t = re.sub(r"(\w)-\s*\n\s*(\w)", r"\1-\2", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def extrair_habilidades(doc_id: str, arquivo: Path) -> list[Pagina]:
+    """Quadros de Habilidades Essenciais: cada linha da tabela vira um registro autocontido.
+
+    O texto corrido do PDF embaralha as colunas, então lemos célula por célula (recorte pela
+    caixa da célula). Linha sem código na coluna de habilidades é continuação da anterior
+    (a tabela atravessou a página). A seção registra o bimestre; o ano vai no rótulo do documento.
+    """
+    ano = doc_id[-1]
+    d = pymupdf.open(arquivo)
+    registros: list[dict] = []
+    bimestre = None
+    for i, p in enumerate(d):
+        for tab in p.find_tables().tables:
+            for row in tab.rows:
+                c = [_celula(p.get_text("text", clip=pymupdf.Rect(bb))) if bb else "" for bb in row.cells]
+                junto = " ".join(x for x in c if x)
+                m = re.search(r"(\d)º\s*BIMESTRE", junto, re.I)
+                if m and len(junto) < 40:
+                    bimestre = m.group(1)
+                    continue
+                if not junto or (re.search(r"ENSINO FUNDAMENTAL|L[IÍ]NGUA ?PORTUGUESA", junto) and len(junto) < 60):
+                    continue
+                if c[0].upper().startswith("CAMPOS"):  # cabeçalho repetido
+                    continue
+                cols = [c[0], c[1] if len(c) > 1 else "", c[2] if len(c) > 2 else "", c[3] if len(c) > 3 else "",
+                        " ".join(x for x in c[4:] if x)]
+                if COD_HE.search(cols[2]) or not registros:
+                    registros.append({"pdf_page": i + 1, "bimestre": bimestre, "cols": cols})
+                else:
+                    r = registros[-1]
+                    r["cols"] = [f"{a} {b}".strip() for a, b in zip(r["cols"], cols)]
+    paginas: list[Pagina] = []
+    chave = None
+    for r in registros:
+        campo, pratica, hab, objeto, conteudo = r["cols"]
+        texto = (f"Habilidade essencial do {ano}º ano, {r['bimestre']}º bimestre: {hab} Campo de atuação: {campo}. "
+                 f"Prática de linguagem: {pratica}. Objeto de conhecimento: {objeto}."
+                 + (f" Conteúdo: {conteudo}" if conteudo else ""))
+        k = (r["pdf_page"], r["bimestre"])
+        if k != chave:  # uma "página" por (página do PDF, bimestre): registros separados por linha em branco
+            paginas.append(Pagina(doc_id, r["pdf_page"], str(r["pdf_page"]), "", f"{r['bimestre']}º bimestre"))
+            chave = k
+        paginas[-1].texto = (paginas[-1].texto + "\n\n" + texto).strip()
+    return paginas
+
+
+def extrair_videos(doc_id: str, pasta: Path) -> list[Pagina]:
+    """Resumos de vídeo do grupo (um .md por vídeo, com front matter). Cada seção (##) vira uma 'página';
+    a seção do trecho identifica vídeo, canal e título, e a minutagem [mm:ss] fica no próprio texto."""
+    paginas: list[Pagina] = []
+    for arq in sorted(pasta.glob("*.md")):
+        bruto = arq.read_text(encoding="utf-8")
+        m = re.match(r"^---\n(.*?)\n---\n", bruto, re.S)
+        fm = {k: v.strip().strip('"') for k, v in re.findall(r"^(\w+):\s*(.*)$", m.group(1), re.M)} if m else {}
+        corpo = bruto[m.end():] if m else bruto
+        secao = f"vídeo {fm.get('id', arq.stem[:4])}, {fm.get('canal', '?')}, “{fm.get('titulo', '?')}”"
+        for bloco in re.split(r"^## ", corpo, flags=re.M):
+            if not bloco.strip():
+                continue
+            titulo, _, texto = bloco.partition("\n")
+            titulo = re.sub(r"\s*\(.*?\)\s*$", "", titulo).strip()
+            texto = limpar(texto)
+            if len(texto) < 40:
+                continue
+            paginas.append(Pagina(doc_id, 0, "s/p", f"{titulo}: {texto}", secao,
+                                  {"url": fm.get("url"), "relevancia": fm.get("relevancia")}))
+    return paginas
+
+
 def extrair_markdown(doc_id: str, arquivo: Path) -> list[Pagina]:
     """Sem paginação: cada seção (#, ##) vira uma 'página' identificada pelo título."""
     bruto = arquivo.read_text(encoding="utf-8")
@@ -195,7 +281,7 @@ def chunkar(paginas: list[Pagina], tam: int | None, sobreposicao: float, por_sec
             "pagina_fim": p1.pagina,
             "pdf_page": p0.pdf_page,
             "secao": p0.secao,
-            "codigos_bncc": sorted(set(BNCC_RE.findall(texto))),
+            "codigos_bncc": codigos(texto),
             "tokens": aprox_tokens(texto),
             "texto": texto,
         })
@@ -240,7 +326,11 @@ def carregar_paginas() -> list[Pagina]:
     paginas: list[Pagina] = []
     for d in docs:
         arq = CORPUS / d["arquivo"]
-        if arq.suffix.lower() == ".pdf":
+        if d["id"].startswith("HE"):
+            ps = extrair_habilidades(d["id"], arq)
+        elif d["id"] == "VID":
+            ps = extrair_videos(d["id"], arq)
+        elif arq.suffix.lower() == ".pdf":
             ps = extrair_pdf(d["id"], arq)
         else:
             ps = extrair_markdown(d["id"], arq)

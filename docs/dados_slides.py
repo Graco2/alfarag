@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import statistics as st
 import sys
 from pathlib import Path
@@ -23,8 +24,12 @@ def resp(modelo, cond):
     return RES / f"respostas_{modelo.replace(':', '-')}_{cond}_E2.jsonl"
 
 
+def juiz_arq(modelo, cond, j):
+    return RES / f"respostas_{modelo.replace(':', '-')}_{cond}_E2__juiz-{j.replace(':', '-')}.jsonl"
+
+
 def juiz(modelo, cond, j):
-    p = RES / f"respostas_{modelo.replace(':', '-')}_{cond}_E2__juiz-{j.replace(':', '-')}.jsonl"
+    p = juiz_arq(modelo, cond, j)
     if not p.exists():
         return None
     t = [n["total"] for n in ler(p) if n.get("total") is not None]
@@ -67,10 +72,16 @@ def main():
         "limiar": LIMIAR_COBERTURA,
         "recuperacao": {f"{r['experimento']}_{r['condicao']}": {"recall": r["recall"], "mrr": r["mrr"]} for r in rec},
         "qwen_c4": execucao(MODELO_LLM, "C4"), "gemma_c4": execucao(G, "C4"), "qwen_c1": execucao(MODELO_LLM, "C1"),
+        "qwen_c5": execucao(MODELO_LLM, "C5") if resp(MODELO_LLM, "C5").exists() else None,
         "b03": {"pergunta": b03["pergunta"], "resposta": b03["resposta"], "verificacao": b03["verificacao"],
                 "trechos": [{k: t[k] for k in ("n", "rotulo", "pagina", "secao")} for t in b03["trechos"]],
                 "latencia": b03["latencia_s"], "tokens": b03["ollama"], "traco": b03.get("traco")},
         "limites": lim, "cpu": cpu,
+        # Leitura humana (nossa) do B03: a resposta chama “prato”/“porta” de grafema complexo. O slide 6 só mostra a nota
+        # se o texto gravado ainda trouxer esse erro; se a demo for refeita, reler a resposta.
+        "b03_erro": bool(re.search(r"grafemas? (múltiplos|complexos)|mais de um fonema", b03["resposta"] or "")),
+        "b03_juizes": [n["total"] for j in (G, MODELO_LLM) if juiz_arq(MODELO_LLM, "C4", j).exists()
+                       for n in ler(juiz_arq(MODELO_LLM, "C4", j)) if n["id"] == "B03"],
     }
     json.dump(dados, open(RAIZ / "docs" / "slides_data.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(json.dumps({k: v for k, v in dados.items() if k not in ("b03", "recuperacao")}, ensure_ascii=False, indent=1)[:3000])

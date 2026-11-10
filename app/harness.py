@@ -16,7 +16,8 @@ from dataclasses import asdict, dataclass, field
 
 from .config import LIMIAR_COBERTURA, MAX_PERGUNTA_CHARS
 
-BNCC_RE = re.compile(r"\b(EF\d{2}LP\d{2})\b")
+# Código BNCC; os quadros de Habilidades Essenciais desdobram alguns com uma letra (EF02LP01A).
+BNCC_RE = re.compile(r"\b(EF\d{2}LP\d{2}[A-Z]?)\b")
 CITA_RE = re.compile(r"\[(\d{1,2}(?:\s*[,;]\s*\d{1,2})*)\]")
 
 _PII = [
@@ -43,7 +44,7 @@ FRASE_DIAGNOSTICO = (
 )
 FRASE_SEM_COBERTURA = (
     "Os documentos da base não trazem evidência suficiente sobre isso. "
-    "O assistente cobre alfabetização em Língua Portuguesa no 2º e 3º anos (BNCC, Manual ABC e artigos sobre dislexia). "
+    "O assistente cobre alfabetização em Língua Portuguesa no 2º e 3º anos (BNCC, Habilidades Essenciais, Manual ABC e artigos sobre dislexia). "
     "Reformule a pergunta dentro desse escopo ou consulte a coordenação pedagógica."
 )
 
@@ -118,9 +119,13 @@ def verificar_saida(resposta: str, trechos: list[dict], pede_diagnostico: bool, 
         v.alertas.append("A resposta não cita nenhuma fonte recuperada.")
 
     # 2) Códigos BNCC precisam aparecer literalmente em algum trecho recuperado.
+    # Um código desdobrado no trecho (EF02LP01A) também valida o código BNCC de origem (EF02LP01);
+    # o inverso não vale: EF02LP01A só passa se aparecer assim no trecho.
     no_contexto = set()
     for c in trechos:
-        no_contexto.update(BNCC_RE.findall(c["texto"]))
+        achados = BNCC_RE.findall(c["texto"])
+        no_contexto.update(achados)
+        no_contexto.update(x[:8] for x in achados)
     citados = sorted(set(BNCC_RE.findall(texto)))
     v.codigos_ok = [c for c in citados if c in no_contexto]
     v.codigos_removidos = [c for c in citados if c not in no_contexto]

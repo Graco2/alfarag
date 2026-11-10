@@ -30,7 +30,10 @@ CONDICOES = {
     "C1": ["BNCC"],
     "C2": ["BNCC", "RAMLI"],
     "C3": ["BNCC", "RAMLI", "HALL"],
-    "C4": ["BNCC", "ABC", "RAMLI", "HALL", "ROSA", "PNEEI"],
+    "C4": ["BNCC", "ABC", "RAMLI", "HALL", "ROSA", "PNEEI", "HE1", "HE2", "HE3"],
+    # Experimento à parte: C4 + resumos de vídeo do YouTube feitos pelo grupo (legenda automática resumida por IA).
+    # A demonstração continua em C4.
+    "C5": ["BNCC", "ABC", "RAMLI", "HALL", "ROSA", "PNEEI", "HE1", "HE2", "HE3", "VID"],
 }
 CONDICAO = os.getenv("CONDICAO", "C4")
 

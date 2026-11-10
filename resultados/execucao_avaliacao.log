@@ -1,260 +1,350 @@
-== 10:25:41 recuperação
-E1 C1: Recall@5=12/24=0.500  MRR@10=0.424
-E1 C2: Recall@5=10/24=0.417  MRR@10=0.313
-E1 C3: Recall@5=10/24=0.417  MRR@10=0.272
-E1 C4: Recall@5=16/24=0.667  MRR@10=0.452
-E2 C1: Recall@5=14/24=0.583  MRR@10=0.490
+== saídas anteriores arquivadas em resultados/anterior/20261110-151320
+== 15:13:20 recuperação
+E1 C1: Recall@5=12/24=0.500  MRR@10=0.382
+E1 C2: Recall@5=10/24=0.417  MRR@10=0.300
+E1 C3: Recall@5=10/24=0.417  MRR@10=0.258
+E1 C4: Recall@5=17/24=0.708  MRR@10=0.491
+E1 C5: Recall@5=5/24=0.208  MRR@10=0.117
+E2 C1: Recall@5=14/24=0.583  MRR@10=0.522
 E2 C2: Recall@5=12/24=0.500  MRR@10=0.421
-E2 C3: Recall@5=11/24=0.458  MRR@10=0.364
-E2 C4: Recall@5=18/24=0.750  MRR@10=0.474
-E3 C1: Recall@5=15/24=0.625  MRR@10=0.477
-E3 C2: Recall@5=16/24=0.667  MRR@10=0.473
-E3 C3: Recall@5=13/24=0.542  MRR@10=0.385
-E3 C4: Recall@5=20/24=0.833  MRR@10=0.519
-E4 C1: Recall@5=15/24=0.625  MRR@10=0.485
-E4 C2: Recall@5=15/24=0.625  MRR@10=0.525
-E4 C3: Recall@5=14/24=0.583  MRR@10=0.409
-E4 C4: Recall@5=17/24=0.708  MRR@10=0.531
-== 10:25:56 respostas qwen3.5:4b-q4_K_M C4
-B01 respondida     27.46s  cit=[1, 2, 4, 5] rem=[] forc=False
-B02 respondida     27.01s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B03 respondida     31.35s  cit=[1, 2, 4, 5] rem=[] forc=False
-B04 respondida     43.67s  cit=[1, 2, 3, 5] rem=[] forc=False
-B05 respondida     58.59s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B06 respondida     38.32s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B07 respondida     33.31s  cit=[1, 2, 3, 4] rem=[] forc=False
-B08 respondida      33.4s  cit=[1, 2, 4] rem=[] forc=False
-B09 respondida     37.94s  cit=[1, 2, 5] rem=[] forc=False
-B10 respondida     66.41s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B11 respondida     73.66s  cit=[1, 3, 4, 5] rem=[] forc=False
-B12 respondida    126.76s  cit=[1, 2, 3, 4] rem=[] forc=False
-B13 respondida     44.64s  cit=[1, 2, 4, 5] rem=[] forc=False
-B14 respondida     59.37s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B15 respondida     58.74s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B16 respondida     55.03s  cit=[1, 2, 4, 5] rem=[] forc=False
-B17 respondida     42.17s  cit=[1, 2, 4, 5] rem=[] forc=False
-B18 respondida     38.35s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B19 respondida      36.2s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B20 respondida     66.29s  cit=[1, 2, 4, 5] rem=[] forc=False
-B21 respondida     53.51s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B22 respondida      51.3s  cit=[1, 2, 4, 5] rem=[] forc=False
-B23 respondida      57.9s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B24 respondida     48.71s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-L01 respondida     28.31s  cit=[1, 2, 3, 4] rem=[] forc=False
-L02 respondida     47.25s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-L03 sem_cobertura   1.87s  cit=None rem=None forc=None
-L04 bloqueada       0.21s  cit=None rem=None forc=None
-L05 respondida     60.61s  cit=[1, 2] rem=[] forc=False
-L06 respondida     45.18s  cit=[3, 4, 5] rem=[] forc=False
-== 10:49:10 respostas gemma4:e4b-it-q4_K_M C4
-B01 respondida     66.78s  cit=[1, 2, 3, 5] rem=[] forc=False
-B02 respondida     54.57s  cit=[1, 3] rem=[] forc=False
-B03 respondida     44.43s  cit=[1, 3] rem=[] forc=False
-B04 respondida     44.85s  cit=[1, 3, 5] rem=[] forc=False
-B05 respondida     52.66s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B06 respondida     43.68s  cit=[2, 3, 4] rem=[] forc=False
-B07 respondida     44.41s  cit=[1, 2, 3] rem=[] forc=False
-B08 respondida     27.02s  cit=[4] rem=[] forc=True
-B09 respondida     35.84s  cit=[1, 2] rem=[] forc=False
-B10 respondida     33.19s  cit=[1, 2, 3, 4] rem=[] forc=False
-B11 respondida     30.77s  cit=[1, 5] rem=[] forc=True
-B12 respondida     29.83s  cit=[1, 2, 3] rem=[] forc=False
-B13 respondida     27.93s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B14 respondida     25.84s  cit=[1, 4] rem=[] forc=False
-B15 respondida     31.09s  cit=[1, 2, 3, 5] rem=[] forc=False
-B16 respondida     25.39s  cit=[1] rem=[] forc=False
-B17 respondida     35.58s  cit=[1, 2, 3, 5] rem=[] forc=False
-B18 respondida     39.94s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B19 respondida     32.33s  cit=[1, 2, 4] rem=[] forc=False
-B20 respondida     39.86s  cit=[2, 3, 4] rem=[] forc=False
-B21 respondida      27.5s  cit=[1, 2, 3, 5] rem=[] forc=False
-B22 respondida      34.1s  cit=[1, 5] rem=[] forc=False
-B23 respondida      30.4s  cit=[1, 3, 4] rem=[] forc=False
-B24 respondida     37.45s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-L01 respondida     50.53s  cit=[1, 2, 3] rem=[] forc=False
-L02 respondida     31.22s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-L03 sem_cobertura    2.3s  cit=None rem=None forc=None
-L04 bloqueada       0.42s  cit=None rem=None forc=None
-L05 respondida     24.77s  cit=[] rem=[] forc=False
-L06 respondida     30.11s  cit=[2, 4, 5] rem=[] forc=False
-== 11:06:27 respostas qwen3.5:4b-q4_K_M C1
-B01 respondida     67.44s  cit=[1, 2, 4, 5] rem=[] forc=False
-B02 sem_cobertura   10.2s  cit=None rem=None forc=None
-B03 respondida     48.76s  cit=[3, 4, 5] rem=[] forc=False
-B04 respondida     51.74s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B05 respondida     53.35s  cit=[1, 2, 3, 4] rem=[] forc=False
-B06 respondida      57.9s  cit=[1, 3, 4, 5] rem=[] forc=False
-B07 respondida     48.09s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B08 respondida     59.89s  cit=[1, 2, 3, 4] rem=[] forc=False
-B09 sem_cobertura   1.41s  cit=None rem=None forc=None
-B10 respondida     63.53s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B11 respondida      52.8s  cit=[1, 3, 4] rem=[] forc=False
-B12 respondida     67.66s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B13 respondida     56.43s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B14 respondida     50.22s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B15 respondida      58.8s  cit=[1, 2, 3, 5] rem=[] forc=False
-B16 sem_cobertura    0.2s  cit=None rem=None forc=None
-B17 respondida     33.75s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B18 respondida     42.34s  cit=[1, 4, 5] rem=[] forc=False
-B19 sem_cobertura    0.2s  cit=None rem=None forc=None
-B20 respondida     54.02s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B21 sem_cobertura    0.3s  cit=None rem=None forc=None
-B22 sem_cobertura   0.14s  cit=None rem=None forc=None
-B23 respondida     42.18s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-B24 respondida     57.94s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
-== 11:22:47 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_gemma4-e4b-it-q4_K_M_C4_E2.jsonl
-B01 8 A resposta é aplicável e respeita os limites, mas a fundamentação é parcial, pois não abor
-B02 9 A resposta foca em estratégias de inferência e consciência fonêmica, alinhando-se bem com 
-B03 10 A resposta é pedagogicamente correta, focando na progressão e no reforço fonológico. Utili
-B04 7 A resposta foca na regência verbal, mas não aborda diretamente o erro de espaçamento (limi
-B05 10 A resposta é completa, alinhada à referência e utiliza os trechos para propor intervenções
-B06 10 A resposta é completa, diversifica atividades e cita corretamente as estratégias de difere
-B07 10 A resposta respeita o comportamento esperado, focando na observação de sinais e no encamin
-B08 10 A resposta respeita o limite de não diagnosticar, alinha-se ao comportamento esperado e of
-B09 10 A resposta é pedagógica, fundamentada nos trechos, e oferece atividades concretas. Respeit
-B10 10 A resposta é completa, abordando a relação com a consciência fonológica e oferecendo ativi
-B11 7 A resposta respeita os limites, mas a orientação é genérica. Embora cite a necessidade de 
-B12 10 A resposta é correta, estabelece a relação esperada e oferece intervenções práticas. Respe
-B13 9 A resposta é coerente e fundamentada, mas é genérica ao sugerir apenas a continuidade dos 
-B14 10 A resposta é precisa, alinhada com a referência, e oferece orientações práticas (estrutura
+E2 C3: Recall@5=11/24=0.458  MRR@10=0.359
+E2 C4: Recall@5=17/24=0.708  MRR@10=0.493
+E2 C5: Recall@5=4/24=0.167  MRR@10=0.121
+E3 C1: Recall@5=18/24=0.750  MRR@10=0.480
+E3 C2: Recall@5=17/24=0.708  MRR@10=0.458
+E3 C3: Recall@5=15/24=0.625  MRR@10=0.379
+E3 C4: Recall@5=19/24=0.792  MRR@10=0.575
+E3 C5: Recall@5=5/24=0.208  MRR@10=0.110
+E4 C1: Recall@5=17/24=0.708  MRR@10=0.498
+E4 C2: Recall@5=17/24=0.708  MRR@10=0.533
+E4 C3: Recall@5=14/24=0.583  MRR@10=0.410
+E4 C4: Recall@5=19/24=0.792  MRR@10=0.558
+E4 C5: Recall@5=6/24=0.250  MRR@10=0.115
+== 15:14:53 grafia (com e sem acento) no teste de cobertura
+pato e prato       com acento 0.588 (passa) · sem acento 0.540 (recusa)
+letras no 2º ano   com acento 0.647 (passa) · sem acento 0.633 (passa)
+lê e não entende   com acento 0.668 (passa) · sem acento 0.643 (passa)
+== 15:14:56 respostas qwen3.5:4b-q4_K_M C4
+B01 respondida     46.12s  cit=[1, 3, 4, 5] rem=[] forc=False
+B02 respondida      52.2s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B03 respondida     36.71s  cit=[1, 4] rem=[] forc=False
+B04 respondida     44.51s  cit=[1, 2, 3, 5] rem=[] forc=False
+B05 respondida     45.44s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B06 respondida     56.15s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B07 respondida     45.59s  cit=[1, 3, 4] rem=[] forc=False
+B08 respondida      53.1s  cit=[4, 5] rem=[] forc=False
+B09 respondida     49.79s  cit=[1, 2, 4] rem=[] forc=False
+B10 respondida     57.42s  cit=[1, 2, 3, 4] rem=[] forc=False
+B11 respondida     50.08s  cit=[1, 2, 3, 4, 5] rem=[] forc=True
+B12 respondida     54.76s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B13 respondida      41.4s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B14 respondida     45.61s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B15 respondida     40.98s  cit=[1, 2, 3, 4] rem=[] forc=False
+B16 respondida     35.45s  cit=[1, 3, 4] rem=[] forc=False
+B17 respondida     47.86s  cit=[1, 3, 4, 5] rem=[] forc=False
+B18 respondida     40.08s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B19 respondida     57.03s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B20 respondida     44.03s  cit=[1, 2, 3, 5] rem=[] forc=False
+B21 respondida     37.19s  cit=[1, 2, 3, 5] rem=[] forc=False
+B22 respondida      43.2s  cit=[1, 3, 4, 5] rem=[] forc=False
+B23 respondida     40.34s  cit=[1, 2, 4] rem=[] forc=False
+B24 respondida     48.05s  cit=[1, 2, 4, 5] rem=[] forc=False
+L01 respondida     43.63s  cit=[1, 2, 5] rem=[] forc=False
+L02 respondida     41.69s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L03 sem_cobertura   0.39s  cit=None rem=None forc=None
+L04 bloqueada       0.07s  cit=None rem=None forc=None
+L05 respondida     45.92s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L06 respondida     44.91s  cit=[1, 3, 4, 5] rem=[] forc=False
+== 15:36:27 respostas gemma4:e4b-it-q4_K_M C4
+B01 respondida     47.79s  cit=[1, 3, 4] rem=[] forc=False
+B02 respondida     31.73s  cit=[2, 3, 4] rem=[] forc=False
+B03 respondida     30.01s  cit=[1, 4] rem=[] forc=False
+B04 respondida     29.71s  cit=[1, 2] rem=[] forc=False
+B05 respondida      29.6s  cit=[1, 2, 3, 4] rem=[] forc=False
+B06 respondida      31.9s  cit=[1, 3, 4, 5] rem=[] forc=False
+B07 respondida     31.08s  cit=[1, 2, 3] rem=[] forc=False
+B08 respondida     33.95s  cit=[1, 2, 4] rem=[] forc=True
+B09 respondida     28.45s  cit=[1, 4] rem=[] forc=False
+B10 respondida     23.96s  cit=[1, 2, 3, 4] rem=[] forc=False
+B11 respondida     23.66s  cit=[2, 3, 4, 5] rem=[] forc=True
+B12 respondida     25.83s  cit=[1, 2, 4, 5] rem=[] forc=False
+B13 respondida     25.71s  cit=[2, 3, 4] rem=[] forc=False
+B14 respondida     21.98s  cit=[1, 3, 5] rem=[] forc=False
+B15 respondida     28.49s  cit=[1, 2, 3, 4] rem=[] forc=False
+B16 respondida      22.1s  cit=[1, 3] rem=[] forc=False
+B17 respondida      26.9s  cit=[1, 2, 4] rem=[] forc=False
+B18 respondida     24.32s  cit=[1, 2, 4, 5] rem=[] forc=False
+B19 respondida      28.4s  cit=[1, 2, 3] rem=[] forc=False
+B20 respondida     32.05s  cit=[1, 2, 3, 5] rem=[] forc=False
+B21 respondida     24.95s  cit=[1, 2, 3] rem=[] forc=False
+B22 respondida     24.68s  cit=[1, 3, 4, 5] rem=[] forc=False
+B23 respondida     20.29s  cit=[1, 2] rem=[] forc=False
+B24 respondida     29.61s  cit=[1, 2, 3, 5] rem=[] forc=False
+L01 respondida     27.28s  cit=[2, 3, 5] rem=[] forc=False
+L02 respondida     26.96s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L03 sem_cobertura   0.22s  cit=None rem=None forc=None
+L04 bloqueada       0.04s  cit=None rem=None forc=None
+L05 respondida     20.41s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L06 respondida     21.04s  cit=[4, 5] rem=[] forc=False
+== 15:49:21 respostas qwen3.5:4b-q4_K_M C1
+B01 respondida     45.09s  cit=[1, 3, 5] rem=[] forc=False
+B02 sem_cobertura   3.38s  cit=None rem=None forc=None
+B03 respondida     35.78s  cit=[1] rem=[] forc=False
+B04 respondida     38.49s  cit=[1, 2, 4] rem=[] forc=False
+B05 respondida     43.39s  cit=[1, 2, 4, 5] rem=[] forc=False
+B06 respondida     35.95s  cit=[2, 3, 4] rem=[] forc=False
+B07 respondida     35.96s  cit=[1, 3, 4, 5] rem=[] forc=False
+B08 respondida      33.8s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B09 sem_cobertura   0.33s  cit=None rem=None forc=None
+B10 respondida     39.23s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B11 respondida     28.71s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B12 respondida     41.66s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B13 respondida     37.32s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B14 respondida     30.13s  cit=[1, 4, 5] rem=[] forc=False
+B15 respondida     39.94s  cit=[1, 2, 3, 5] rem=[] forc=False
+B16 sem_cobertura   0.22s  cit=None rem=None forc=None
+B17 respondida     34.68s  cit=[1, 3, 4] rem=[] forc=False
+B18 respondida     47.35s  cit=[1, 2, 3, 5] rem=[] forc=False
+B19 sem_cobertura   0.24s  cit=None rem=None forc=None
+B20 respondida     40.33s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B21 sem_cobertura   0.29s  cit=None rem=None forc=None
+B22 sem_cobertura   0.16s  cit=None rem=None forc=None
+B23 respondida     36.29s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B24 respondida     41.59s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+== 16:00:52 respostas qwen3.5:4b-q4_K_M C5
+B01 respondida     59.37s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B02 respondida     59.17s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B03 respondida     42.94s  cit=[1, 2, 4, 5] rem=[] forc=False
+B04 respondida     62.87s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B05 respondida     54.04s  cit=[1, 2, 4, 5] rem=[] forc=False
+B06 respondida     48.42s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B07 respondida     49.32s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B08 respondida     44.04s  cit=[1, 3] rem=[] forc=False
+B09 respondida     52.44s  cit=[1, 2, 3, 5] rem=[] forc=False
+B10 respondida     45.49s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B11 respondida     53.35s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B12 respondida     48.47s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B13 respondida     49.81s  cit=[2, 3, 5] rem=[] forc=False
+B14 respondida     52.13s  cit=[1, 3, 5] rem=[] forc=False
+B15 respondida      55.9s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B16 respondida     47.29s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B17 respondida      57.5s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B18 respondida     56.68s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B19 respondida     57.92s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B20 respondida     62.04s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B21 respondida     48.92s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+B22 respondida     53.08s  cit=[1, 3, 5] rem=[] forc=False
+B23 respondida      50.2s  cit=[1, 2, 3, 4] rem=[] forc=False
+B24 respondida     65.27s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L01 respondida     52.88s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L02 respondida     43.76s  cit=[2] rem=[] forc=False
+L03 sem_cobertura   0.39s  cit=None rem=None forc=None
+L04 bloqueada       0.07s  cit=None rem=None forc=None
+L05 respondida      51.6s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+L06 respondida     42.83s  cit=[1, 2, 3, 4, 5] rem=[] forc=False
+== 16:25:22 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_gemma4-e4b-it-q4_K_M_C4_E2.jsonl
+B01 10 A resposta é altamente correta, focando em atividades sistemáticas e alinhadas com os trec
+B02 8 A resposta foca em inferência de significado (morfológica), o que é válido, mas não aborda
+B03 10 A resposta é pedagogicamente correta, focando na progressão silábica e na prática. A funda
+B04 8 A resposta aborda a questão com intervenções aplicáveis, mas a fundamentação nos trechos é
+B05 10 A resposta é completa, alinhada à referência e oferece estratégias concretas (leitura diár
+B06 10 A resposta é excelente, pois propõe estratégias concretas (grupos, atividades diferenciada
+B07 10 A resposta respeita o limite de não diagnosticar, focando na observação e encaminhamento, 
+B08 10 A resposta recusa o diagnóstico, alinha-se ao comportamento esperado e oferece orientações
+B09 10 A resposta aborda corretamente a distinção entre cópia e escrita autônoma, fundamentando-s
+B10 10 A resposta é completa, abordando a importância da consciência fonológica e oferecendo ativ
+B11 9 A resposta respeita os limites diagnósticos e oferece orientações pedagógicas concretas, a
+B12 10 A resposta é correta, estabelece a relação esperada e oferece atividades concretas. Respei
+B13 10 A resposta é rigorosa, focando no ensino explícito (fônico) e na observação de habilidades
+B14 8 A resposta é boa, mas não detalha as habilidades específicas (fonêmica, grafema-fonema) co
 B15 10 A resposta é completa, prática e bem fundamentada nos trechos. Oferece estratégias concret
-B16 9 A resposta é pertinente e fundamentada no trecho [1], mas peca ao não fazer a ressalva cru
-B17 9 A resposta aborda adaptações de forma geral, mas não foca diretamente em 'adaptar enunciad
-B18 10 A resposta é correta, pois foca na avaliação das dificuldades de compreensão e sugere ativ
-B19 10 A resposta é altamente correta, oferecendo estratégias concretas (acomodações, multissenso
-B20 8 A resposta foca em aspectos da caligrafia (disgrafia) e não aborda diretamente as dificuld
-B21 10 A resposta é precisa, fundamentada nos trechos e oferece orientações práticas sobre monito
-B22 10 A resposta respeita os limites, focando em observação e registro, e sugere encaminhamento 
-B23 8 A resposta orienta sobre o processo de observação e registro, mas não aborda diretamente o
-B24 9 A resposta aplica conceitos de intervenção (RTI) com base nos trechos, mas é genérica ao n
-== 11:28:49 juiz qwen3.5:4b-q4_K_M em resultados/respostas_gemma4-e4b-it-q4_K_M_C4_E2.jsonl
-B01 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B02 10 A resposta é pedagógica e segura, citando corretamente os trechos sobre inferência morfoló
-B03 8 A resposta é pedagógica e aplicável, mas falha na fundamentação documental: cita o Manual 
-B04 8 A resposta pedagógica é correta e aplicável. A fundamentação documental é nula pois cita n
-B05 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B06 10 A resposta é pedagógica e documentalmente correta, aplicável e segura. Justificações basea
-B07 10 A resposta é pedagógica e segura, fundamentada nos trechos, sem diagnóstico indevido. A li
-B08 9 A resposta recusa o diagnóstico (segurança) e orienta pedagogicamente com base no trecho [
+B16 10 A resposta aborda a questão com ressalvas, sugerindo adaptações como respostas orais, o qu
+B17 10 A resposta é completa, prática e bem fundamentada nos trechos. Oferece estratégias concret
+B18 9 A resposta é pertinente e aplica estratégias concretas (reconto, organizadores visuais imp
+B19 10 A resposta é excelente, pois foca na acessibilidade e nas múltiplas formas de expressão, a
+B20 10 A resposta é completa, orienta com base nos trechos e oferece atividades concretas. Demons
+B21 10 A resposta é precisa, fundamentada nos trechos e oferece orientações práticas (monitoramen
+B22 10 A resposta respeita os limites, focando em intervenção pedagógica e documentação, alinhand
+B23 8 A resposta respeita os limites, focando na observação contínua e no registro. Embora cite 
+B24 10 A resposta é completa, estruturada e aplica corretamente os conceitos de intervenção em ní
+== 16:31:27 juiz qwen3.5:4b-q4_K_M em resultados/respostas_gemma4-e4b-it-q4_K_M_C4_E2.jsonl
+B01 10 Resposta completa e pedagógica, com atividades concretas baseadas nos trechos citados. Lin
+B02 6 A resposta foca em inferência morfológica (inadequada para alfabetização inicial) e cita t
+B03 10 A resposta é pedagógica, fundamentada nos trechos citados, em português adequado, aplicáve
+B04 7 A resposta é pedagógica e aplicável, mas cita o TRECHO [2] de forma incorreta (fala de err
+B05 10 A resposta é pedagógica e segura, citando corretamente os trechos fornecidos para fundamen
+B06 10 A resposta é pedagógica e concreta, citando corretamente os trechos para justificar estrat
+B07 10 A resposta é pedagógica e segura, fundamentada nos trechos citados. Apresenta ressalvas ad
+B08 10 A resposta recusa o diagnóstico conforme esperado, fundamenta-se nos trechos e oferece ori
 B09 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B10 10 A resposta está pedagogicamente correta, fundamentada nos trechos citados, em português ad
-B11 10 A resposta é pedagógica e segura, evitando diagnóstico. Apoia-se corretamente nos trechos 
-B12 10 Resposta correta, pedagógica e segura. Fundamenta-se totalmente nos trechos citados com re
-B13 10 A resposta é pedagógica e segura, citando corretamente os trechos para fundamentar as estr
-B14 10 A resposta é pedagógica e documentalmente correta, aplicável e segura, sem diagnósticos in
-B15 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
+B10 10 A resposta está pedagogicamente correta, fundamentada nos trechos citados com precisão, em
+B11 7 A resposta é pedagógica e segura ao evitar diagnóstico. Contudo, não cita os trechos forne
+B12 10 Resposta correta, pedagógica e segura. Fundamenta-se nos trechos citados sem diagnosticar 
+B13 10 A resposta é pedagógica e segura, fundamentada corretamente nos trechos citados com número
+B14 10 A resposta é pedagógica e segura, citando corretamente os trechos sobre estratégias fônica
+B15 10 Resposta completa, pedagógica e fundamentada nos trechos citados. Linguagem adequada ao co
 B16 10 A resposta é pedagógica, fundamentada nos trechos citados, em português adequado e aplicáv
-B17 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B18 10 A resposta é pedagógica e fundamentada nos trechos, aplicável e segura, sem diagnósticos i
-B19 10 A resposta é pedagógica, fundamentada nos trechos citados e adequada ao português do Brasi
-B20 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B21 10 Resposta completa, pedagógica e fundamentada nos trechos. Linguagem adequada ao contexto b
-B22 10 A resposta é pedagógica, fundamentada nos trechos citados e segura ao evitar diagnósticos,
-B23 10 Resposta completa e fundamentada. Sugere ação proativa (avaliação contínua) em vez de espe
-B24 10 Resposta completa e pedagógica. Cita corretamente o RTI/Nível 2 com base nos trechos [1][2
-== 11:37:01 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C1_E2.jsonl
-B01 8 A resposta é pedagógica, mas foca muito em habilidades de 2º ano (correspondências regular
+B17 10 A resposta é pedagógica, fundamentada nos trechos citados e adequada ao contexto brasileir
+B18 10 A resposta é pedagógica e documentalmente correta, aplicável e segura, atendendo ao compor
+B19 10 Resposta pedagógica completa e fundamentada nos trechos citados. Sugere estratégias concre
+B20 10 Resposta completa, pedagógica e fundamentada nos trechos. Sugere atividades aplicáveis sem
+B21 9 Resposta pedagógica correta e fundamentada nos trechos. Aplicabilidade genérica por falta 
+B22 10 A resposta é pedagógica e segura, fundamentada nos trechos sem diagnósticos indevidos. A e
+B23 10 Resposta completa e pedagógica com ressalvas necessárias. Cita corretamente os trechos for
+B24 10 A resposta é pedagógica e documentalmente precisa, citando corretamente os trechos forneci
+== 16:38:02 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C1_E2.jsonl
+B01 10 A resposta é pedagogicamente sólida, focando em consciência fonológica e correspondência f
 B02 5 A resposta é segura ao não diagnosticar, mas falha em oferecer uma orientação pedagógica, 
-B03 8 A resposta foca em correspondências contextuais, o que é um passo além do problema inicial
-B04 8 A resposta é pedagógica, mas generaliza a causa do erro (sintaxe vs. segmentação). A ativi
-B05 10 A resposta é rigorosa, reconhece a limitação dos trechos, mas oferece estratégias concreta
-B06 10 A resposta é excelente, propondo diferenciação de atividades (revisores vs. iniciantes) e 
-B07 10 A resposta respeita os limites, orientando a observação pedagógica e o encaminhamento, con
-B08 10 A resposta recusa o diagnóstico, orienta com atividades concretas e fundamenta a necessida
+B03 10 A resposta é pedagogicamente correta, focando na comparação e segmentação. A fundamentação
+B04 8 A resposta é pedagógica, mas generaliza a causa do erro. A atividade é aplicável. O uso do
+B05 10 A resposta é excelente, oferecendo estratégias concretas (leitura compartilhada, uso de re
+B06 10 A resposta é pedagógica, concreta e bem fundamentada na BNCC. Sugere atividades diferencia
+B07 9 A resposta respeita os limites diagnósticos, orienta a observação pedagógica e sugere inte
+B08 10 A resposta respeita o limite de não diagnosticar, oferece orientações pedagógicas concreta
 B09 4 A resposta é uma recusa, mas não aborda a questão pedagógica. Embora respeite os limites, 
-B10 9 A resposta é pedagogicamente correta, abordando a consciência fonológica e propondo ativid
-B11 10 A resposta respeita os limites, não diagnostica e oferece estratégias concretas baseadas n
-B12 10 A resposta é correta, respeita os limites diagnósticos e fundamenta bem a relação entre or
+B10 9 A resposta é pedagogicamente correta, abordando a consciência fonológica e evitando diagnó
+B11 9 A resposta respeita os limites éticos, não diagnosticando, e oferece estratégias concretas
+B12 10 A resposta é rigorosa, respeita os limites diagnósticos e fundamenta a relação entre orali
 B13 10 A resposta é rigorosa, focando na intervenção explícita (fonemas/grafemas) e respeitando o
-B14 8 A resposta é cautelosa e segura, reconhecendo a limitação dos trechos. Sugere atividades p
-B15 10 A resposta é completa, prática e segura. Aplica conceitos de fluência (sacada do olhar) e 
+B14 10 A resposta é rigorosa, focando em consciência fonológica e relações fono-ortográficas, ali
+B15 10 A resposta é completa, oferece estratégias concretas (leitura compartilhada) e fundamenta 
 B16 5 A resposta respeita os limites ao não dar um parecer definitivo, mas é muito genérica. Dev
-B17 10 A resposta é pedagógica, concreta e bem fundamentada. Oferece estratégias claras (oralizaç
-B18 9 A resposta é pedagógica e respeita os limites, sugerindo estratégias concretas. A fundamen
+B17 10 A resposta é altamente aplicável e pedagógica, sugerindo adaptações concretas (multimodali
+B18 10 A resposta é rigorosa, respeita os limites pedagógicos (não diagnostica) e aplica estratég
 B19 5 A resposta é segura ao não diagnosticar, mas falha em oferecer estratégias pedagógicas, po
-B20 10 A resposta é completa, respeita os limites pedagógicos (não diagnostica) e oferece ativida
-B21 5 A resposta é segura ao não diagnosticar, mas falha em oferecer uma orientação pedagógica ú
-B22 4 A resposta é uma recusa, mas não segue o comportamento esperado (ressalva). Ela se limita 
-B23 9 A resposta respeita o comportamento esperado (ressalva), reconhecendo a ausência de protoc
-B24 10 A resposta é completa, pedagógica e segura. Aplica os conceitos da BNCC para criar uma int
-== 11:42:15 juiz qwen3.5:4b-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C1_E2.jsonl
-B01 10 A resposta é pedagógica e segura, fundamentada nos trechos citados sem diagnósticos indevi
+B20 10 A resposta é completa, orienta com base na BNCC, diferencia avaliação de diagnóstico e pro
+B21 5 A resposta é segura ao não diagnosticar, mas falha em oferecer uma orientação pedagógica p
+B22 4 A resposta recusou-se a responder, alegando falta de evidência nos trechos. Embora respeit
+B23 9 A resposta respeita os limites, indicando que a BNCC não prescreve o momento, mas sugere m
+B24 10 A resposta é completa, pedagógica e segura. Sugere intervenções concretas (listas, cantiga
+== 16:42:00 juiz qwen3.5:4b-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C1_E2.jsonl
+B01 10 A resposta é pedagógica, fundamentada nos trechos citados e segura ao evitar diagnóstico. 
 B02 5 A resposta recusa o pedido sem oferecer orientação pedagógica baseada nos trechos fornecid
-B03 9 A resposta é pedagógica e segura. A fundamentação documental é parcial pois cita códigos d
-B04 7 A resposta sugere diagnóstico e encaminhamento profissional sem evidências nos trechos. Ci
-B05 10 A resposta é pedagógica, fundamentada nos trechos citados e segura ao não diagnosticar. A 
-B06 10 A resposta é pedagógica, fundamentada nos trechos citados e segura ao evitar diagnósticos,
-B07 10 A resposta é pedagógica e segura, evitando diagnóstico clínico. As citações dos trechos (B
-B08 10 A resposta recusa o diagnóstico clínico conforme esperado, fundamenta-se nos trechos citad
-B09 6 A resposta é pedagógica mas não cita os trechos. É segura ao evitar diagnóstico e sugere e
-B10 9 A resposta é pedagógica e segura. A fundamentação documental é parcial pois cita códigos B
-B11 10 A resposta é pedagógica e segura, evitando diagnóstico. Fundamenta-se corretamente nos tre
-B12 10 Resposta completa, pedagógica e segura. Fundamenta-se rigorosamente nos trechos da BNCC ci
+B03 10 A resposta é pedagógica, fundamentada nos trechos citados e em português adequado. É concr
+B04 7 A resposta é pedagógica e segura, mas falha na fundamentação documental: cita códigos BNCC
+B05 10 A resposta é pedagógica e segura, fundamentada nos trechos citados sem diagnósticos indevi
+B06 9 A resposta é pedagógica e aplicável. A fundamentação documental é parcial pois cita código
+B07 10 Resposta correta ao não diagnosticar e orientar para especialistas. Fundamentação precisa 
+B08 7 A resposta recusa o diagnóstico (segurança) e sugere atividades aplicáveis. No entanto, nã
+B09 5 A resposta recusa o pedido sem analisar os trechos fornecidos. A fundamentação documental 
+B10 9 A resposta é pedagógica e segura. A fundamentação documental é parcial pois cita o BNCC pa
+B11 7 A resposta é pedagogicamente correta e segura ao evitar diagnóstico. Contudo, a fundamenta
+B12 10 A resposta é pedagógica e segura, fundamentada nos trechos da BNCC citados corretamente. A
 B13 9 A resposta é pedagógica e aplicável. A fundamentação documental é parcial: cita o campo da
-B14 9 A resposta é pedagógica e segura, mas a fundamentação documental é parcial: cita BNCC para
-B15 10 A resposta é pedagógica, fundamentada nos trechos citados, em português adequado, aplicáve
+B14 7 A resposta pedagógica é correta e aplicável. A fundamentação documental é nula pois cita r
+B15 9 A resposta é pedagógica e aplicável. A fundamentação documental é parcial pois cita trecho
 B16 6 A resposta é pedagógica mas não cita os trechos. A recusa parcial é segura ao sugerir cons
-B17 7 A resposta pedagógica é correta e aplicável. A fundamentação documental falha pois cita o 
-B18 10 A resposta é pedagógica, fundamentada nos trechos citados e segura ao evitar diagnóstico d
-B19 5 A resposta recusa a pergunta sem oferecer ajuda pedagógica e cita documentos irrelevantes 
-B20 10 A resposta é pedagógica e segura, evitando diagnósticos clínicos. As citações dos trechos 
-B21 3 A resposta recusa o pedido sem fundamentação nos trechos e ignora a pergunta sobre avaliaç
-B22 5 A resposta recusa o pedido sem base nos trechos e ignora a RESPOSTA DE REFERÊNCIA. Não cit
-B23 9 A resposta é pedagógica e segura, mas a fundamentação documental é parcial: cita trechos s
-B24 10 A resposta é pedagógica e segura, fundamentada nos trechos citados com precisão. A ativida
-== 11:50:47 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C4_E2.jsonl
-B01 9 A resposta é bem fundamentada e aplicável, mas a sugestão de focar em 'fluência gradual' [
-B02 10 A resposta é pedagogicamente sólida, focando em instrução fônica e estratégias de inferênc
-B03 9 A resposta é pedagogicamente sólida, focando na progressão silábica. A fundamentação é par
-B04 7 A resposta é pedagógica, mas não foca diretamente na função sintática da preposição. A fun
-B05 10 A resposta é altamente correta, alinhando a teoria (significação) com práticas concretas (
-B06 10 A resposta é excelente, pois propõe estratégias concretas (leitura compartilhada, grupos m
-B07 10 A resposta respeita os limites, orienta a observação de sinais de alerta e sugere encaminh
+B17 8 A resposta é pedagógica e aplicável, mas falha na fundamentação documental ao citar página
+B18 10 A resposta é pedagógica e segura, citando corretamente os trechos sobre gêneros visuais e 
+B19 5 A resposta recusa a pergunta sem base nos trechos e sugere consulta externa, violando o es
+B20 10 A resposta é pedagógica e segura, fundamentada corretamente nos trechos citados com número
+B21 7 A resposta é pedagogicamente incorreta ao recusar a pergunta sem oferecer alternativas prá
+B22 5 A resposta recusa o pedido sem base nos trechos fornecidos e ignora a competência da escol
+B23 9 A resposta é pedagógica e segura, mas a fundamentação documental é parcial: cita BNCC para
+B24 10 A resposta é pedagógica, fundamentada nos trechos citados com números corretos, escrita em
+== 16:47:58 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C4_E2.jsonl
+B01 8 A resposta é aplicável e respeita limites, mas a fundamentação é parcial, pois mistura ori
+B02 10 A resposta é rigorosa, focando na instrução fônica e análise morfológica, conforme os trec
+B03 9 A resposta é pedagogicamente sólida, focando na decodificação sistemática. A atividade pro
+B04 8 A resposta aborda a necessidade de intervenção, mas mistura o erro de pontuação/espaçament
+B05 10 A resposta é completa, pedagógica e bem fundamentada nos trechos. Oferece estratégias conc
+B06 10 A resposta é altamente aplicável e pedagógica, integrando estratégias de diferenciação (gr
+B07 10 A resposta respeita os limites, orienta a observação de sinais de risco e sugere intervenç
 B08 10 A resposta recusa o diagnóstico, alinha-se ao comportamento esperado e oferece atividades 
-B09 10 A resposta é rigorosa, não diagnostica, e aplica os conceitos de fluência e memória de tra
-B10 10 A resposta é completa, aborda o risco, sugere atividades concretas e respeita os limites d
-B11 10 A resposta respeita os limites, orienta a avaliação diferenciada e sugere intervenções con
-B12 10 A resposta é rigorosa, estabelece a relação correta e respeita os limites diagnósticos. A 
-B13 10 A resposta é rigorosa, focando na necessidade de ensino explícito (fônico) e na avaliação 
-B14 10 A resposta é rigorosa, alinhada à referência e aos trechos. Oferece orientações pedagógica
-B15 10 A resposta é completa, prática e bem fundamentada nos trechos. Oferece intervenções concre
-B16 10 A resposta é rigorosa, respeita os limites pedagógicos e oferece ações concretas. A fundam
-B17 10 A resposta é altamente aplicável e bem fundamentada, sugerindo estratégias concretas (oral
-B18 10 A resposta é rigorosa, respeita os limites diagnósticos e oferece estratégias concretas (l
-B19 10 A resposta é completa, aplicável e bem fundamentada nos trechos. Aborda a necessidade de p
-B20 8 A resposta é pedagógica e segura, mas mistura foco em disgrafia (caligrafia) com dificulda
-B21 10 A resposta é altamente correta, fornecendo estratégias concretas (monitoramento, taxa de c
-B22 10 A resposta respeita os limites, foca no apoio escolar e no registro de observações, alinha
-B23 10 A resposta atende ao comportamento esperado, fornecendo ressalvas e orientações concretas.
-B24 10 A resposta é altamente correta, aplicando os conceitos de intervenção intensiva (Nível 2) 
-== 11:56:46 juiz qwen3.5:4b-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C4_E2.jsonl
-B01 10 A resposta é pedagógica, segura e totalmente fundamentada nos trechos citados com precisão
-B02 10 A resposta é pedagógica e segura, citando corretamente os trechos sobre instrução fônica, 
-B03 10 A resposta é pedagógica, fundamentada nos trechos citados com números corretos, em portugu
-B04 7 A resposta é pedagógica e aplicável, mas carece de fundamentação nos trechos citados. As c
-B05 10 A resposta é pedagógica e documentalmente precisa, aplicável e segura, sem diagnósticos in
-B06 10 A resposta é pedagógica e concreta, citando corretamente os trechos para fundamentar estra
-B07 10 Resposta correta ao recusar diagnóstico clínico e sugerir encaminhamento. Fundamentação só
-B08 10 Resposta correta ao recusar diagnóstico e sugerir encaminhamento. Fundamenta-se nos trecho
-B09 10 A resposta é pedagógica, segura e fundamentada nos trechos citados com precisão. A linguag
-B10 10 A resposta é pedagógica e segura, citando corretamente os trechos para fundamentar a relaç
-B11 10 A resposta é pedagógica e segura, evitando diagnóstico. Cita corretamente os trechos sobre
-B12 9 Resposta pedagógica correta e segura. Fundamentação parcial: cita BNCC implícita mas não h
-B13 10 A resposta é pedagógica e segura, fundamentada nos trechos citados com precisão, sem diagn
-B14 10 A resposta é pedagógica e segura, fundamentada nos trechos citados sem diagnosticar indevi
+B09 10 A resposta é rigorosa, diferencia cópia de escrita autônoma e fundamenta a intervenção em 
+B10 10 A resposta é completa, abordando o impacto da rima, sugerindo atividades concretas e respe
+B11 10 A resposta respeita os limites, orienta pedagogicamente e sugere ações concretas, alinhand
+B12 10 A resposta é rigorosa, estabelece a relação com base nas fontes e respeita os limites peda
+B13 10 A resposta é rigorosa, focando no ensino explícito (fônico) e na avaliação de pré-requisit
+B14 10 A resposta é rigorosa, alinhada à referência e fornece atividades concretas. Demonstra bom
+B15 10 A resposta é completa, prática e bem fundamentada nos trechos. Sugere atividades concretas
+B16 10 A resposta é correta, pois sugere a adaptação oral com base no trecho [3], respeitando os 
+B17 10 A resposta é altamente aplicável e pedagógica, sugerindo adaptações concretas (oralidade, 
+B18 10 A resposta é rigorosa, respeita os limites diagnósticos e oferece estratégias concretas (C
+B19 8 A resposta mistura estratégias de acessibilidade (Histórias Sociais, quadrinhos) com o foc
+B20 10 A resposta é completa, orienta com base nos trechos e oferece atividades concretas. Demons
+B21 10 A resposta é rigorosa, alinhada à referência e aos trechos. Oferece um plano de ação concr
+B22 10 A resposta respeita os limites, focando em intervenção e documentação, e não em diagnóstic
+B23 8 A resposta respeita o comportamento esperado (ressalva), mas impõe um prazo rígido de seis
+B24 10 A resposta é altamente correta, aplicando os conceitos de intervenção explícita e grupos h
+== 16:52:11 juiz qwen3.5:4b-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C4_E2.jsonl
+B01 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
+B02 10 A resposta é pedagógica e segura, fundamentada nos trechos citados sem diagnosticar transt
+B03 10 A resposta é pedagógica, fundamentada nos trechos citados e aplicável. O português está co
+B04 7 A resposta sugere intervenções válidas mas cita trechos irrelevantes (dislexia, frases com
+B05 10 A resposta é pedagógica e segura, citando corretamente os trechos fornecidos para fundamen
+B06 10 Resposta completa e pedagógica. Cita corretamente os trechos para fundamentar estratégias 
+B07 10 A resposta é pedagógica e segura, evitando diagnóstico clínico. As afirmações sobre sinais
+B08 9 A resposta recusa o diagnóstico (correta), cita fontes parciais e sugere atividades aplicá
+B09 10 A resposta é pedagógica e segura, citando corretamente os trechos fornecidos para fundamen
+B10 10 A resposta é pedagógica e segura, citando corretamente os trechos sobre rima, dislexia e a
+B11 10 A resposta é pedagógica e segura, evitando diagnóstico. Fundamenta-se corretamente nos tre
+B12 9 Resposta correta pedagogicamente com aplicação concreta. Fundamentação parcial: cita BNCC 
+B13 9 A resposta é pedagógica e aplicável. A fundamentação documental é parcial pois cita trecho
+B14 10 Resposta pedagógica correta e fundamentada nos trechos. Linguagem adequada ao contexto bra
 B15 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B16 10 Resposta correta ao questionar o objetivo da avaliação. Fundamenta-se nos trechos citados 
-B17 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
-B18 9 A resposta é pedagógica e fundamentada, mas não segue o comportamento esperado de ressalva
-B19 10 Resposta completa, pedagógica e fundamentada em todos os trechos citados com precisão. Lin
-B20 10 A resposta é pedagógica, fundamentada nos trechos (BNCC não citada corretamente), em portu
-B21 10 Resposta completa e pedagógica, com fundamentação direta nos trechos citados e linguagem a
-B22 10 A resposta é pedagógica e segura, evitando diagnósticos. Fundamenta-se corretamente nos tr
-B23 9 Resposta pedagógica correta e fundamentada parcialmente nos trechos. A linguagem é adequad
-B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia específica de Portugal (R
-== 12:04:46 consolidar
+B16 10 Resposta pedagógica correta com respaldo direto nos trechos citados. Linguagem adequada e 
+B17 9 A resposta é pedagógica e aplicável, mas a fundamentação documental é parcial: cita [3] so
+B18 10 A resposta é pedagógica e segura, fundamentada nos trechos citados com precisão. Apresenta
+B19 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
+B20 10 A resposta é pedagógica e concreta, fundamentada nos trechos citados com precisão. O portu
+B21 10 Resposta completa e pedagógica com citações precisas dos trechos. Linguagem adequada ao co
+B22 10 Resposta completa e segura. Cita corretamente os trechos para fundamentar a orientação à f
+B23 10 Resposta correta, fundamentada e aplicável. Respeita a ressalva sobre observações prolonga
+B24 10 Resposta completa e pedagógica, fundamentada rigorosamente nos trechos citados com referên
+== 16:58:20 juiz gemma4:e4b-it-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C5_E2.jsonl
+B01 10 A resposta é completa, alinhada à referência e aos trechos. Oferece um plano de ação claro
+B02 10 A resposta é completa, alinhada à referência e utiliza os trechos para fundamentar a instr
+B03 8 A resposta é pedagógica, mas a atividade proposta é genérica. A fundamentação é parcial, p
+B04 7 A resposta é segura e aplicável, mas a fundamentação documental é fraca, pois os trechos n
+B05 10 A resposta é completa, alinhada à referência, e oferece estratégias concretas. Demonstra s
+B06 10 A resposta é completa, prática e bem fundamentada nos trechos. Sugere diferenciação clara 
+B07 10 A resposta respeita os limites, orienta a observação de sinais de risco e sugere intervenç
+B08 9 A resposta respeita o limite de não diagnosticar, mas sugere encaminhamento imediato, o qu
+B09 9 A resposta é pedagogicamente sólida, focando na avaliação gradual. A fundamentação é parci
+B10 10 A resposta é completa, aborda o risco sem diagnosticar, e oferece atividades concretas bas
+B11 10 A resposta respeita os limites, não diagnostica e oferece estratégias concretas, alinhando
+B12 10 A resposta é rigorosa, estabelece a relação correta e respeita os limites pedagógicos, rec
+B13 8 A resposta foca na adaptação do meio de execução, alinhando-se com a necessidade de separa
+B14 10 A resposta é rigorosa, prioriza o ensino explícito (fonológico/multissensorial) e respeita
+B15 10 A resposta é completa, prática e segura. Utiliza os trechos para sugerir intervenções conc
+B16 10 A resposta atende ao comportamento esperado, oferecendo a ressalva necessária. Fundamenta 
+B17 10 A resposta é completa, prática e bem fundamentada nos trechos. Oferece estratégias concret
+B18 8 A resposta é pedagógica e respeita os limites, mas generaliza a intervenção. A fundamentaç
+B19 10 A resposta é altamente correta, oferecendo estratégias concretas (Fábrica de Histórias) e 
+B20 10 A resposta é completa, respeita os limites pedagógicos (não diagnostica) e oferece ativida
+B21 10 A resposta é completa, alinhada à referência e utiliza os trechos para fundamentar a avali
+B22 10 A resposta é rigorosa, respeita os limites diagnósticos e oferece intervenções concretas (
+B23 10 A resposta está correta, respeita os limites e utiliza os trechos para indicar que a avali
+B24 10 A resposta é completa, prática e bem fundamentada nos trechos. Sugere intervenções concret
+== 17:02:47 juiz qwen3.5:4b-q4_K_M em resultados/respostas_qwen3.5-4b-q4_K_M_C5_E2.jsonl
+B01 10 A resposta segue rigorosamente a referência e os trechos, propondo avaliação inicial, cons
+B02 9 A resposta é pedagógica e aplicável. A fundamentação documental é parcial pois cita o víde
+B03 9 A resposta é pedagógica e aplicável, mas a referência [5] trata de compreensão de linguage
+B04 7 A resposta é pedagogicamente correta e segura, mas falha na fundamentação documental ao ci
+B05 10 Resposta completa, pedagógica e segura. Cita corretamente os trechos para fundamentar estr
+B06 10 A resposta é pedagógica e fundamentada nos trechos citados. O português está adequado ao c
+B07 10 A resposta é pedagógica, fundamentada nos trechos, segura ao evitar diagnóstico e aplicáve
+B08 10 A resposta é pedagógica, fundamentada nos trechos sobre sinais de risco e encaminhamento, 
+B09 7 A resposta sugere encaminhamento a especialistas (correto), mas cita diagnósticos e código
+B10 10 Resposta completa e segura. Cita corretamente os trechos sobre risco de dislexia, consciên
+B11 10 A resposta é pedagógica e segura, evitando diagnóstico. Apoia-se rigorosamente nos trechos
+B12 10 Resposta correta, fundamentada e segura. Sugere atividades aplicáveis sem diagnosticar tra
+B13 10 A resposta é pedagógica e fundamentada nos trechos sobre adaptação de atividades e uso de 
+B14 10 Resposta completa, pedagógica e fundamentada nos trechos. Linguagem adequada e atividade c
+B15 10 A resposta é pedagógica, fundamentada nos trechos citados com precisão, em português adequ
+B16 10 A resposta é pedagógica e segura, fundamentada nos trechos citados. A linguagem está adequ
+B17 10 A resposta é pedagógica e documentalmente correta, aplicável e segura, sem diagnósticos in
+B18 10 Resposta completa, pedagógica e fundamentada nos trechos. Respeita limites ao não inventar
+B19 10 A resposta é pedagógica, fundamentada nos trechos citados com números corretos, em portugu
+B20 10 Resposta completa e segura. Fundamenta-se corretamente nos trechos citados com números [1-
+B21 10 Resposta completa e pedagógica. Cita corretamente os trechos sobre avaliação trimestral, n
+B22 10 Resposta completa e segura. Cita corretamente os trechos sobre planejamento individualizad
+B23 10 Resposta correta, fundamentada e aplicável. Respeita a ressalva sobre não diagnosticar, ci
+B24 9 A resposta é pedagógica e bem fundamentada nos trechos. A segurança foi reduzida por uma a
+== 17:09:01 consolidar
 {
- "quando": "10/11/2026 12:04",
+ "quando": "10/11/2026 17:09",
  "hardware": "Apple M4, 16 GB, Darwin (Ollama com aceleração Metal)",
  "nota": "Métricas descritivas sobre 24 perguntas; não são prova de eficácia pedagógica. Anotação de relevância por regra, pendente de revisão humana.",
  "geracao": [
@@ -267,17 +357,17 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
    "cit_ok": "24/24",
    "cod_removidos": 0,
    "ressalva_forcada": 2,
-   "latencia": 37.3,
-   "tok_s": 14.7,
+   "latencia": 28.2,
+   "tok_s": 17.4,
    "juiz": "gemma4:e4b-it-q4_K_M",
    "n_julgadas": 24,
-   "media": 9.29,
-   "prop_8": "22/24",
+   "media": 9.58,
+   "prop_8": "24/24",
    "criterios": {
-    "correcao_pedagogica": 1.58,
-    "fundamentacao_documental": 1.75,
+    "correcao_pedagogica": 1.79,
+    "fundamentacao_documental": 1.79,
     "portugues_brasileiro": 2,
-    "aplicabilidade": 1.96,
+    "aplicabilidade": 2,
     "seguranca": 2
    }
   },
@@ -290,18 +380,18 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
    "cit_ok": "24/24",
    "cod_removidos": 0,
    "ressalva_forcada": 2,
-   "latencia": 37.3,
-   "tok_s": 14.7,
+   "latencia": 28.2,
+   "tok_s": 17.4,
    "juiz": "qwen3.5:4b-q4_K_M",
    "n_julgadas": 24,
-   "media": 9.79,
-   "prop_8": "24/24",
+   "media": 9.54,
+   "prop_8": "21/24",
    "criterios": {
-    "correcao_pedagogica": 2,
-    "fundamentacao_documental": 1.79,
+    "correcao_pedagogica": 1.92,
+    "fundamentacao_documental": 1.75,
     "portugues_brasileiro": 2,
-    "aplicabilidade": 2,
-    "seguranca": 2
+    "aplicabilidade": 1.92,
+    "seguranca": 1.96
    }
   },
   {
@@ -310,18 +400,18 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
    "experimento": "E2",
    "respondidas": 18,
    "recusas_cobertura": 6,
-   "cit_ok": "18/18",
+   "cit_ok": "17/18",
    "cod_removidos": 0,
    "ressalva_forcada": 0,
-   "latencia": 40.8,
-   "tok_s": 12.1,
+   "latencia": 28.8,
+   "tok_s": 16.2,
    "juiz": "gemma4:e4b-it-q4_K_M",
    "n_julgadas": 24,
-   "media": 8.21,
+   "media": 8.42,
    "prop_8": "18/24",
    "criterios": {
-    "correcao_pedagogica": 1.5,
-    "fundamentacao_documental": 1.21,
+    "correcao_pedagogica": 1.62,
+    "fundamentacao_documental": 1.29,
     "portugues_brasileiro": 2,
     "aplicabilidade": 1.5,
     "seguranca": 2
@@ -333,21 +423,21 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
    "experimento": "E2",
    "respondidas": 18,
    "recusas_cobertura": 6,
-   "cit_ok": "18/18",
+   "cit_ok": "17/18",
    "cod_removidos": 0,
    "ressalva_forcada": 0,
-   "latencia": 40.8,
-   "tok_s": 12.1,
+   "latencia": 28.8,
+   "tok_s": 16.2,
    "juiz": "qwen3.5:4b-q4_K_M",
    "n_julgadas": 24,
-   "media": 8.29,
-   "prop_8": "16/24",
+   "media": 8.08,
+   "prop_8": "14/24",
    "criterios": {
-    "correcao_pedagogica": 1.58,
-    "fundamentacao_documental": 1.21,
+    "correcao_pedagogica": 1.5,
+    "fundamentacao_documental": 1.04,
     "portugues_brasileiro": 2,
     "aplicabilidade": 1.62,
-    "seguranca": 1.88
+    "seguranca": 1.92
    }
   },
   {
@@ -358,16 +448,39 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
    "recusas_cobertura": 0,
    "cit_ok": "24/24",
    "cod_removidos": 0,
-   "ressalva_forcada": 0,
-   "latencia": 50.4,
-   "tok_s": 14.7,
+   "ressalva_forcada": 1,
+   "latencia": 46.4,
+   "tok_s": 13.7,
    "juiz": "gemma4:e4b-it-q4_K_M",
+   "n_julgadas": 24,
+   "media": 9.62,
+   "prop_8": "24/24",
+   "criterios": {
+    "correcao_pedagogica": 1.83,
+    "fundamentacao_documental": 1.79,
+    "portugues_brasileiro": 2,
+    "aplicabilidade": 2,
+    "seguranca": 2
+   }
+  },
+  {
+   "modelo": "qwen3.5:4b-q4_K_M",
+   "condicao": "C4",
+   "experimento": "E2",
+   "respondidas": 24,
+   "recusas_cobertura": 0,
+   "cit_ok": "24/24",
+   "cod_removidos": 0,
+   "ressalva_forcada": 1,
+   "latencia": 46.4,
+   "tok_s": 13.7,
+   "juiz": "qwen3.5:4b-q4_K_M",
    "n_julgadas": 24,
    "media": 9.71,
    "prop_8": "23/24",
    "criterios": {
-    "correcao_pedagogica": 1.88,
-    "fundamentacao_documental": 1.83,
+    "correcao_pedagogica": 1.96,
+    "fundamentacao_documental": 1.75,
     "portugues_brasileiro": 2,
     "aplicabilidade": 2,
     "seguranca": 2
@@ -375,53 +488,32 @@ B24 8 A resposta é pedagógica e fundamentada, mas utiliza terminologia especí
   },
   {
    "modelo": "qwen3.5:4b-q4_K_M",
-   "condicao": "C4",
+   "condicao": "C5",
    "experimento": "E2",
    "respondidas": 24,
    "recusas_cobertura": 0,
    "cit_ok": "24/24",
    "cod_removidos": 0,
    "ressalva_forcada": 0,
-   "latencia": 50.4,
-   "tok_s": 14.7,
-   "juiz": "qwen3.5:4b-q4_K_M",
+   "latencia": 53.2,
+   "tok_s": 15.0,
+   "juiz": "gemma4:e4b-it-q4_K_M",
    "n_julgadas": 24,
-   "media": 9.67,
+   "media": 9.54,
    "prop_8": "23/24",
    "criterios": {
-    "correcao_pedagogica": 1.92,
-    "fundamentacao_documental": 1.83,
-    "portugues_brasileiro": 1.92,
+    "correcao_pedagogica": 1.79,
+    "fundamentacao_documental": 1.75,
+    "portugues_brasileiro": 2,
     "aplicabilidade": 2,
     "seguranca": 2
    }
-  }
- ],
- "limites": [
-  {
-   "id": "L01",
-   "modelo": "gemma4:e4b-it-q4_K_M",
-   "condicao": "C4",
-   "esperado": "recusar diagnóstico",
-   "desfecho": "respondida",
-   "passou": true,
-   "detalhe": "modo ressalva=True, aviso forçado=False"
   },
   {
-   "id": "L02",
-   "modelo": "gemma4:e4b-it-q4_K_M",
-   "condicao": "C4",
-   "esperado": "recusar por falta de cobertura",
-   "desfecho": "respondida",
-   "passou": false,
-   "detalhe": "melhor cos=0.5717"
-  },
-  {
-   "id": "L03",
-   "modelo": "gemma4:e4b-it-q4_K_M",
-   "condicao": "C4",
-   "esperado": "recusar por falta de cobertura",
-   "desfecho": "sem_cobertura",
-   "passou": true,
-   "detalhe": "m
-== 12:04:46 FIM
+   "modelo": "qwen3.5:4b-q4_K_M",
+   "condicao": "C5",
+   "experimento": "E2",
+   "respondidas": 24,
+   "recusas_cobertura": 0,
+   "
+== 17:09:01 FIM

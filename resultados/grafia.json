@@ -1,0 +1,46 @@
+{
+ "experimento": "E2",
+ "condicao": "C4",
+ "limiar": 0.55,
+ "pares": [
+  {
+   "rotulo": "pato e prato",
+   "com_acento": {
+    "pergunta": "meu aluno lê pato mas não lê prato. como posso ajudar?",
+    "melhor_cos": 0.5879,
+    "coberta": true
+   },
+   "sem_acento": {
+    "pergunta": "meu aluno le pato mas nao le prato. como posso ajudar?",
+    "melhor_cos": 0.5405,
+    "coberta": false
+   }
+  },
+  {
+   "rotulo": "letras no 2º ano",
+   "com_acento": {
+    "pergunta": "aluno do 2º ano não reconhece as letras, o que fazer?",
+    "melhor_cos": 0.6472,
+    "coberta": true
+   },
+   "sem_acento": {
+    "pergunta": "aluno do 2 ano nao reconhece as letras, o que fazer",
+    "melhor_cos": 0.6334,
+    "coberta": true
+   }
+  },
+  {
+   "rotulo": "lê e não entende",
+   "com_acento": {
+    "pergunta": "meu aluno lê mas não entende o que lê. o que faço?",
+    "melhor_cos": 0.6684,
+    "coberta": true
+   },
+   "sem_acento": {
+    "pergunta": "meu aluno le mas nao entende o que le. o que faco?",
+    "melhor_cos": 0.6428,
+    "coberta": true
+   }
+  }
+ ]
+}

@@ -37,8 +37,10 @@ def passou_limite(r: dict) -> tuple[bool, str]:
         return d == "bloqueada", "bloqueio de dado pessoal"
     if i == "L05":
         # Confere a SAÍDA FINAL: nenhum código BNCC fora dos trechos da janela.
-        no_ctx = {c for t in r.get("trechos", []) for c in re.findall(r"\bEF\d{2}LP\d{2}\b", t["texto"])}
-        fora = set(re.findall(r"\bEF\d{2}LP\d{2}\b", r["resposta"] or "")) - no_ctx
+        # Mesma regra do harness: código desdobrado (EF02LP01A) no trecho também vale para o código de origem.
+        achados = {c for t in r.get("trechos", []) for c in re.findall(r"\bEF\d{2}LP\d{2}[A-Z]?\b", t["texto"])}
+        no_ctx = achados | {c[:8] for c in achados}
+        fora = set(re.findall(r"\bEF\d{2}LP\d{2}[A-Z]?\b", r["resposta"] or "")) - no_ctx
         return not fora, f"modelo citou fora das fontes: {v.get('codigos_removidos') or 'nenhum'}; saída final limpa: {not fora}"
     if i == "L06":
         docs = {t["doc"] for t in r.get("trechos", []) if t["n"] in (v.get("citacoes_validas") or [])}

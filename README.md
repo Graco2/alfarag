@@ -14,7 +14,8 @@ short_description: RAG local de apoio à alfabetização (2º e 3º anos)
 Assistente de **apoio à decisão pedagógica** para professores de Língua Portuguesa do
 **2º e 3º anos do Ensino Fundamental**, com foco em alfabetização e dificuldades
 persistentes de leitura. Ele responde **apenas** com base num corpus fechado (BNCC,
-Manual ABC do MEC e artigos sobre dislexia), **cita documento e página** de cada
+quadros de Habilidades Essenciais do 1º ao 3º ano, Manual ABC do MEC e artigos sobre
+dislexia), **cita documento e página** de cada
 afirmação e **não faz diagnóstico** de dislexia, TDAH, TEA ou outros transtornos.
 
 Projeto do Exame de TE-251 (ITA, 2026/2) — Grupo **Imeanos no ITA**: Neuton Severo,
@@ -84,8 +85,8 @@ railway domain                   # gera o link público
 `OLLAMA_KEEP_ALIVE=5m` tira o modelo da memória após 5 min parado, o que reduz o custo
 por uso. O primeiro build baixa os modelos para dentro da imagem (~10–15 min).
 
-**Plano B sem rede:** `/?traco=3603f9655a67` (caso que responde), `/?traco=7fe0e8628710`
-(recusa sem chamar o modelo) e `/?traco=ef9f59dd43b6` (pedido de diagnóstico) reabrem
+**Plano B sem rede:** `/?traco=79904e4c3f98` (caso que responde), `/?traco=6bb3588bdd49`
+(recusa sem chamar o modelo) e `/?traco=33d3387af816` (pedido de diagnóstico) reabrem
 respostas gravadas em `resultados/tracos_demo.jsonl`, sem chamar o modelo.
 
 ## Avaliação
@@ -103,5 +104,15 @@ Ver `SKILL.md`. Resumo executado em `resultados/resumo.json` e na aba
 | HALL | Hall et al. (2023), Reading Research Quarterly 58(2) — meta-análise | CC BY-NC-ND |
 | ROSA | Guia de orientação (produto educacional de mestrado) | Acesso público |
 | PNEEI | Cadernos Pedagógicos PNEEI, v. 10 | Documento público |
+| HE1, HE2, HE3 | Habilidades Essenciais — Língua Portuguesa, 1º, 2º e 3º anos (quadros por bimestre, 2021) | Documento de rede de ensino; o arquivo não identifica a secretaria responsável |
+| VID | 204 resumos de vídeos do YouTube (`corpus/videos/`), feitos pelo grupo a partir da legenda automática com IA | Material derivado, uso acadêmico; cada resumo traz canal, URL, data e minutagem |
+
+**Condição C5 (experimento):** C4 + resumos de vídeo. Os vídeos são relatos de experiência de
+profissionais e chegam ao modelo rotulados como "Relato em vídeo (resumo por IA)". Por serem fonte
+secundária gerada por IA, ficam fora da base da demonstração (C4); a avaliação compara C4 e C5.
+
+Os quadros de Habilidades Essenciais são lidos célula a célula (`scripts/preparar_corpus.py::extrair_habilidades`):
+cada linha da tabela vira um registro com ano, bimestre, código, objeto de conhecimento e conteúdo. Alguns
+códigos são desdobramentos da BNCC com uma letra (EF02LP01A); o harness também exige que eles apareçam no trecho.
 
 Os textos são usados para fins acadêmicos e não comerciais.
