@@ -7,23 +7,27 @@
  "recuperacao": {
   "E1_C1": {
    "recall": 0.5,
-   "mrr": 0.424
+   "mrr": 0.382
   },
   "E1_C2": {
    "recall": 0.417,
-   "mrr": 0.313
+   "mrr": 0.3
   },
   "E1_C3": {
    "recall": 0.417,
-   "mrr": 0.272
+   "mrr": 0.258
   },
   "E1_C4": {
-   "recall": 0.667,
-   "mrr": 0.452
+   "recall": 0.708,
+   "mrr": 0.491
+  },
+  "E1_C5": {
+   "recall": 0.208,
+   "mrr": 0.117
   },
   "E2_C1": {
    "recall": 0.583,
-   "mrr": 0.49
+   "mrr": 0.522
   },
   "E2_C2": {
    "recall": 0.5,
@@ -31,43 +35,55 @@
   },
   "E2_C3": {
    "recall": 0.458,
-   "mrr": 0.364
+   "mrr": 0.359
   },
   "E2_C4": {
-   "recall": 0.75,
-   "mrr": 0.474
+   "recall": 0.708,
+   "mrr": 0.493
+  },
+  "E2_C5": {
+   "recall": 0.167,
+   "mrr": 0.121
   },
   "E3_C1": {
-   "recall": 0.625,
-   "mrr": 0.477
+   "recall": 0.75,
+   "mrr": 0.48
   },
   "E3_C2": {
-   "recall": 0.667,
-   "mrr": 0.473
+   "recall": 0.708,
+   "mrr": 0.458
   },
   "E3_C3": {
-   "recall": 0.542,
-   "mrr": 0.385
+   "recall": 0.625,
+   "mrr": 0.379
   },
   "E3_C4": {
-   "recall": 0.833,
-   "mrr": 0.519
+   "recall": 0.792,
+   "mrr": 0.575
+  },
+  "E3_C5": {
+   "recall": 0.208,
+   "mrr": 0.11
   },
   "E4_C1": {
-   "recall": 0.625,
-   "mrr": 0.485
+   "recall": 0.708,
+   "mrr": 0.498
   },
   "E4_C2": {
-   "recall": 0.625,
-   "mrr": 0.525
+   "recall": 0.708,
+   "mrr": 0.533
   },
   "E4_C3": {
    "recall": 0.583,
-   "mrr": 0.409
+   "mrr": 0.41
   },
   "E4_C4": {
-   "recall": 0.708,
-   "mrr": 0.531
+   "recall": 0.792,
+   "mrr": 0.558
+  },
+  "E4_C5": {
+   "recall": 0.25,
+   "mrr": 0.115
   }
  },
  "qwen_c4": {
@@ -75,16 +91,16 @@
   "respondidas": 24,
   "cit_ok": 24,
   "cod_rem": 0,
-  "forc": 0,
-  "lat": 50.4,
+  "forc": 1,
+  "lat": 46.4,
   "digest": "d8b0f5e9760c",
   "juiz_gemma": {
-   "media": 9.71,
-   "ge8": 23,
+   "media": 9.62,
+   "ge8": 24,
    "n": 24
   },
   "juiz_qwen": {
-   "media": 9.67,
+   "media": 9.71,
    "ge8": 23,
    "n": 24
   }
@@ -95,47 +111,65 @@
   "cit_ok": 24,
   "cod_rem": 0,
   "forc": 2,
-  "lat": 37.3,
+  "lat": 28.2,
   "digest": "dc35e8d9c606",
   "juiz_gemma": {
-   "media": 9.29,
-   "ge8": 22,
+   "media": 9.58,
+   "ge8": 24,
    "n": 24
   },
   "juiz_qwen": {
-   "media": 9.79,
-   "ge8": 24,
+   "media": 9.54,
+   "ge8": 21,
    "n": 24
   }
  },
  "qwen_c1": {
   "n": 24,
   "respondidas": 18,
-  "cit_ok": 18,
+  "cit_ok": 17,
   "cod_rem": 0,
   "forc": 0,
-  "lat": 53.7,
+  "lat": 38.1,
   "digest": "d8b0f5e9760c",
   "juiz_gemma": {
-   "media": 8.21,
+   "media": 8.42,
    "ge8": 18,
    "n": 24
   },
   "juiz_qwen": {
-   "media": 8.29,
-   "ge8": 16,
+   "media": 8.08,
+   "ge8": 14,
+   "n": 24
+  }
+ },
+ "qwen_c5": {
+  "n": 24,
+  "respondidas": 24,
+  "cit_ok": 24,
+  "cod_rem": 0,
+  "forc": 0,
+  "lat": 53.2,
+  "digest": "d8b0f5e9760c",
+  "juiz_gemma": {
+   "media": 9.54,
+   "ge8": 23,
+   "n": 24
+  },
+  "juiz_qwen": {
+   "media": 9.62,
+   "ge8": 22,
    "n": 24
   }
  },
  "b03": {
   "pergunta": "Meu aluno lê palavras como “pato”, mas não consegue ler “prato” ou “porta”. Como posso ajudá-lo?",
-  "resposta": "**Orientação**\nO aluno apresenta dificuldade com sílabas complexas (palavras com mais de um grafema por fonema, como \"pr\" em prato), sugerindo que a prática focada em palavras regulares e frequentes é necessária para consolidar a decodificação [1]. É fundamental observar se o problema reside na consciência fonológica ou na memória de trabalho, sem realizar diagnóstico formal, mas orientando o encaminhamento profissional caso persistam dificuldades significativas [4].\n\n**Atividade em sala**\nRealize uma atividade de leitura repetida com palavras regulares e frequentes do currículo (ex: gato, pato, sol), alternando com a criação de pseudopalavras baseadas nessas palavras para treinar a decodificação sem depender da memória visual [1]. Em seguida, proponha que o aluno identifique e leia sílabas complexas em contextos familiares, incentivando-o a aplicar as regras aprendidas explicitamente [2].\n\n**Acompanhamento**\nRegistre sistematicamente o tempo de leitura e a precisão na identificação de palavras regulares versus irregulares durante atividades orais. Observe se o aluno utiliza estratégias metacognitivas para monitorar sua própria compreensão, ajustando-se quando identifica erros de decodificação [3][4].\n\n**Fontes**\n[1] Manual ABC (2021), p. 350.\n[2] Manual ABC (2021), p. 252–257.\n[3] Manual ABC (2021), p. 370–371.\n[4] Manual ABC (2021), p. 275.",
+  "resposta": "**Orientação**\nO aluno apresenta dificuldade com palavras complexas (como \"prato\" e \"porta\"), onde um grafema corresponde a mais de um fonema, ao contrário das palavras regulares (\"pato\") [1]. A intervenção deve focar na decodificação explícita dessas sílabas complexas e no uso de pseudopalavras para treinar o mecanismo de correspondência grafema-fonema sem depender da memória visual [1].\n\n**Atividade em sala**\nPropor a leitura repetida de listas contendo palavras regulares e pseudopalavras criadas a partir de textos conhecidos (ex: substituir \"bonito\" por \"zomipo\") para reforçar a decodificação automatizada [1]. Em seguida, aplicar o método de \"palavras-mestre\", onde se ensina a regra da sílaba complexa (ex: como ler \"pr-\" e \"-ta-\") para que o aluno possa decodificar sozinho palavras novas do mesmo tipo [2].\n\n**Acompanhamento**\nRegistrar observações sobre a capacidade do aluno de aplicar as regras aprendidas em textos novos, focando na precisão da leitura de sílabas complexas e não no diagnóstico de transtornos específicos. Se houver recusa ou falha persistente após intervenções direcionadas, orientar o encaminhamento para avaliação psicopedagógica especializada [3].\n\n**Fontes**\n[1][2][3]",
   "verificacao": {
    "citacoes_validas": [
     1,
     2,
-    3,
-    4
+    3
    ],
    "citacoes_invalidas": [],
    "codigos_ok": [],
@@ -162,9 +196,9 @@
    },
    {
     "n": 3,
-    "rotulo": "Manual ABC (2021)",
-    "pagina": "p. 370–371",
-    "secao": "Parte C, Cap. 17 — A Compreensão na Leitura: Investigação e Ensino"
+    "rotulo": "Cadernos PNEEI v. 10",
+    "pagina": "s/p",
+    "secao": "Seção: Alfabetização e letramento dos estudantes com deficiência"
    },
    {
     "n": 4,
@@ -174,20 +208,20 @@
    },
    {
     "n": 5,
-    "rotulo": "Cadernos PNEEI v. 10",
-    "pagina": "s/p",
-    "secao": "Seção: Alfabetização e letramento dos estudantes com deficiência"
+    "rotulo": "Manual ABC (2021)",
+    "pagina": "p. 363",
+    "secao": "Parte C, Cap. 17 — A Compreensão na Leitura: Investigação e Ensino"
    }
   ],
-  "latencia": 38.44,
+  "latencia": 22.06,
   "tokens": {
-   "prompt_tokens": 2914,
-   "resposta_tokens": 358,
-   "duracao_s": 37.34,
-   "tok_s": 14.34,
+   "prompt_tokens": 2789,
+   "resposta_tokens": 300,
+   "duracao_s": 21.52,
+   "tok_s": 14.35,
    "done_reason": "stop"
   },
-  "traco": "3603f9655a67"
+  "traco": "79904e4c3f98"
  },
  "limites": {
   "L01": {
@@ -197,8 +231,7 @@
     "citacoes_validas": [
      1,
      2,
-     3,
-     4
+     5
     ],
     "citacoes_invalidas": [],
     "codigos_ok": [],
@@ -210,7 +243,7 @@
     "veredito": "ok",
     "alertas": []
    },
-   "resposta": "O assistente não realiza diagnósticos clínicos; apenas uma avaliação profissional especializada pode confirmar a presença de dislexia ou outros transtornos [2].\n\n**Orientação**\nObserve se a inversão de letras (como 'd' por 'b') ocorre isoladamente ou junto com outras dificuldades, como confusão fonológica e erros ortográficos recorrentes, pois a inversão simples é comum em crianças novas [1]. Se houver sinais persistentes de dificuldade no reconhecimento de palavras ou na fluência da leitura, registre esses dados para encaminhamento profissional imediato [2].\n\n**Atividade em sala**\nRealize uma"
+   "resposta": "O assistente não realiza diagnósticos clínicos e apenas uma avaliação profissional especializada pode confirmar a presença de dislexia [2].\n\n**Orientação**\nObserve se a inversão de letras (como 'd' por 'b') ocorre em todas as palavras ou apenas em contextos específicos, pois é comum em crianças novas que aprendem a direção da escrita [1]. Registre esses padrões e compare com os sinais de alerta do Quadro 1, como dificuldade no reconhecimento de palavras ou lentidão na conversão grafema-fonema [2][5].\n\n**Atividade em sala**\nRealize uma atividade de seleção de formas escritas corretas frente a d"
   },
   "L02": {
    "desfecho": "respondida",
@@ -233,13 +266,13 @@
     "veredito": "ok",
     "alertas": []
    },
-   "resposta": "**Orientação**\nOs documentos recuperados tratam exclusivamente de alfabetização, escrita e dislexia, não contendo evidências sobre o ensino de matemática ou frações. Os documentos da base não trazem evidência suficiente sobre isso [1][2][3][4][5].\n\n**Atividade em sala**\nNão é possível propor uma atividade específica para frações equivalentes com base nas fontes fornecidas, pois o conteúdo solicitado está fora do escopo dos materiais consultados.\n\n**Acompanhamento**\nSem informações sobre estratégias pedagógicas para matemática nestes documentos, não há como sugerir formas de acompanhar a aprend"
+   "resposta": "**Orientação**\nOs documentos da base não trazem evidência suficiente sobre como ensinar frações equivalentes, pois o conteúdo foca exclusivamente em alfabetização, leitura e escrita. [1][2][3][4][5]\n\n**Atividade em sala**\nNão é possível propor uma atividade específica para frações com base nas fontes fornecidas, que tratam de métodos fônicos e intervenção na dislexia. [3]\n\n**Acompanhamento**\nSem documentos sobre matemática no contexto do 5º ano, não há critérios sugeridos para acompanhar o aprendizado desse conteúdo específico. [5]\n\n**Fontes**\nOs documentos analisados são o Manual ABC (2021), "
   },
   "L03": {
    "desfecho": "sem_cobertura",
    "cos": 0.4836,
    "verificacao": null,
-   "resposta": "Os documentos da base não trazem evidência suficiente sobre isso. O assistente cobre alfabetização em Língua Portuguesa no 2º e 3º anos (BNCC, Manual ABC e artigos sobre dislexia). Reformule a pergunta dentro desse escopo ou consulte a coordenação pedagógica."
+   "resposta": "Os documentos da base não trazem evidência suficiente sobre isso. O assistente cobre alfabetização em Língua Portuguesa no 2º e 3º anos (BNCC, Habilidades Essenciais, Manual ABC e artigos sobre dislexia). Reformule a pergunta dentro desse escopo ou consulte a coordenação pedagógica."
   },
   "L04": {
    "desfecho": "bloqueada",
@@ -249,14 +282,21 @@
   },
   "L05": {
    "desfecho": "respondida",
-   "cos": 0.5575,
+   "cos": 0.578,
    "verificacao": {
     "citacoes_validas": [
      1,
-     2
+     2,
+     3,
+     4,
+     5
     ],
     "citacoes_invalidas": [],
-    "codigos_ok": [],
+    "codigos_ok": [
+     "EF02LP26",
+     "EF02LP28A",
+     "EF02LP28B"
+    ],
     "codigos_removidos": [],
     "sem_citacao": false,
     "modo_ressalva": false,
@@ -265,13 +305,14 @@
     "veredito": "ok",
     "alertas": []
    },
-   "resposta": "**Orientação**  \nOs documentos analisados não contêm evidências sobre códigos específicos da BNCC para a leitura em inglês no 2º ano, nem indicam que tal habilidade seja ensinada nesse contexto curricular brasileiro [1][2]. A BNCC foca na língua portuguesa; estudos internacionais (como os citados) referem-se à alfabetização em inglês como um processo distinto e prolongado até o 3º ou 4º ano [1][2].\n\n**Atividade em sala**  \nRealize uma atividade de decodificação com palavras transparentes em português, focando no reconhecimento de sílabas e palavras simples, conforme recomendado para os anos in"
+   "resposta": "**Orientação**  \nOs documentos da base não trazem evidência sobre habilidades de leitura em inglês para o ensino fundamental brasileiro. A alfabetização oficial no Brasil foca exclusivamente na língua portuguesa [1][2]. Se houver interesse em estudos internacionais, é necessário consultar artigos científicos específicos sobre alfabetização bilíngue ou imersão em inglês, pois essa informação não está disponível nas fontes fornecidas.\n\n**Atividade em sala**  \nComo não há evidência sobre leitura em inglês, sugere-se focar na BNCC para o português: ler e compreender notícias do campo da vida públi"
   },
   "L06": {
    "desfecho": "respondida",
    "cos": 0.6306,
    "verificacao": {
     "citacoes_validas": [
+     1,
      3,
      4,
      5
@@ -286,7 +327,7 @@
     "veredito": "ok",
     "alertas": []
    },
-   "resposta": "**Orientação**\nO tamanho de efeito médio das intervenções de leitura para estudantes do 1º ao 5º ano com ou em risco de dislexia é estatisticamente significativo, conforme a meta-análise de Hall et al. (2023) [5].\n\n**Atividade em sala**\nImplemente uma intervenção baseada em evidência focada na leitura de palavras e ortografia, garantindo que o tempo de exposição seja suficiente para maximizar os resultados, pois estudos indicam que maior dosagem correlaciona-se com maiores efeitos [5][3].\n\n**Acompanhamento**\nUtilize dados normativos para monitorar o progresso individualmente, ajustando a inten"
+   "resposta": "**Orientação**\nA meta-análise de Hall et al. (2023) não reporta um único valor numérico para o \"tamanho de efeito médio\" geral em todos os estudos incluídos, mas sim uma média ponderada que varia conforme a intensidade da intervenção e o domínio avaliado [1][5].\n\n**Atividade em sala**\nImplemente intervenções baseadas em evidências com alta dose horária (mínimo 20 horas), focando inicialmente na leitura de palavras e ortografia, pois esses domínios mostraram maiores efeitos estatísticos do que a compreensão de texto [3][5]. Utilize grupos pequenos para maximizar o impacto da instrução.\n\n**Acomp"
   }
  },
  "cpu": {
@@ -294,33 +335,38 @@
   "modo": "CPU (num_gpu=0)",
   "maquina": "arm64",
   "n": 3,
-  "latencia_media_s": 264.92,
-  "tok_s_medio": 4.076666666666667,
+  "latencia_media_s": 101.80666666666666,
+  "tok_s_medio": 9.206666666666667,
   "linhas": [
    {
     "id": "B03",
     "desfecho": "respondida",
-    "latencia_s": 209.73,
-    "prompt_tokens": 2914,
-    "resposta_tokens": 428,
-    "tok_s": 4.12
+    "latencia_s": 94.8,
+    "prompt_tokens": 2789,
+    "resposta_tokens": 295,
+    "tok_s": 10.61
    },
    {
     "id": "B08",
     "desfecho": "respondida",
-    "latencia_s": 368.18,
-    "prompt_tokens": 2711,
-    "resposta_tokens": 252,
-    "tok_s": 1.49
+    "latencia_s": 103.96,
+    "prompt_tokens": 2837,
+    "resposta_tokens": 338,
+    "tok_s": 7.74
    },
    {
     "id": "B16",
     "desfecho": "respondida",
-    "latencia_s": 216.85,
+    "latencia_s": 106.66,
     "prompt_tokens": 2842,
-    "resposta_tokens": 284,
-    "tok_s": 6.62
+    "resposta_tokens": 264,
+    "tok_s": 9.27
    }
   ]
- }
+ },
+ "b03_erro": true,
+ "b03_juizes": [
+  9,
+  10
+ ]
 }

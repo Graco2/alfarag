@@ -3,32 +3,32 @@
  "modo": "CPU (num_gpu=0)",
  "maquina": "arm64",
  "n": 3,
- "latencia_media_s": 264.92,
- "tok_s_medio": 4.076666666666667,
+ "latencia_media_s": 101.80666666666666,
+ "tok_s_medio": 9.206666666666667,
  "linhas": [
   {
    "id": "B03",
    "desfecho": "respondida",
-   "latencia_s": 209.73,
-   "prompt_tokens": 2914,
-   "resposta_tokens": 428,
-   "tok_s": 4.12
+   "latencia_s": 94.8,
+   "prompt_tokens": 2789,
+   "resposta_tokens": 295,
+   "tok_s": 10.61
   },
   {
    "id": "B08",
    "desfecho": "respondida",
-   "latencia_s": 368.18,
-   "prompt_tokens": 2711,
-   "resposta_tokens": 252,
-   "tok_s": 1.49
+   "latencia_s": 103.96,
+   "prompt_tokens": 2837,
+   "resposta_tokens": 338,
+   "tok_s": 7.74
   },
   {
    "id": "B16",
    "desfecho": "respondida",
-   "latencia_s": 216.85,
+   "latencia_s": 106.66,
    "prompt_tokens": 2842,
-   "resposta_tokens": 284,
-   "tok_s": 6.62
+   "resposta_tokens": 264,
+   "tok_s": 9.27
   }
  ]
 }

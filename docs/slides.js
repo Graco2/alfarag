@@ -14,17 +14,19 @@ const SAIDA = process.argv[2];
 const { applyTheme } = require(process.argv[3]);
 
 const THEME = {
-  name: "AlfaRAG Brasa",
+  name: "AlfaRAG Ardósia",
   headFontFace: "Cambria",
   bodyFontFace: "Calibri",
   colors: {
-    dk1: "1A1310", lt1: "FFFFFF", dk2: "58514A", lt2: "FFF6EA",
-    accent1: "E86600", accent2: "A2370F", accent3: "007B53", accent4: "B3261E", accent5: "2C4AA8", accent6: "B08400",
-    hlink: "A2370F", folHlink: "7F2B10",
+    dk1: "0F172A", lt1: "FFFFFF", dk2: "475569", lt2: "F1F5F9",
+    accent1: "2563EB", accent2: "1E3A8A", accent3: "0F766E", accent4: "B91C1C", accent5: "4F46E5", accent6: "A16207",
+    hlink: "1D4ED8", folHlink: "1E3A8A",
   },
 };
-const HEX = { tinta: "1A1310", cinza: "58514A", cinza2: "716B63", borda: "EBE6E2", laranja: "E86600", laranjaSoft: "FFEBD4",
-  verde: "007B53", verdeSoft: "DDF5EA", vermelho: "B3261E", vermelhoSoft: "FDE2DF", azul: "2C4AA8", azulSoft: "EAF0FF", creme: "FFF6EA" };
+// Paleta fria, a mesma do app (web/styles.css): ardósia + azul.
+const HEX = { tinta: "0F172A", cinza: "475569", cinza2: "64748B", borda: "E2E8F0", marca: "2563EB", marcaSoft: "DCE6FD",
+  verde: "0F766E", verdeSoft: "E7F6F3", vermelho: "B91C1C", vermelhoSoft: "FEF2F2", azul: "4F46E5", azulSoft: "EEF0FF", suave: "EEF3FF",
+  alerta: "A16207", alertaSoft: "FEF8E7", claro: "CBD5E1", claro2: "94A3B8", marca2: "93C5FD" };
 
 const br = (x, c = 2) => (x == null ? "–" : Number(x).toFixed(c).replace(".", ","));
 
@@ -47,7 +49,7 @@ async function icone(nome, cor) {
     background: { color: HEX.tinta },
     objects: [
       { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 1.05, w: 6.6, h: 1.5, fontSize: 36, bold: true, color: "FFFFFF", fontFace: "Cambria", valign: "bottom", align: "left", margin: 0 }, text: "" } },
-      { placeholder: { options: { name: "body", type: "body", x: 0.6, y: 2.65, w: 6.6, h: 1.1, fontSize: 18, color: "F2D9C2", valign: "top", align: "left", margin: 0 }, text: "" } },
+      { placeholder: { options: { name: "body", type: "body", x: 0.6, y: 2.65, w: 6.6, h: 1.1, fontSize: 18, color: HEX.claro, valign: "top", align: "left", margin: 0 }, text: "" } },
     ],
   });
   pres.defineSlideMaster({
@@ -63,10 +65,10 @@ async function icone(nome, cor) {
 
   const ICON = {};
   for (const [k, n, c] of [
-    ["prompt", "FaPenNib", HEX.laranja], ["contexto", "FaWindowMaximize", HEX.azul], ["rag", "FaBookOpen", HEX.laranja],
+    ["prompt", "FaPenNib", HEX.marca], ["contexto", "FaWindowMaximize", HEX.azul], ["rag", "FaBookOpen", HEX.marca],
     ["aval", "FaScaleBalanced", HEX.verde], ["harness", "FaShieldHalved", HEX.vermelho], ["agents", "FaFileLines", HEX.cinza],
-    ["ok", "FaCircleCheck", HEX.verde], ["stop", "FaBan", HEX.vermelho], ["warn", "FaTriangleExclamation", "B08400"],
-    ["user", "FaChalkboardUser", HEX.laranja], ["cpu", "FaMicrochip", HEX.cinza], ["lock", "FaLock", HEX.vermelho],
+    ["ok", "FaCircleCheck", HEX.verde], ["stop", "FaBan", HEX.vermelho], ["warn", "FaTriangleExclamation", HEX.alerta],
+    ["user", "FaChalkboardUser", HEX.marca], ["cpu", "FaMicrochip", HEX.cinza], ["lock", "FaLock", HEX.vermelho],
     ["robo", "FaRobot", HEX.azul], ["gear", "FaGears", HEX.vermelho], ["log", "FaReceipt", HEX.verde], ["book", "FaBook", "FFFFFF"],
   ]) ICON[k] = await icone(n, c);
 
@@ -79,10 +81,10 @@ async function icone(nome, cor) {
   s.addText("AlfaRAG", { placeholder: "title" });
   s.addText("Assistente RAG local, com citação verificável, para apoio à alfabetização no 2º e 3º anos", { placeholder: "body" });
   txt(s, "Neuton Severo · Beatriz Luberiaga · Murilo Narciso · Priscila · Ricardo Graco de Souza Lima Castellano", { x: 0.6, y: 3.95, w: 6.4, h: 0.5, fontSize: 13, color: "FFFFFF" });
-  txt(s, "Grupo Imeanos no ITA · TE-251 · ITA 2026/2 · github.com/Graco2/alfarag", { x: 0.6, y: 4.5, w: 6.4, h: 0.35, fontSize: 12, color: "D9C7B8" });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.35, y: 1.35, w: 2.1, h: 2.1, rectRadius: 0.35, fill: { color: HEX.laranja }, line: { type: "none" }, objectName: "logo" });
+  txt(s, "Grupo Imeanos no ITA · TE-251 · ITA 2026/2 · github.com/Graco2/alfarag", { x: 0.6, y: 4.5, w: 6.4, h: 0.35, fontSize: 12, color: HEX.claro2 });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.35, y: 1.35, w: 2.1, h: 2.1, rectRadius: 0.35, fill: { color: HEX.marca }, line: { type: "none" }, objectName: "logo" });
   txt(s, "Aa", { x: 7.35, y: 1.35, w: 2.1, h: 2.1, fontSize: 64, bold: true, color: "FFFFFF", align: "center", valign: "middle", fontFace: "Cambria" });
-  txt(s, "Ollama local · Qwen3.5 4B", { x: 7.0, y: 3.6, w: 2.8, h: 0.35, fontSize: 12, color: "D9C7B8", align: "center" });
+  txt(s, "Ollama local · Qwen3.5 4B", { x: 7.0, y: 3.6, w: 2.8, h: 0.35, fontSize: 12, color: HEX.claro2, align: "center" });
   s.addNotes("Abertura (20 s). Somos o grupo Imeanos no ITA. Construímos e executamos o AlfaRAG: um assistente para professoras de alfabetização que responde só com base em documentos oficiais e científicos, cita página e não faz diagnóstico.");
 
   // 2. Problema ------------------------------------------------------------
@@ -93,11 +95,11 @@ async function icone(nome, cor) {
     ["7 de 7", "apontam dificuldade de compreender o que se lê"], ["2 de 7", "não dispõem de apoio regular"]];
   stats.forEach(([n, l], i) => {
     const y = 1.2 + i * 1.22;
-    txt(s, n, { x: 0.5, y, w: 1.75, h: 0.75, fontSize: 36, bold: true, color: HEX.laranja, fontFace: "Cambria", valign: "middle" });
+    txt(s, n, { x: 0.5, y, w: 1.75, h: 0.75, fontSize: 36, bold: true, color: HEX.marca, fontFace: "Cambria", valign: "middle" });
     txt(s, l, { x: 2.3, y: y + 0.05, w: 2.6, h: 0.75, fontSize: 14, color: HEX.tinta, valign: "middle" });
   });
   txt(s, "Consulta exploratória do grupo (n = 7)", { x: 0.5, y: 4.85, w: 4.4, h: 0.3, fontSize: 10, color: HEX.cinza2, italic: true });
-  card(s, 5.25, 1.15, 4.25, 1.75, HEX.creme, "por_que");
+  card(s, 5.25, 1.15, 4.25, 1.75, HEX.suave, "por_que");
   s.addImage({ data: ICON.robo, x: 5.45, y: 1.32, w: 0.34, h: 0.34 });
   txt(s, "Por que um modelo", { x: 5.9, y: 1.3, w: 3.4, h: 0.4, fontSize: 16, bold: true });
   txt(s, [
@@ -128,7 +130,7 @@ async function icone(nome, cor) {
   ];
   linhas3.forEach(([ic, t, d], i) => {
     const y = 1.12 + i * 1.02;
-    s.addShape(pres.shapes.OVAL, { x: 4.6, y: y + 0.05, w: 0.5, h: 0.5, fill: { color: HEX.creme }, line: { type: "none" }, objectName: "ic_" + i });
+    s.addShape(pres.shapes.OVAL, { x: 4.6, y: y + 0.05, w: 0.5, h: 0.5, fill: { color: HEX.suave }, line: { type: "none" }, objectName: "ic_" + i });
     s.addImage({ data: ic, x: 4.71, y: y + 0.16, w: 0.28, h: 0.28 });
     txt(s, t, { x: 5.3, y, w: 4.2, h: 0.32, fontSize: 15, bold: true });
     txt(s, d, { x: 5.3, y: y + 0.33, w: 4.2, h: 0.62, fontSize: 12, color: HEX.cinza });
@@ -141,14 +143,14 @@ async function icone(nome, cor) {
   const tec = [
     [ICON.prompt, "Prompt Engineering", `Prompt de sistema versionado (${D.versao_prompt}): 4 partes e 6 regras — app/prompts.py`],
     [ICON.contexto, "Context Engineering", `Top-5 trechos dentro de ${D.orcamento} tokens; histórico fora; o painel mostra o que ficou de fora`],
-    [ICON.rag, "RAG com citação", "BM25 + embeddings bge-m3, fusão RRF; cada trecho com documento e página impressa"],
+    [ICON.rag, "RAG com citação", "BM25 + bge-m3, fusão RRF; 9 documentos (+ resumos de vídeo no teste C5), com documento e página"],
     [ICON.aval, "RAG com avaliação", "Recall@5 e MRR nas 24 perguntas; outro modelo julga com rubrica 0–10; traço JSONL"],
     [ICON.harness, "Harness", "Regras antes e depois do modelo: bloqueio, recusa, remoção de citação e código, aviso forçado"],
     [ICON.agents, "AGENTS.md + Agent Skill", "Regras para agentes de código e SKILL.md com o procedimento de avaliação"],
   ];
   tec.forEach(([ic, t, d], i) => {
     const x = 0.5 + (i % 3) * 3.05, y = 1.15 + Math.floor(i / 3) * 2.0;
-    card(s, x, y, 2.85, 1.8, i % 2 ? "FFFFFF" : HEX.creme, "tec_" + i);
+    card(s, x, y, 2.85, 1.8, i % 2 ? "FFFFFF" : HEX.suave, "tec_" + i);
     s.addImage({ data: ic, x: x + 0.2, y: y + 0.2, w: 0.38, h: 0.38 });
     txt(s, t, { x: x + 0.7, y: y + 0.18, w: 2.05, h: 0.45, fontSize: 15, bold: true, valign: "middle" });
     txt(s, d, { x: x + 0.2, y: y + 0.75, w: 2.5, h: 0.95, fontSize: 12, color: HEX.cinza });
@@ -194,19 +196,24 @@ async function icone(nome, cor) {
     s.addImage({ path: resp, x: 0.5, y: 1.1, w, h, altText: "Resposta do AlfaRAG à pergunta B03 com citações" });
   }
   const v = D.b03.verificacao;
-  card(s, 5.75, 1.1, 3.75, 4.05, HEX.creme, "b03");
+  card(s, 5.75, 1.1, 3.75, 4.05, HEX.suave, "b03");
   txt(s, "B03 · “lê pato, mas não lê prato”", { x: 5.95, y: 1.25, w: 3.4, h: 0.4, fontSize: 15, bold: true });
   const usados = D.b03.trechos.filter((t) => v.citacoes_validas.includes(t.n));
   txt(s, [
     { text: `${v.citacoes_validas.length} citações conferidas pelo harness`, options: { bullet: true, breakLine: true } },
-    { text: `${v.codigos_removidos.length} código(s) BNCC removido(s)`, options: { bullet: true, breakLine: true } },
+    { text: `${v.codigos_removidos.length} ${v.codigos_removidos.length === 1 ? "código BNCC removido" : "códigos BNCC removidos"}`, options: { bullet: true, breakLine: true } },
     { text: `${D.b03.tokens.prompt_tokens} tokens de entrada, ${D.b03.tokens.resposta_tokens} de saída`, options: { bullet: true, breakLine: true } },
     { text: `${br(D.b03.latencia, 0)} s no M4 · traço ${D.b03.traco || "-"}`, options: { bullet: true } },
   ], { x: 5.95, y: 1.7, w: 3.4, h: 1.35, fontSize: 13, paraSpaceAfter: 3 });
-  txt(s, "Fontes citadas", { x: 5.95, y: 3.1, w: 3.4, h: 0.32, fontSize: 13, bold: true, color: HEX.laranja });
+  txt(s, "Fontes citadas", { x: 5.95, y: 3.1, w: 3.4, h: 0.32, fontSize: 13, bold: true, color: HEX.marca });
   txt(s, usados.slice(0, 4).map((t, i, a) => ({ text: `[${t.n}] ${t.rotulo}, ${t.pagina}`, options: { breakLine: i < a.length - 1 } })),
-    { x: 5.95, y: 3.45, w: 3.4, h: 1.5, fontSize: 12, color: HEX.cinza, paraSpaceAfter: 2 });
-  s.addNotes("Caso que responde (1 min 30). Pergunta real do benchmark: o aluno lê pato mas não lê prato. A resposta vem em quatro partes, cada afirmação com [n]; clicando no número, o app mostra o trecho e a página. O harness conferiu as citações e não precisou remover nada. Se a rede falhar na demo, seguimos com esta captura.");
+    { x: 5.95, y: 3.45, w: 3.4, h: D.b03_erro ? 0.85 : 1.5, fontSize: 12, color: HEX.cinza, paraSpaceAfter: 2 });
+  if (D.b03_erro) {
+    txt(s, "Lendo a resposta", { x: 5.95, y: 4.24, w: 3.4, h: 0.28, fontSize: 12, bold: true, color: HEX.vermelho });
+    txt(s, "“Prato” não tem grafema complexo (duas letras, um só som, como o “lh” de “milho”): no “pr”, as duas letras soam. A fonte existe e o harness aceita.",
+      { x: 5.95, y: 4.5, w: 3.4, h: 0.6, fontSize: 11, color: HEX.tinta });
+  }
+  s.addNotes(`Caso que responde (1 min 30). Pergunta real do benchmark: o aluno lê pato mas não lê prato. A resposta vem em quatro partes, cada afirmação com [n]; clicando no número, o app mostra o trecho e a página. ${v.codigos_removidos.length || (v.citacoes_invalidas || []).length ? "O harness conferiu as citações e removeu o que não constava nas fontes." : "O harness conferiu as citações e não precisou remover nada."}${D.b03_erro ? ` Mas, lendo, a explicação está errada: o trecho [1] do Manual ABC chama de grafema complexo duas letras para um só som, como o “lh” de milho; em “prato” as duas consoantes soam, é encontro consonantal, e “porta” tem sílaba travada. O sistema cumpriu tudo o que verifica e mesmo assim errou o conceito. Na avaliação, a resposta ao B03 tinha o mesmo erro e os juízes deram ${(D.b03_juizes || []).join(" e ")} de 10.` : ""} Se a rede falhar na demo, seguimos com esta captura.`);
 
   // 7. Casos que não fecham ------------------------------------------------
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Execução" });
@@ -215,19 +222,21 @@ async function icone(nome, cor) {
   const cos = (id) => (L[id] && L[id].cos != null ? br(L[id].cos, 3) : "–");
   const l01 = L.L01 || {}, l02 = L.L02 || {}, l05 = L.L05 || {};
   const rem05 = (l05.verificacao && l05.verificacao.codigos_removidos) || [];
+  const cit02 = (l02.verificacao && l02.verificacao.citacoes_validas) || [];
+  const cit02txt = cit02.length ? ` Admite que não há evidência, mas anexa ${cit02.map((n) => "[" + n + "]").join("")}, e o harness aceita.` : " Admite que não há evidência.";
   const casos = [
     [ICON.stop, "Receita de bolo (L03)", `Cosseno ${cos("L03")} < ${br(D.limiar)}: recusa sem chamar o modelo.`, "Sistema"],
     [ICON.lock, "Pergunta com CPF (L04)", `${L.L04 && L.L04.desfecho === "bloqueada" ? "Bloqueada na entrada; nada é recuperado nem enviado." : "Desfecho: " + (L.L04 || {}).desfecho}`, "Sistema"],
     [ICON.harness, "“Ele tem dislexia, sim ou não?” (L01)", `Modo ressalva ligado; ${l01.verificacao && l01.verificacao.ressalva_forcada ? "o modelo não declarou o limite e o sistema inseriu o aviso." : "o modelo declarou que não diagnostica."}`, l01.verificacao && l01.verificacao.ressalva_forcada ? "Sistema" : "Modelo + sistema"],
-    [ICON.warn, "Frações no 5º ano (L02)", l02.desfecho === "sem_cobertura" ? `Cosseno ${cos("L02")}: recusada.` : `Cosseno ${cos("L02")}, acima do limiar: chega ao modelo.${(l02.resposta || "").includes("evidência suficiente") ? " Admite que não há evidência, mas anexa [1]–[5], e o harness aceita." : " A recusa depende do prompt."}`, l02.desfecho === "sem_cobertura" ? "Sistema" : "Modelo"],
+    [ICON.warn, "Frações no 5º ano (L02)", l02.desfecho === "sem_cobertura" ? `Cosseno ${cos("L02")}: recusada.` : `Cosseno ${cos("L02")}, acima do limiar: chega ao modelo.${(l02.resposta || "").includes("evidência suficiente") ? cit02txt : " A recusa depende do prompt."}`, l02.desfecho === "sem_cobertura" ? "Sistema" : "Modelo"],
   ];
   casos.forEach(([ic, t, d, quem], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 1.15 + Math.floor(i / 2) * 1.95;
-    card(s, x, y, 4.4, 1.75, i === 3 ? "FFF2CC" : (i % 3 ? "FFFFFF" : HEX.creme), "caso_" + i);
+    card(s, x, y, 4.4, 1.75, i === 3 ? HEX.alertaSoft : (i % 3 ? "FFFFFF" : HEX.suave), "caso_" + i);
     s.addImage({ data: ic, x: x + 0.2, y: y + 0.22, w: 0.34, h: 0.34 });
     txt(s, t, { x: x + 0.7, y: y + 0.18, w: 3.55, h: 0.45, fontSize: 14, bold: true, valign: "middle" });
     txt(s, d, { x: x + 0.2, y: y + 0.72, w: 4.0, h: 0.68, fontSize: 12, color: HEX.cinza });
-    txt(s, "Quem decidiu: " + quem, { x: x + 0.2, y: y + 1.42, w: 4.0, h: 0.28, fontSize: 11, bold: true, color: quem === "Modelo" ? "8A5A00" : HEX.verde });
+    txt(s, "Quem decidiu: " + quem, { x: x + 0.2, y: y + 1.42, w: 4.0, h: 0.28, fontSize: 11, bold: true, color: quem === "Modelo" ? HEX.alerta : HEX.verde });
   });
   s.addNotes(`Casos que não fecham (1 min 30). Receita de bolo: o sistema recusa sem gastar o modelo. CPF: bloqueado na entrada. Pedido de diagnóstico: modo ressalva. E o caso honesto: frações no 5º ano tem similaridade ${cos("L02")}, acima do limiar, porque o corpus fala de ensino; aí quem segura é o prompt, não o sistema. ${rem05.length ? "No pedido de código BNCC para inglês, o modelo inventou " + rem05.join(", ") + " e o sistema removeu." : ""}`);
 
@@ -236,36 +245,40 @@ async function icone(nome, cor) {
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Resultados" });
   s.addText("Resultados nas 24 perguntas do grupo", { placeholder: "title" });
   const R = D.recuperacao;
+  const conds = ["C1", "C2", "C3", "C4", "C5"].filter((c) => R["E2_" + c]);
+  const rot = { C1: "C1 BNCC", C2: "C2 +Ramli", C3: "C3 +Hall", C4: "C4 completo", C5: "C5 +vídeos" };
   s.addChart(pres.charts.BAR, [
-    { name: "Recall@5", labels: ["C1 BNCC", "C2 +Ramli", "C3 +Hall", "C4 completo"], values: ["C1", "C2", "C3", "C4"].map((c) => R["E2_" + c].recall) },
-    { name: "MRR@10", labels: ["C1 BNCC", "C2 +Ramli", "C3 +Hall", "C4 completo"], values: ["C1", "C2", "C3", "C4"].map((c) => R["E2_" + c].mrr) },
+    { name: "Recall@5", labels: conds.map((c) => rot[c]), values: conds.map((c) => R["E2_" + c].recall) },
+    { name: "MRR@10", labels: conds.map((c) => rot[c]), values: conds.map((c) => R["E2_" + c].mrr) },
   ], {
-    x: 0.5, y: 1.1, w: 4.5, h: 3.9, barDir: "col", barGrouping: "clustered", chartColors: [HEX.laranja, "D9B48F"],
+    x: 0.5, y: 1.1, w: 4.5, h: 3.9, barDir: "col", barGrouping: "clustered", chartColors: [HEX.marca, HEX.marca2],
     showTitle: true, title: "Recuperação (chunks de 512 tokens)", titleFontSize: 13, titleColor: HEX.tinta, titleFontFace: "+mn-lt",
     showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 10, dataLabelFormatCode: "0.00", dataLabelColor: HEX.cinza, dataLabelFontFace: "+mn-lt",
     valAxisMinVal: 0, valAxisMaxVal: 1, valAxisLabelColor: HEX.cinza2, catAxisLabelColor: HEX.cinza, valAxisLabelFontSize: 10, catAxisLabelFontSize: 10,
     catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-lt",
     valGridLine: { color: HEX.borda, size: 0.5 }, catGridLine: { style: "none" }, showLegend: true, legendPos: "b", legendFontSize: 10, legendFontFace: "+mn-lt",
   });
-  const q = D.qwen_c4, g = D.gemma_c4, q1 = D.qwen_c1;
+  const cols = [["Qwen C4", D.qwen_c4], ["Gemma C4", D.gemma_c4], ["Qwen C1", D.qwen_c1]].concat(D.qwen_c5 ? [["Qwen C5", D.qwen_c5]] : []);
   const jm = (e, k) => (e[k] ? br(e[k].media) : "–");
   const j8 = (e, k) => (e[k] ? `${e[k].ge8}/${e[k].n}` : "–");
-  const cab = { bold: true, color: "FFFFFF", fill: { color: HEX.tinta }, fontSize: 11, align: "center" };
-  const cel = (t, o = {}) => ({ text: String(t), options: { fontSize: 11, color: HEX.tinta, align: "center", ...o } });
+  const fs4 = cols.length > 3 ? 10 : 11;
+  const cab = { bold: true, color: "FFFFFF", fill: { color: HEX.tinta }, fontSize: fs4, align: "center" };
+  const cel = (t, o = {}) => ({ text: String(t), options: { fontSize: fs4, color: HEX.tinta, align: "center", ...o } });
+  const linha = (rotulo, f) => [cel(rotulo, { align: "left" })].concat(cols.map(([, e]) => cel(f(e))));
   s.addTable([
-    [{ text: "Geração", options: { ...cab, align: "left" } }, { text: "Qwen C4", options: cab }, { text: "Gemma C4", options: cab }, { text: "Qwen C1", options: cab }],
-    [cel("Nota média (juiz Gemma)", { align: "left" }), cel(jm(q, "juiz_gemma")), cel(jm(g, "juiz_gemma")), cel(jm(q1, "juiz_gemma"))],
-    [cel("Nota média (juiz Qwen)", { align: "left" }), cel(jm(q, "juiz_qwen")), cel(jm(g, "juiz_qwen")), cel(jm(q1, "juiz_qwen"))],
-    [cel("Nota ≥ 8 (juiz Gemma)", { align: "left" }), cel(j8(q, "juiz_gemma")), cel(j8(g, "juiz_gemma")), cel(j8(q1, "juiz_gemma"))],
-    [cel("Respondidas (resto: recusa)", { align: "left" }), cel(`${q.respondidas}/${q.n}`), cel(`${g.respondidas}/${g.n}`), cel(`${q1.respondidas}/${q1.n}`)],
-    [cel("Com citação válida", { align: "left" }), cel(`${q.cit_ok}/${q.respondidas}`), cel(`${g.cit_ok}/${g.respondidas}`), cel(`${q1.cit_ok}/${q1.respondidas}`)],
-    [cel("Códigos BNCC removidos", { align: "left" }), cel(q.cod_rem), cel(g.cod_rem), cel(q1.cod_rem)],
-    [cel("Latência média (s, M4)", { align: "left" }), cel(br(q.lat, 1)), cel(br(g.lat, 1)), cel(br(q1.lat, 1))],
-  ], { x: 5.25, y: 1.15, w: 4.25, colW: [1.9, 0.78, 0.79, 0.78], rowH: 0.38, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
+    [{ text: "Geração", options: { ...cab, align: "left" } }].concat(cols.map(([n]) => ({ text: n, options: cab }))),
+    linha("Nota média (juiz Gemma)", (e) => jm(e, "juiz_gemma")),
+    linha("Nota média (juiz Qwen)", (e) => jm(e, "juiz_qwen")),
+    linha("Nota ≥ 8 (juiz Gemma)", (e) => j8(e, "juiz_gemma")),
+    linha("Respondidas (resto: recusa)", (e) => `${e.respondidas}/${e.n}`),
+    linha("Com citação válida", (e) => `${e.cit_ok}/${e.respondidas}`),
+    linha("Códigos BNCC removidos", (e) => e.cod_rem),
+    linha("Latência média (s, M4)", (e) => br(e.lat, 1)),
+  ], { x: 5.25, y: 1.15, w: 4.25, colW: cols.length > 3 ? [1.53, 0.68, 0.68, 0.68, 0.68] : [1.9, 0.78, 0.79, 0.78], rowH: 0.38, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
   txt(s, "Nota de 0 a 10 dada por outro modelo (rubrica do projeto). Indicador descritivo, não prova de eficácia pedagógica."
     + (D.cpu ? ` Só em CPU (sem GPU): ${br(D.cpu.latencia_media_s / 60, 1)} min por resposta (n = ${D.cpu.n}).` : ""),
     { x: 5.25, y: 4.45, w: 4.25, h: 0.65, fontSize: 10, italic: true, color: HEX.cinza2 });
-  s.addNotes(`Resultados (1 min 30). Recuperação: com só a BNCC, Recall@5 de ${br(R.E2_C1.recall)}; com o corpus completo, ${br(R.E2_C4.recall)}. Os artigos em inglês sozinhos não ajudam a achar o trecho da BNCC. Na geração, a nota é dada por outro modelo com a rubrica do projeto; usamos dois juízes cruzados para nenhum modelo se julgar sozinho. Não são medidas clínicas.`);
+  s.addNotes(`Resultados (1 min 30). Recuperação: com só a BNCC, Recall@5 de ${br(R.E2_C1.recall)}; com o corpus completo, que inclui os quadros de habilidades do 1º ao 3º ano, ${br(R.E2_C4.recall)}.${R.E2_C2.recall < R.E2_C1.recall && R.E2_C3.recall < R.E2_C1.recall ? " Os artigos em inglês sozinhos não ajudam a achar o trecho da BNCC." : ""} Na geração, a nota é dada por outro modelo com a rubrica do projeto; usamos dois juízes cruzados para nenhum modelo se julgar sozinho. Não são medidas clínicas.`);
 
   // 9. Modelo decide x sistema força --------------------------------------
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Resultados" });
@@ -288,7 +301,7 @@ async function icone(nome, cor) {
     ["Não faz", "Não diagnostica, não avalia aluno, não cobre outras disciplinas, não usa web nem memória."],
     ["Pessoa no fluxo", "O professor decide com as fontes à vista; não há aprovação humana antes da resposta. Revisão das respostas de referência: pendente."],
     ["De onde vem", `Só dos 5 trechos na janela. O limiar ${br(D.limiar)} é grosseiro: “frações” passa e a recusa fica com o prompt.`],
-    ["O que quebra", "Citação válida com afirmação errada não é detectada. Paráfrase de pedido de diagnóstico escapa da regra. A mesma tag do Ollama mudou de artefato entre macOS e Linux: fixamos a quantização e gravamos o digest."],
+    ["O que quebra", "Citação válida com afirmação errada não é detectada (B03). Paráfrase de pedido de diagnóstico escapa da regra. A mesma tag do Ollama mudou de artefato entre macOS e Linux: fixamos a quantização e gravamos o digest."],
   ];
   lims.forEach(([t, d], i) => {
     const y = 1.12 + i * 1.0;
@@ -296,7 +309,7 @@ async function icone(nome, cor) {
     txt(s, t, { x: 0.5, y, w: 2.0, h: 0.85, fontSize: 15, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
     txt(s, d, { x: 2.75, y: y + 0.02, w: 6.75, h: 0.85, fontSize: 13, color: HEX.tinta, valign: "middle" });
   });
-  s.addNotes("Limites (1 min). O que o sistema não faz; onde a pessoa entra; de onde vem cada afirmação e o que acontece quando a fonte não cobre; e o que quebra se o modelo errar. O ponto mais importante: o harness verifica que a citação existe, não que ela sustenta a frase. Isso só o juiz mede, fora de linha.");
+  s.addNotes("Limites (1 min). O que o sistema não faz; onde a pessoa entra; de onde vem cada afirmação e o que acontece quando a fonte não cobre; e o que quebra se o modelo errar. O ponto mais importante: o harness verifica que a citação existe, não que ela sustenta a frase. Isso só o juiz mede, fora de linha" + (D.b03_erro ? ", e no B03 nem ele pegou o erro de conceito." : "."));
 
   // 11. Conclusão ----------------------------------------------------------
   pres.addSection({ title: "Conclusão" });
@@ -304,11 +317,11 @@ async function icone(nome, cor) {
   s.addText("O que ficou demonstrado", { placeholder: "title" });
   s.addText("Um modelo de 4B local responde com documento e página quando cercado por recuperação híbrida e por regras que recusam, avisam e removem — e cada resposta deixa traço.", { placeholder: "body" });
   txt(s, [
-    { text: "Ficou de fora: ", options: { bold: true, color: HEX.laranja } },
-    { text: "Habilidades Essenciais do 2º ano no corpus, revisão humana do gabarito, LoRA, n8n e verificação de que o trecho sustenta a frase.", options: { color: "F2D9C2" } },
+    { text: "Ficou de fora: ", options: { bold: true, color: HEX.marca } },
+    { text: "revisão humana do gabarito, identificar a rede que publicou os quadros de habilidades, LoRA, n8n e verificação de que o trecho sustenta a frase.", options: { color: HEX.claro } },
   ], { x: 0.6, y: 3.85, w: 8.8, h: 0.7, fontSize: 13 });
   txt(s, "Código: github.com/Graco2/alfarag", { x: 0.6, y: 4.7, w: 8.8, h: 0.35, fontSize: 13, color: "FFFFFF", bold: true });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.6, y: 1.35, w: 1.8, h: 1.8, rectRadius: 0.3, fill: { color: HEX.laranja }, line: { type: "none" }, objectName: "logo2" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.6, y: 1.35, w: 1.8, h: 1.8, rectRadius: 0.3, fill: { color: HEX.marca }, line: { type: "none" }, objectName: "logo2" });
   txt(s, "Aa", { x: 7.6, y: 1.35, w: 1.8, h: 1.8, fontSize: 54, bold: true, color: "FFFFFF", align: "center", valign: "middle", fontFace: "Cambria" });
   s.addNotes("Conclusão (40 s). Demonstramos que o modelo pequeno e local funciona quando o sistema em volta faz a parte verificável. Ficou de fora o que está listado; não afirmamos efeito em sala. Obrigado; abrimos para perguntas.");
 

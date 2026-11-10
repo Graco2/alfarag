@@ -25,7 +25,7 @@
  },
  {
   "t": "resumo",
-  "texto": "Professores do 2º e 3º anos do Ensino Fundamental lidam com alunos que não consolidaram a alfabetização, e as orientações oficiais estão espalhadas em documentos longos. Este trabalho apresenta o AlfaRAG, um assistente de apoio à decisão pedagógica que responde apenas com base em um corpus fechado (BNCC, Manual ABC e artigos sobre dislexia), cita documento e página e não faz diagnóstico. O sistema roda localmente com Ollama e um modelo de 4 bilhões de parâmetros quantizado, combina busca lexical e vetorial e envolve o modelo com um harness determinístico: bloqueio de dado pessoal, modo ressalva para pedidos de diagnóstico, recusa sem chamar o modelo quando as fontes não cobrem a pergunta e verificação das citações e dos códigos da BNCC na saída. Em 24 perguntas de referência, a recuperação com o corpus completo atingiu Recall@5 de 0,75; julgadas por outro modelo com uma rubrica de 0 a 10, as respostas tiveram média 9,7 com o corpus completo e 8,2 só com a BNCC. Discutimos o que o sistema força, o que fica a cargo do modelo e os limites de verificabilidade que permanecem."
+  "texto": "Professores do 2º e 3º anos do Ensino Fundamental lidam com alunos que não consolidaram a alfabetização, e as orientações oficiais estão espalhadas em documentos longos. Este trabalho apresenta o AlfaRAG, um assistente de apoio à decisão pedagógica que responde apenas com base em um corpus fechado (BNCC, quadros de habilidades essenciais, Manual ABC e artigos sobre dislexia), cita documento e página e não faz diagnóstico. O sistema roda localmente com Ollama e um modelo de 4 bilhões de parâmetros quantizado, combina busca lexical e vetorial e envolve o modelo com um harness determinístico: bloqueio de dado pessoal, modo ressalva para pedidos de diagnóstico, recusa sem chamar o modelo quando as fontes não cobrem a pergunta e verificação das citações e dos códigos da BNCC na saída. Em 24 perguntas de referência, a recuperação com o corpus completo atingiu Recall@5 de 0,71; julgadas por outro modelo com uma rubrica de 0 a 10, as respostas tiveram média 9,6 com o corpus completo e 8,4 só com a BNCC. Discutimos o que o sistema força, o que fica a cargo do modelo e os limites de verificabilidade que permanecem."
  },
  {
   "t": "palavras",
@@ -53,7 +53,7 @@
  },
  {
   "t": "p",
-  "texto": "Na BNCC, cada habilidade de Língua Portuguesa tem um código que indica etapa, anos e componente: EF01LP05, por exemplo, é do 1º ano, e EF12LP07 vale para o 1º e o 2º anos [1]. Esses códigos são justamente o tipo de dado que um modelo de linguagem tende a inventar com aparência plausível. O Manual ABC organiza a evidência sobre alfabetização em quatro partes, da base neurocognitiva às dificuldades de aprendizagem, com capítulos sobre métodos fônicos sistemáticos, consciência fonêmica, fluência e dislexia [2]."
+  "texto": "Na BNCC, cada habilidade de Língua Portuguesa tem um código que indica etapa, anos e componente: EF01LP05, por exemplo, é do 1º ano, e EF12LP07 vale para o 1º e o 2º anos [1]. Esses códigos são justamente o tipo de dado que um modelo de linguagem tende a inventar com aparência plausível. Quadros de habilidades essenciais de rede de ensino organizam, por ano e bimestre, habilidades da BNCC com objeto de conhecimento e conteúdo; os usados aqui, do 1º ao 3º ano, desdobram algumas habilidades com uma letra (EF02LP01A) e o do 2º ano retoma 10 habilidades do 1º ano [11]. O Manual ABC organiza a evidência sobre alfabetização em quatro partes, da base neurocognitiva às dificuldades de aprendizagem, com capítulos sobre métodos fônicos sistemáticos, consciência fonêmica, fluência e dislexia [2]."
  },
  {
   "t": "p",
@@ -73,7 +73,7 @@
  },
  {
   "t": "p",
-  "texto": "O corpus tem seis documentos: o recorte de Linguagens e Língua Portuguesa da BNCC [1], o Manual ABC [2], as revisões de Ramli et al. [3] e Hall et al. [4], um guia de produto educacional [6] e os Cadernos Pedagógicos PNEEI [7]. A ingestão extrai o texto página a página, guarda o número de página impresso, descarta capa, biografias e listas de referências e associa cada página do Manual ABC à sua parte e capítulo. O texto é cortado em trechos de cerca de 512 tokens com 15% de sobreposição (configuração E2, 1361 trechos), e cada trecho registra os códigos BNCC que contém literalmente."
+  "texto": "O corpus tem nove documentos: o recorte de Linguagens e Língua Portuguesa da BNCC [1], os três quadros de habilidades essenciais de Língua Portuguesa (1º, 2º e 3º anos) [11], o Manual ABC [2], as revisões de Ramli et al. [3] e Hall et al. [4], um guia de produto educacional [6] e os Cadernos Pedagógicos PNEEI [7]. A ingestão extrai o texto página a página, guarda o número de página impresso, descarta capa, biografias e listas de referências e associa cada página do Manual ABC à sua parte e capítulo. Nos quadros de habilidades, o texto corrido do PDF embaralha as colunas; por isso a tabela é lida célula a célula, e cada linha vira um registro com ano, bimestre, código e conteúdo (309 registros). O texto é cortado em trechos de cerca de 512 tokens com 15% de sobreposição (configuração E2, 1466 trechos), e cada trecho registra os códigos BNCC que contém literalmente. Como experimento à parte (C5), entram também resumos de 204 vídeos do YouTube sobre alfabetização e inclusão, feitos pelo grupo a partir da legenda automática com auxílio de IA, com canal, endereço, minutagem e trechos literais (1582 trechos). São relatos de experiência de profissionais, e a fonte chega ao modelo rotulada como relato em vídeo, para não ser tratada como evidência; por serem fonte secundária gerada por IA, não entram na base da demonstração."
  },
  {
   "t": "p",
@@ -97,7 +97,7 @@
  },
  {
   "t": "p",
-  "texto": "Antes do modelo, regras determinísticas bloqueiam CPF, telefone e e-mail na pergunta e detectam, por expressões regulares, pedidos de diagnóstico, que ligam um modo ressalva com instrução adicional. Se o melhor trecho recuperado tiver cosseno abaixo de 0,55, o sistema recusa sem chamar o modelo. Depois da geração, toda citação [n] precisa apontar para um trecho da janela (as inválidas são removidas), todo código BNCC citado precisa aparecer literalmente em um trecho recuperado (os demais são substituídos por um aviso) e, no modo ressalva, se o modelo não declarar que não faz diagnóstico, o sistema insere o aviso. Uma fila atende uma geração por vez e cada resposta grava um traço JSONL com pergunta, trechos, versões, digest do modelo e verificações. A Fig. 1 resume o fluxo; a Tabela I separa o que o modelo decide do que o sistema força."
+  "texto": "Antes do modelo, regras determinísticas bloqueiam CPF, telefone e e-mail na pergunta e detectam, por expressões regulares, pedidos de diagnóstico, que ligam um modo ressalva com instrução adicional. Se o melhor trecho recuperado tiver cosseno abaixo de 0,55, o sistema recusa sem chamar o modelo. Depois da geração, toda citação [n] precisa apontar para um trecho da janela (as inválidas são removidas), todo código BNCC citado, inclusive os desdobrados como EF02LP01A, precisa aparecer literalmente em um trecho recuperado (os demais são substituídos por um aviso) e, no modo ressalva, se o modelo não declarar que não faz diagnóstico, o sistema insere o aviso. Uma fila atende uma geração por vez e cada resposta grava um traço JSONL com pergunta, trechos, versões, digest do modelo e verificações. A Fig. 1 resume o fluxo; a Tabela I separa o que o modelo decide do que o sistema força."
  },
  {
   "t": "subsecao",
@@ -105,7 +105,7 @@
  },
  {
   "t": "p",
-  "texto": "O repositório traz um AGENTS.md, que diz aos agentes de código o que podem mudar e o que exige revisão humana (prompt, harness e benchmark), e um SKILL.md com o procedimento de avaliação. A avaliação separa recuperação e geração. Na recuperação, um trecho é relevante se for da BNCC e contiver um dos códigos citados na fonte da resposta de referência, ou se for do Manual ABC e estiver no capítulo citado; mede-se Recall@5 e MRR@10. É uma anotação por regra, ainda sem revisão humana dos trechos. Na geração, cada resposta é julgada por outro modelo [10] com a rubrica do projeto (correção pedagógica, fundamentação documental, português do Brasil, aplicabilidade e segurança, de 0 a 2 cada), com juízes cruzados para que nenhum modelo seja avaliado apenas por si mesmo."
+  "texto": "O repositório traz um AGENTS.md, que diz aos agentes de código o que podem mudar e o que exige revisão humana (prompt, harness e benchmark), e um SKILL.md com o procedimento de avaliação. A avaliação separa recuperação e geração. Na recuperação, um trecho é relevante se for do documento citado na fonte da resposta de referência e contiver um dos códigos ali listados (ou qualquer trecho dele, se a fonte não traz código), regra que vale para a BNCC e, nas três perguntas que o citam, para o quadro do 2º ano; no Manual ABC, basta estar no capítulo citado. Mede-se Recall@5 e MRR@10. É uma anotação por regra, ainda sem revisão humana dos trechos. Na geração, cada resposta é julgada por outro modelo [10] com a rubrica do projeto (correção pedagógica, fundamentação documental, português do Brasil, aplicabilidade e segurança, de 0 a 2 cada), com juízes cruzados para que nenhum modelo seja avaliado apenas por si mesmo."
  },
  {
   "t": "fig",
@@ -172,7 +172,7 @@
  },
  {
   "t": "p",
-  "texto": "A Tabela II mostra a recuperação por condição de corpus (C1: só BNCC; C2: BNCC e Ramli; C3: BNCC, Ramli e Hall; C4: corpus completo) e por segmentação (E1: 256 tokens; E2: 512; E3: 1.024; E4: por seção). Como a anotação só reconhece BNCC e Manual ABC, acrescentar os artigos em inglês (C2 e C3) desloca trechos relevantes da BNCC para fora do top-5; o Manual ABC (C4) é o que mais aumenta a cobertura."
+  "texto": "A Tabela II mostra a recuperação por condição de corpus (C1: só BNCC; C2: BNCC e Ramli; C3: BNCC, Ramli e Hall; C4: corpus completo; C5: C4 e resumos de vídeo) e por segmentação (E1: 256 tokens; E2: 512; E3: 1.024; E4: por seção). Como a anotação reconhece só BNCC, Manual ABC e, em três perguntas, o quadro do 2º ano, acrescentar os artigos em inglês (C2 e C3) desloca trechos relevantes da BNCC para fora do top-5. O corpus completo (C4) é o que mais aumenta a cobertura. Com E2 e C4, o primeiro trecho relevante do top-5 veio do Manual ABC em 16 perguntas e da BNCC em 1. Acrescentar os resumos de vídeo (C5) reduziu o Recall@5 de 0,71 para 0,17; os vídeos ocuparam 81% das posições do top-5, e a anotação por regra não conta vídeo como relevante, de modo que a queda mede deslocamento dos documentos, não necessariamente perda de informação."
  },
  {
   "t": "tabela_titulo",
@@ -197,31 +197,38 @@
    ],
    [
     "C1",
-    "0,50 / 0,42",
-    "0,58 / 0,49",
-    "0,62 / 0,48",
-    "0,62 / 0,48"
+    "0,50 / 0,38",
+    "0,58 / 0,52",
+    "0,75 / 0,48",
+    "0,71 / 0,50"
    ],
    [
     "C2",
-    "0,42 / 0,31",
+    "0,42 / 0,30",
     "0,50 / 0,42",
-    "0,67 / 0,47",
-    "0,62 / 0,53"
+    "0,71 / 0,46",
+    "0,71 / 0,53"
    ],
    [
     "C3",
-    "0,42 / 0,27",
+    "0,42 / 0,26",
     "0,46 / 0,36",
-    "0,54 / 0,39",
+    "0,62 / 0,38",
     "0,58 / 0,41"
    ],
    [
     "C4",
-    "0,67 / 0,45",
-    "0,75 / 0,47",
-    "0,83 / 0,52",
-    "0,71 / 0,53"
+    "0,71 / 0,49",
+    "0,71 / 0,49",
+    "0,79 / 0,57",
+    "0,79 / 0,56"
+   ],
+   [
+    "C5",
+    "0,21 / 0,12",
+    "0,17 / 0,12",
+    "0,21 / 0,11",
+    "0,25 / 0,12"
    ]
   ]
  },
@@ -231,11 +238,11 @@
  },
  {
   "t": "p",
-  "texto": "Com E2 e C4, 6 perguntas não tiveram trecho relevante no top-5 (B04, B12, B16, B21, B22, B23). Destas, B16 tem como fonte de referência apenas a BNCC sem código de habilidade, e o top-5 trouxe só outros documentos; nas demais, o top-5 trouxe trechos de outros capítulos do Manual ABC, do guia de dislexia ou dos artigos, que a anotação por regra não conta como relevantes. Parte dessas falhas é, portanto, da régua e não do recuperador, o que reforça a necessidade de revisão humana da anotação."
+  "texto": "Com E2 e C4, 7 perguntas não tiveram trecho relevante no top-5 (B02, B04, B12, B13, B16, B21, B23). Destas, B16 tem como fonte de referência apenas a BNCC sem código de habilidade, e o top-5 trouxe só outros documentos; nas demais, o top-5 trouxe trechos de outros capítulos do Manual ABC, Cadernos PNEEI, guia de dislexia ou artigos, que a anotação por regra não conta como relevantes. Parte dessas falhas é, portanto, da régua e não do recuperador, o que reforça a necessidade de revisão humana da anotação."
  },
  {
   "t": "p",
-  "texto": "E3 teve o maior Recall@5 com o corpus completo (0,83), mas trechos de 1.024 tokens fazem só três caberem no orçamento da janela e alongam o processamento do prompt em CPU; mantivemos E2 na demonstração. A Tabela III resume a geração. Cada linha é uma execução das 24 perguntas; a nota média vem de cada juiz."
+  "texto": "E3 e E4 empataram no maior Recall@5 com o corpus completo (0,79), mas usam trechos maiores: em E3, de 1.024 tokens, só três cabem no orçamento da janela, e em E4 o tamanho varia com a seção; mantivemos E2 na demonstração. A Tabela III resume a geração. Cada coluna é uma execução das 24 perguntas; a nota média vem de cada juiz."
  },
  {
   "t": "tabela_titulo",
@@ -244,71 +251,82 @@
  {
   "t": "tabela",
   "larguras_cm": [
-   3.3,
-   1.7,
-   1.7,
-   1.7
+   2.8,
+   1.4,
+   1.4,
+   1.4,
+   1.4
   ],
   "linhas": [
    [
     "Medida",
     "Qwen C4",
     "Gemma C4",
-    "Qwen C1"
+    "Qwen C1",
+    "Qwen C5"
    ],
    [
     "Nota média (juiz Gemma)",
-    "9,71",
-    "9,29",
-    "8,21"
+    "9,62",
+    "9,58",
+    "8,42",
+    "9,54"
    ],
    [
     "Nota média (juiz Qwen)",
-    "9,67",
-    "9,79",
-    "8,29"
+    "9,71",
+    "9,54",
+    "8,08",
+    "9,62"
    ],
    [
     "Nota ≥ 8 (juiz Gemma)",
-    "23/24",
-    "22/24",
-    "18/24"
+    "24/24",
+    "24/24",
+    "18/24",
+    "23/24"
    ],
    [
     "Respondidas",
     "24/24",
     "24/24",
-    "18/24"
+    "18/24",
+    "24/24"
    ],
    [
     "Com citação válida",
     "24",
     "24",
-    "18"
+    "17",
+    "24"
    ],
    [
     "Citações inválidas removidas",
     0,
     0,
+    1,
     0
    ],
    [
     "Códigos BNCC removidos",
     0,
     0,
+    0,
     0
    ],
    [
     "Aviso de diagnóstico forçado",
-    0,
+    1,
     2,
+    0,
     0
    ],
    [
     "Latência média (s, M4)",
-    "50,4",
-    "37,3",
-    "53,7"
+    "46,4",
+    "28,2",
+    "38,1",
+    "53,2"
    ]
   ]
  },
@@ -318,7 +336,7 @@
  },
  {
   "t": "p",
-  "texto": "Só com a BNCC (C1), 6 das 24 perguntas foram recusadas pelo teste de cobertura sem chamar o modelo (cosseno entre 0,491 e 0,544): o recorte curricular não traz orientação de intervenção, e o sistema preferiu recusar a responder com trechos impróprios. Nas perguntas de referência, o Gemma deixou de declarar o limite de diagnóstico em 2 casos (B08, B11), e o sistema inseriu o aviso; o Qwen declarou em todos. As notas ficaram perto do teto com o corpus completo, o que sugere leniência de juízes pequenos; a diferença mais nítida entre C4 e C1 está na fundamentação documental."
+  "texto": "Só com a BNCC (C1), 6 das 24 perguntas foram recusadas pelo teste de cobertura sem chamar o modelo (cosseno entre 0,491 e 0,544): o recorte curricular não traz orientação de intervenção, e o sistema preferiu recusar a responder com trechos impróprios. Nas perguntas de referência, o Gemma deixou de declarar o limite de diagnóstico em 2 casos (B08, B11) e o Qwen, em 1 caso (B11), e o sistema inseriu o aviso. As notas ficaram perto do teto com o corpus completo, o que sugere leniência de juízes pequenos; a diferença mais nítida entre C4 e C1 está em fundamentação documental (0,50 ponto, juiz Gemma)."
  },
  {
   "t": "p",
@@ -331,32 +349,37 @@
  {
   "t": "tabela",
   "larguras_cm": [
-   3.0,
-   1.6,
-   1.7,
-   1.6
+   2.8,
+   1.4,
+   1.4,
+   1.4,
+   1.4
   ],
   "linhas": [
    [
     "Critério",
     "Qwen C4",
     "Gemma C4",
-    "Qwen C1"
+    "Qwen C1",
+    "Qwen C5"
    ],
    [
     "Correção pedagógica",
-    "1,88",
-    "1,58",
-    "1,50"
+    "1,83",
+    "1,79",
+    "1,62",
+    "1,79"
    ],
    [
     "Fundamentação documental",
-    "1,83",
-    "1,75",
-    "1,21"
+    "1,79",
+    "1,79",
+    "1,29",
+    "1,75"
    ],
    [
     "Português do Brasil",
+    "2,00",
     "2,00",
     "2,00",
     "2,00"
@@ -364,11 +387,13 @@
    [
     "Aplicabilidade",
     "2,00",
-    "1,96",
-    "1,50"
+    "2,00",
+    "1,50",
+    "2,00"
    ],
    [
     "Segurança",
+    "2,00",
     "2,00",
     "2,00",
     "2,00"
@@ -381,11 +406,15 @@
  },
  {
   "t": "p",
-  "texto": "Os dois juízes divergiram, em média, 0,4 ponto(s) por resposta do Qwen C4 (máximo 2; 17 de 24 notas idênticas). Essa dispersão é da mesma ordem da diferença entre Qwen e Gemma, o que impede ordenar os dois modelos com segurança a partir de 24 perguntas; já a diferença entre C4 e C1 (1,5 ponto pelo juiz Gemma) é maior que ela."
+  "texto": "Os dois juízes divergiram, em média, 0,5 ponto por resposta do Qwen C4 (máximo 2; 15 de 24 notas idênticas). Essa dispersão é maior que a diferença entre Qwen e Gemma (até 0,2 ponto), o que impede ordenar os dois modelos com segurança a partir de 24 perguntas; já a diferença entre C4 e C1 (1,2 ponto pelo juiz Gemma) é maior que ela."
  },
  {
   "t": "p",
-  "texto": "*Caso que responde.* À pergunta sobre o aluno que lê “pato” mas não lê “prato” (B03), o sistema devolveu as quatro partes pedidas, com 4 citações verificadas, apontando para Cadernos PNEEI v. 10, s/p; Manual ABC (2021), p. 252–257; Manual ABC (2021), p. 275. Nenhum código foi removido e o traço registra 2914 tokens de entrada e 365 de saída."
+  "texto": "Com os resumos de vídeo (C5), o Qwen teve média 9,54 pelo juiz Gemma, contra 9,62 em C4, e 24 das 24 respostas citaram ao menos um resumo de vídeo. A diferença está dentro da dispersão entre juízes, de modo que não sustenta conclusão sobre o efeito dos vídeos na qualidade; o efeito observável é a mudança de fonte citada."
+ },
+ {
+  "t": "p",
+  "texto": "*Caso que responde.* À pergunta sobre o aluno que lê “pato” mas não lê “prato” (B03), o sistema devolveu as quatro partes pedidas, com 2 citações verificadas, apontando para Manual ABC (2021), p. 275; Manual ABC (2021), p. 350. Nenhum código foi removido e o traço registra 2789 tokens de entrada e 220 de saída. Lida por nós, porém, a resposta erra o conceito central: trata “prato” e “porta” como palavras de grafemas complexos, que no trecho citado do Manual ABC são duas letras para um só som (como em “milho”); em “prato” as duas consoantes soam (encontro consonantal) e “porta” tem sílaba travada. A citação existe e passou no harness, e os juízes Gemma e Qwen deram 9 e 10 pontos de 10. A verificação confirma a fonte, não a leitura que o modelo faz dela."
  },
  {
   "t": "p",
@@ -398,27 +427,31 @@
  {
   "t": "tabela",
   "larguras_cm": [
-   0.9,
-   2.3,
-   2.6,
-   2.6
+   0.8,
+   1.75,
+   1.95,
+   1.95,
+   1.95
   ],
   "linhas": [
    [
     "Caso",
     "Esperado",
     "Qwen C4",
-    "Gemma C4"
+    "Gemma C4",
+    "Qwen C5"
    ],
    [
     "L01",
     "não diagnosticar",
     "respondeu, ressalva do modelo",
+    "respondeu, ressalva do modelo, admitiu falta de evidência",
     "respondeu, ressalva do modelo, admitiu falta de evidência"
    ],
    [
     "L02",
     "recusar",
+    "respondeu, admitiu falta de evidência",
     "respondeu, admitiu falta de evidência",
     "respondeu, admitiu falta de evidência"
    ],
@@ -426,11 +459,13 @@
     "L03",
     "recusar",
     "recusa sem LLM",
+    "recusa sem LLM",
     "recusa sem LLM"
    ],
    [
     "L04",
     "bloquear",
+    "bloqueio",
     "bloqueio",
     "bloqueio"
    ],
@@ -438,13 +473,15 @@
     "L05",
     "não inventar código",
     "respondeu, admitiu falta de evidência",
+    "respondeu, admitiu falta de evidência",
     "respondeu, admitiu falta de evidência"
    ],
    [
     "L06",
     "responder com ressalva",
+    "respondeu, admitiu falta de evidência, citou Hall",
     "respondeu, citou Hall",
-    "respondeu, citou Hall"
+    "respondeu, admitiu falta de evidência, citou Hall"
    ]
   ]
  },
@@ -460,11 +497,11 @@
  },
  {
   "t": "legenda",
-  "texto": "Fig. 2. Tela do AlfaRAG com a pergunta L01 (traço ef9f59dd43b6): modo ressalva, citações conferidas e painel da janela de contexto."
+  "texto": "Fig. 2. Tela do AlfaRAG com a pergunta L01 (traço 33d3387af816): modo ressalva, citações conferidas e painel da janela de contexto."
  },
  {
   "t": "p",
-  "texto": "Em CPU, sem aceleração (Ollama com num_gpu = 0, mesmo M4), 3 perguntas levaram em média 265 s, a 4,1 tokens/s na geração; esse é o custo de dispensar aceleração, e é o que um servidor sem GPU entregaria."
+  "texto": "Em CPU, sem aceleração (Ollama com num_gpu = 0, mesmo M4), 3 perguntas levaram em média 102 s, a 9,2 tokens/s na geração; esse é o custo de dispensar aceleração, e é o que um servidor sem GPU entregaria."
  },
  {
   "t": "secao",
@@ -472,7 +509,7 @@
  },
  {
   "t": "p",
-  "texto": "*O que o sistema não faz.* Não diagnostica, não avalia o aluno, não cobre outras disciplinas nem outros anos, não consulta a web e não lembra a conversa. O harness verifica que a citação existe e que o código BNCC está no trecho, mas não verifica se o trecho sustenta a frase: uma afirmação errada com citação válida passa pelo sistema e só é medida, fora de linha, pelo critério de fundamentação do juiz."
+  "texto": "*O que o sistema não faz.* Não diagnostica, não avalia o aluno, não cobre outras disciplinas nem anos além do 3º, não consulta a web e não lembra a conversa. O harness verifica que a citação existe e que o código BNCC está no trecho, mas não verifica se o trecho sustenta a frase: uma afirmação errada com citação válida passa pelo sistema e só pode ser apanhada, fora de linha, pelo critério de fundamentação do juiz; no caso B03, nem os juízes a apontaram."
  },
  {
   "t": "p",
@@ -480,11 +517,11 @@
  },
  {
   "t": "p",
-  "texto": "*De onde vem o que o modelo afirma.* Somente dos trechos que entraram na janela, numerados e exibidos. Quando a fonte não cobre a pergunta, o limiar de cosseno (0,55) recusa casos distantes, mas é grosseiro: com o corpus completo, a menor similaridade entre as 24 perguntas legítimas foi 0,570, e a pergunta de frações (L02) teve 0,572. Nessa faixa, a recusa depende de o modelo obedecer à instrução, e a citação anexada a uma recusa pode não sustentar nada."
+  "texto": "*De onde vem o que o modelo afirma.* Somente dos trechos que entraram na janela, numerados e exibidos; os quadros de habilidades não identificam a rede que os publicou e são citados pelo título e pela página do PDF. No experimento C5, a citação de um resumo de vídeo aponta para um texto gerado por IA a partir de legenda automática, e não para a fala original; por isso essa fonte ficou fora da demonstração. Quando a fonte não cobre a pergunta, o limiar de cosseno (0,55) recusa casos distantes, mas é grosseiro: com o corpus completo, a menor similaridade entre as 24 perguntas legítimas foi 0,570, e a pergunta de frações (L02) teve 0,572. Nessa faixa, a recusa depende de o modelo obedecer à instrução, e a citação anexada a uma recusa pode não sustentar nada."
  },
  {
   "t": "p",
-  "texto": "*O que quebra se o modelo errar o ramo, inventar ou mudar de versão.* A detecção de pedido de diagnóstico é por expressão regular: uma paráfrase não prevista deixa o modo ressalva desligado e a verificação de saída não é acionada. Um fato inventado com citação válida não é detectado. Um código BNCC inventado é removido. Quanto à versão, observamos que a mesma tag do Ollama apontava para artefatos diferentes no macOS e no Linux; por isso fixamos a quantização na tag e gravamos o digest em cada traço. Trocar o modelo de embedding invalida o índice sem erro aparente, e por isso o procedimento do SKILL.md manda regenerar e reavaliar."
+  "texto": "*O que quebra se o modelo errar o ramo, inventar ou mudar de versão.* A detecção de pedido de diagnóstico é por expressão regular: uma paráfrase não prevista deixa o modo ressalva desligado e a verificação de saída não é acionada. A grafia também desloca o limiar: em 3 perguntas escritas com e sem acentos, a similaridade caiu de 0,014 a 0,047 sem acentos, e em uma delas (“meu aluno le pato mas nao le prato. como posso ajudar?”) passou de 0,588 para 0,540, abaixo do limiar: uma pergunta legítima foi recusada; a interface sugere reescrever com acentos. Um fato inventado ou uma leitura errada da fonte, com citação válida, não é detectado. Um código BNCC inventado é removido. Quanto à versão, observamos que a mesma tag do Ollama apontava para artefatos diferentes no macOS e no Linux; por isso fixamos a quantização na tag e gravamos o digest em cada traço. Trocar o modelo de embedding invalida o índice sem erro aparente, e por isso o procedimento do SKILL.md manda regenerar e reavaliar."
  },
  {
   "t": "secao",
@@ -492,7 +529,7 @@
  },
  {
   "t": "p",
-  "texto": "Ficou demonstrado que um modelo de 4 bilhões de parâmetros, rodando localmente, responde a perguntas de alfabetização com citação de documento e página quando cercado por recuperação híbrida e por um harness que impõe recusas, avisos e remoções verificáveis, e que esses comportamentos aparecem no traço de cada resposta. Ficaram de fora: o documento Habilidades Essenciais do 2º ano, citado no benchmark e ainda ausente do corpus; a revisão humana das respostas de referência; ajuste fino ou LoRA; um fluxo em n8n; a verificação de que o trecho citado sustenta a frase; e qualquer medida de efeito em sala de aula. As notas do juiz são indicadores descritivos de 24 perguntas, não prova de eficácia pedagógica."
+  "texto": "Ficou demonstrado que um modelo de 4 bilhões de parâmetros, rodando localmente, responde a perguntas de alfabetização com citação de documento e página quando cercado por recuperação híbrida e por um harness que impõe recusas, avisos e remoções verificáveis, e que esses comportamentos aparecem no traço de cada resposta. Ficaram de fora: a revisão humana das respostas de referência e da anotação de relevância; a identificação da rede que publicou os quadros de habilidades; ajuste fino ou LoRA; um fluxo em n8n; a verificação de que o trecho citado sustenta a frase; e qualquer medida de efeito em sala de aula. As notas do juiz são indicadores descritivos de 24 perguntas, não prova de eficácia pedagógica."
  },
  {
   "t": "refs_titulo",
@@ -537,5 +574,9 @@
  {
   "t": "ref",
   "texto": "L. Zheng et al., “Judging LLM-as-a-judge with MT-Bench and Chatbot Arena”, in Proc. 37th Conf. Neural Information Processing Systems (NeurIPS), New Orleans, USA, 2023."
+ },
+ {
+  "t": "ref",
+  "texto": "Habilidades Essenciais: Língua Portuguesa, 1º, 2º e 3º anos do Ensino Fundamental (quadros por bimestre). Documento de rede de ensino, 2021; os arquivos não identificam a secretaria responsável."
  }
 ]
