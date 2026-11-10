@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AlfaRAG — Alfabetização Inclusiva</title>
+  <meta name="description" content="Assistente RAG de apoio pedagógico à alfabetização (2º e 3º anos), com citação de fontes e verificação automática.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E86600'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <span class="logo" aria-hidden="true">Aa</span>
+      <div>
+        <h1>AlfaRAG</h1>
+        <p class="sub">Apoio pedagógico à alfabetização · Língua Portuguesa · 2º e 3º anos</p>
+      </div>
+    </div>
+    <nav class="abas" role="tablist">
+      <button role="tab" class="aba ativa" data-aba="chat" aria-selected="true">Assistente</button>
+      <button role="tab" class="aba" data-aba="aval" aria-selected="false">Como funciona e avaliação</button>
+    </nav>
+    <div class="estado">
+      <label class="seletor">Modelo
+        <select id="modelo"></select>
+      </label>
+      <span id="pill" class="pill">conectando…</span>
+    </div>
+  </header>
+
+  <main id="aba-chat" class="layout">
+    <section class="conversa" aria-label="Conversa">
+      <div id="mensagens" class="mensagens" aria-live="polite">
+        <div id="boasvindas" class="boasvindas">
+          <h2>Pergunte sobre alfabetização no 2º e 3º anos</h2>
+          <p>As respostas vêm <strong>só</strong> dos documentos da base (BNCC, Manual ABC, artigos sobre dislexia), sempre com a fonte e a página. O assistente <strong>não faz diagnóstico</strong>: a decisão pedagógica é do professor e da equipe escolar.</p>
+          <div id="exemplos" class="exemplos"></div>
+        </div>
+      </div>
+      <form id="form" class="composer">
+        <textarea id="entrada" rows="2" maxlength="1200" placeholder="Ex.: Meu aluno lê “pato”, mas não lê “prato”. Como posso ajudá-lo?" aria-label="Pergunta"></textarea>
+        <button id="enviar" type="submit" class="btn-primario">Perguntar</button>
+      </form>
+      <p class="rodape">Não escreva nome, CPF ou telefone do aluno. Modelo local (Ollama, CPU) — respostas podem levar até 1 minuto.</p>
+    </section>
+
+    <aside class="painel" aria-label="Janela de contexto">
+      <div class="painel-cab">
+        <h2>Janela de contexto</h2>
+        <p class="sub">O que o modelo recebeu na última resposta selecionada — e o que ficou de fora.</p>
+      </div>
+      <div id="painel" class="painel-corpo">
+        <p class="vazio">Faça uma pergunta para ver os trechos recuperados, o orçamento de tokens e as verificações do harness.</p>
+      </div>
+    </aside>
+  </main>
+
+  <main id="aba-aval" class="aval" hidden>
+    <section class="cartao">
+      <h2>Arquitetura</h2>
+      <ol class="fluxo">
+        <li><b>Harness de entrada</b> — bloqueia dado pessoal; detecta pedido de diagnóstico e liga o <i>modo ressalva</i>.</li>
+        <li><b>Recuperação híbrida</b> — BM25 + embeddings (bge-m3), fundidos por posição (RRF), restritos à condição de corpus.</li>
+        <li><b>Cobertura</b> — se o melhor trecho não passa do limiar de similaridade, o sistema recusa <i>sem chamar o modelo</i>.</li>
+        <li><b>Janela de contexto</b> — top-k trechos dentro de um orçamento de tokens; histórico da conversa não entra.</li>
+        <li><b>Modelo local</b> — prompt de sistema versionado + trechos numerados [n].</li>
+        <li><b>Harness de saída</b> — citação [n] tem de existir; código BNCC tem de estar no trecho; ressalva de diagnóstico é forçada se faltar.</li>
+        <li><b>Traço</b> — cada resposta grava pergunta, trechos, versões e verificações (JSONL).</li>
+      </ol>
+      <div id="config" class="config"></div>
+    </section>
+    <section class="cartao">
+      <h2>Prompt de sistema</h2>
+      <pre id="prompt" class="prompt">carregando…</pre>
+    </section>
+    <section class="cartao">
+      <h2>Avaliação executada</h2>
+      <div id="avaliacao"><p class="vazio">carregando…</p></div>
+    </section>
+  </main>
+
+  <template id="tpl-msg-usuario"><div class="msg usuario"><div class="bolha"></div></div></template>
+  <template id="tpl-msg-assistente">
+    <div class="msg assistente">
+      <div class="bolha">
+        <div class="selos"></div>
+        <div class="texto"><span class="digitando">buscando nas fontes…</span></div>
+        <details class="fontes" hidden><summary></summary><ol></ol></details>
+        <div class="meta"></div>
+      </div>
+    </div>
+  </template>
+  <script src="app.js?v=3"></script>
+</body>
+</html>

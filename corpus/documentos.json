@@ -1,0 +1,59 @@
+[
+  {
+    "id": "BNCC",
+    "arquivo": "pdf/bncc_2018.pdf",
+    "titulo": "Base Nacional Comum Curricular — Linguagens / Língua Portuguesa (Ensino Fundamental)",
+    "rotulo": "BNCC (2018)",
+    "tipo": "curriculo",
+    "idioma": "pt-BR",
+    "licenca": "Documento público do MEC",
+    "nota": "Recorte das páginas 63–111 da versão final (área de Linguagens e Língua Portuguesa)."
+  },
+  {
+    "id": "ABC",
+    "arquivo": "pdf/manual_abc.pdf",
+    "titulo": "Alfabetização Baseada na Ciência — Manual do Curso ABC (MEC/CAPES, 2021)",
+    "rotulo": "Manual ABC (2021)",
+    "tipo": "manual",
+    "idioma": "pt-PT/pt-BR",
+    "licenca": "Documento público do MEC, distribuição gratuita",
+    "nota": "Páginas iniciais (notas, biografias) e listas de referências dos capítulos são descartadas na ingestão."
+  },
+  {
+    "id": "RAMLI",
+    "arquivo": "pdf/ramli_2026.pdf",
+    "titulo": "Developmental Dyslexia in Children: A Narrative Review of Evidence-Based Interventions, Parenting Approaches, and Assistive Technologies",
+    "rotulo": "Ramli et al. (2026)",
+    "tipo": "artigo",
+    "idioma": "en",
+    "licenca": "Acesso aberto (IJRISS)"
+  },
+  {
+    "id": "HALL",
+    "arquivo": "pdf/hall_2022.pdf",
+    "titulo": "Forty Years of Reading Intervention Research for Elementary Students with or at Risk for Dyslexia: A Systematic Review and Meta-Analysis",
+    "rotulo": "Hall et al. (2023)",
+    "tipo": "artigo",
+    "idioma": "en",
+    "licenca": "CC BY-NC-ND (Reading Research Quarterly, 58(2))"
+  },
+  {
+    "id": "ROSA",
+    "arquivo": "pdf/rosa_produto_educacional.pdf",
+    "titulo": "Guia de orientação para o trabalho pedagógico (Produto Educacional) — A. R. R. da Silva e C. C. da Silva",
+    "rotulo": "Silva e Silva (Produto Educacional)",
+    "tipo": "guia",
+    "idioma": "pt-BR",
+    "licenca": "Produto educacional de mestrado profissional, acesso público"
+  },
+  {
+    "id": "PNEEI",
+    "arquivo": "pneei_vol10.md",
+    "titulo": "Cadernos Pedagógicos PNEEI, vol. 10",
+    "rotulo": "Cadernos PNEEI v. 10",
+    "tipo": "guia",
+    "idioma": "pt-BR",
+    "licenca": "Documento público",
+    "nota": "Disponível apenas em Markdown (sem paginação); a citação usa a seção."
+  }
+]
