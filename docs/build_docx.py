@@ -207,6 +207,18 @@ def montar(modelo, conteudo, saida, imagens_base="."):
             m.tabela(b["linhas"], b["larguras_cm"])
         else:
             m.par(t, b.get("texto", ""))
+    # Quebra de seção contínua no fim: o Word (e o LibreOffice) equilibram as duas colunas da última página.
+    final = m.corpo.find(qn("w:sectPr"))
+    quebra = copy.deepcopy(final)
+    for t in quebra.findall(qn("w:type")):
+        quebra.remove(t)
+    tipo = quebra.makeelement(qn("w:type"), {qn("w:val"): "continuous"})
+    quebra.insert(0, tipo)
+    p = m.corpo.makeelement(qn("w:p"), {})
+    ppr = p.makeelement(qn("w:pPr"), {})
+    ppr.append(quebra)
+    p.append(ppr)
+    final.addprevious(p)
     # metadados
     cp = m.doc.core_properties
     cp.title = conteudo[0].get("texto", "")

@@ -6,7 +6,7 @@
   <title>AlfaRAG — Alfabetização Inclusiva</title>
   <meta name="description" content="Assistente RAG de apoio pedagógico à alfabetização (2º e 3º anos), com citação de fontes e verificação automática.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E86600'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <header class="topo">
@@ -42,7 +42,7 @@
         <textarea id="entrada" rows="2" maxlength="1200" placeholder="Ex.: Meu aluno lê “pato”, mas não lê “prato”. Como posso ajudá-lo?" aria-label="Pergunta"></textarea>
         <button id="enviar" type="submit" class="btn-primario">Perguntar</button>
       </form>
-      <p class="rodape">Não escreva nome, CPF ou telefone do aluno. Modelo local (Ollama, CPU) — respostas podem levar até 1 minuto.</p>
+      <p class="rodape">Não escreva nome, CPF ou telefone do aluno. Modelo local (Ollama) — cada resposta leva de segundos a alguns minutos, conforme a máquina.</p>
     </section>
 
     <aside class="painel" aria-label="Janela de contexto">
@@ -91,6 +91,6 @@
       </div>
     </div>
   </template>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

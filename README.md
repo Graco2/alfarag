@@ -42,7 +42,7 @@ pergunta ──► harness de entrada ──► busca híbrida (BM25 + bge-m3, R
                │ diagnóstico → modo ressalva                                 ▼
                                                      janela: prompt v1.2 + top-k trechos [n] (≤ orçamento)
                                                                              ▼
-                                                     LLM local (Ollama, qwen3.5:4b-q4_K_M, CPU)
+                                                     LLM local (Ollama, qwen3.5:4b-q4_K_M)
                                                                              ▼
                               harness de saída: [n] existe? código BNCC está no trecho? ressalva presente?
                                                                              ▼
@@ -62,11 +62,31 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt pymupdf
 # abra http://localhost:7860
 ```
 
-Com Docker (CPU, igual ao deploy):
+Com Docker (só CPU; ver latência medida em `resultados/latencia_cpu.json`):
 
 ```bash
 docker build -t alfarag . && docker run -p 7860:7860 alfarag
 ```
+
+## Deploy (Railway ou qualquer host Docker)
+
+O container precisa de **~5 GB de RAM** (Qwen3.5 4B Q4_K_M + bge-m3) — não cabe em
+planos gratuitos de 0,5–1 GB. No Railway (plano pago, cobrança por uso):
+
+```bash
+railway login --browserless      # quem tem a conta
+railway init                     # novo projeto, ou: railway link
+railway up                       # usa o Dockerfile da raiz
+railway variables --set PORT=7860 --set OLLAMA_KEEP_ALIVE=5m
+railway domain                   # gera o link público
+```
+
+`OLLAMA_KEEP_ALIVE=5m` tira o modelo da memória após 5 min parado, o que reduz o custo
+por uso. O primeiro build baixa os modelos para dentro da imagem (~10–15 min).
+
+**Plano B sem rede:** `/?traco=3603f9655a67` (caso que responde), `/?traco=7fe0e8628710`
+(recusa sem chamar o modelo) e `/?traco=ef9f59dd43b6` (pedido de diagnóstico) reabrem
+respostas gravadas em `resultados/tracos_demo.jsonl`, sem chamar o modelo.
 
 ## Avaliação
 

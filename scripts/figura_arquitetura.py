@@ -40,7 +40,7 @@ def main():
     caixa(ax, X, ys[2], W, H, "Recuperação híbrida", f"BM25 + {MODELO_EMBED} → fusão RRF (k=60)", LARANJA, "#FFEBD4")
     caixa(ax, X, ys[3], W, H, "Teste de cobertura", f"melhor cosseno ≥ {str(LIMIAR_COBERTURA).replace(".", ",")}?", VERMELHO, "#FDE2DF")
     caixa(ax, X, ys[4], W, H, "Janela de contexto", f"prompt {VERSAO_PROMPT} + top-{k} trechos [n] ≤ {ORCAMENTO_CONTEXTO} tokens", AZUL, "#EAF0FF")
-    caixa(ax, X, ys[5], W, H, "LLM local (Ollama, CPU)", f"{MODELO_LLM}, temperatura 0,2, sem raciocínio", LARANJA, "#FFEBD4")
+    caixa(ax, X, ys[5], W, H, "LLM local (Ollama)", f"{MODELO_LLM}, temperatura 0,2, sem raciocínio", LARANJA, "#FFEBD4")
     caixa(ax, X, ys[6], W, H, "Harness de saída", "[n] existe? · código BNCC no trecho? · ressalva?", VERMELHO, "#FDE2DF")
     caixa(ax, X, ys[7], W, H, "Resposta + fontes + traço", "documento e página · JSONL por resposta", VERDE, "#DDF5EA")
     for a, b in zip(ys[:-1], ys[1:]):

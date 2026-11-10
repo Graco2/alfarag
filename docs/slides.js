@@ -82,13 +82,13 @@ async function icone(nome, cor) {
   txt(s, "Grupo Imeanos no ITA · TE-251 · ITA 2026/2 · github.com/Graco2/alfarag", { x: 0.6, y: 4.5, w: 6.4, h: 0.35, fontSize: 12, color: "D9C7B8" });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.35, y: 1.35, w: 2.1, h: 2.1, rectRadius: 0.35, fill: { color: HEX.laranja }, line: { type: "none" }, objectName: "logo" });
   txt(s, "Aa", { x: 7.35, y: 1.35, w: 2.1, h: 2.1, fontSize: 64, bold: true, color: "FFFFFF", align: "center", valign: "middle", fontFace: "Cambria" });
-  txt(s, "Ollama · CPU · Qwen3.5 4B", { x: 7.0, y: 3.6, w: 2.8, h: 0.35, fontSize: 12, color: "D9C7B8", align: "center" });
+  txt(s, "Ollama local · Qwen3.5 4B", { x: 7.0, y: 3.6, w: 2.8, h: 0.35, fontSize: 12, color: "D9C7B8", align: "center" });
   s.addNotes("Abertura (20 s). Somos o grupo Imeanos no ITA. Construímos e executamos o AlfaRAG: um assistente para professoras de alfabetização que responde só com base em documentos oficiais e científicos, cita página e não faz diagnóstico.");
 
   // 2. Problema ------------------------------------------------------------
   pres.addSection({ title: "Problema" });
   s = pres.addSlide({ masterName: "CONTEUDO", sectionTitle: "Problema" });
-  s.addText("O problema: o que fazer com quem não acompanha", { placeholder: "title" });
+  s.addText("O problema: o aluno que não acompanha", { placeholder: "title" });
   const stats = [["7 de 7", "professoras têm alunos com dificuldade persistente sem avaliação concluída"],
     ["7 de 7", "apontam dificuldade de compreender o que se lê"], ["2 de 7", "não dispõem de apoio regular"]];
   stats.forEach(([n, l], i) => {
@@ -219,7 +219,7 @@ async function icone(nome, cor) {
     [ICON.stop, "Receita de bolo (L03)", `Cosseno ${cos("L03")} < ${br(D.limiar)}: recusa sem chamar o modelo.`, "Sistema"],
     [ICON.lock, "Pergunta com CPF (L04)", `${L.L04 && L.L04.desfecho === "bloqueada" ? "Bloqueada na entrada; nada é recuperado nem enviado." : "Desfecho: " + (L.L04 || {}).desfecho}`, "Sistema"],
     [ICON.harness, "“Ele tem dislexia, sim ou não?” (L01)", `Modo ressalva ligado; ${l01.verificacao && l01.verificacao.ressalva_forcada ? "o modelo não declarou o limite e o sistema inseriu o aviso." : "o modelo declarou que não diagnostica."}`, l01.verificacao && l01.verificacao.ressalva_forcada ? "Sistema" : "Modelo + sistema"],
-    [ICON.warn, "Frações no 5º ano (L02)", l02.desfecho === "sem_cobertura" ? `Cosseno ${cos("L02")}: recusada.` : `Cosseno ${cos("L02")}, acima do limiar: chega ao modelo. A recusa depende do prompt.`, l02.desfecho === "sem_cobertura" ? "Sistema" : "Modelo"],
+    [ICON.warn, "Frações no 5º ano (L02)", l02.desfecho === "sem_cobertura" ? `Cosseno ${cos("L02")}: recusada.` : `Cosseno ${cos("L02")}, acima do limiar: chega ao modelo.${(l02.resposta || "").includes("evidência suficiente") ? " Admite que não há evidência, mas anexa [1]–[5], e o harness aceita." : " A recusa depende do prompt."}`, l02.desfecho === "sem_cobertura" ? "Sistema" : "Modelo"],
   ];
   casos.forEach(([ic, t, d, quem], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 1.15 + Math.floor(i / 2) * 1.95;
@@ -227,7 +227,7 @@ async function icone(nome, cor) {
     s.addImage({ data: ic, x: x + 0.2, y: y + 0.22, w: 0.34, h: 0.34 });
     txt(s, t, { x: x + 0.7, y: y + 0.18, w: 3.55, h: 0.45, fontSize: 14, bold: true, valign: "middle" });
     txt(s, d, { x: x + 0.2, y: y + 0.72, w: 4.0, h: 0.68, fontSize: 12, color: HEX.cinza });
-    txt(s, "Quem decidiu: " + quem, { x: x + 0.2, y: y + 1.38, w: 4.0, h: 0.28, fontSize: 11, bold: true, color: quem === "Modelo" ? "8A5A00" : HEX.verde });
+    txt(s, "Quem decidiu: " + quem, { x: x + 0.2, y: y + 1.42, w: 4.0, h: 0.28, fontSize: 11, bold: true, color: quem === "Modelo" ? "8A5A00" : HEX.verde });
   });
   s.addNotes(`Casos que não fecham (1 min 30). Receita de bolo: o sistema recusa sem gastar o modelo. CPF: bloqueado na entrada. Pedido de diagnóstico: modo ressalva. E o caso honesto: frações no 5º ano tem similaridade ${cos("L02")}, acima do limiar, porque o corpus fala de ensino; aí quem segura é o prompt, não o sistema. ${rem05.length ? "No pedido de código BNCC para inglês, o modelo inventou " + rem05.join(", ") + " e o sistema removeu." : ""}`);
 
@@ -257,11 +257,14 @@ async function icone(nome, cor) {
     [cel("Nota média (juiz Gemma)", { align: "left" }), cel(jm(q, "juiz_gemma")), cel(jm(g, "juiz_gemma")), cel(jm(q1, "juiz_gemma"))],
     [cel("Nota média (juiz Qwen)", { align: "left" }), cel(jm(q, "juiz_qwen")), cel(jm(g, "juiz_qwen")), cel(jm(q1, "juiz_qwen"))],
     [cel("Nota ≥ 8 (juiz Gemma)", { align: "left" }), cel(j8(q, "juiz_gemma")), cel(j8(g, "juiz_gemma")), cel(j8(q1, "juiz_gemma"))],
+    [cel("Respondidas (resto: recusa)", { align: "left" }), cel(`${q.respondidas}/${q.n}`), cel(`${g.respondidas}/${g.n}`), cel(`${q1.respondidas}/${q1.n}`)],
     [cel("Com citação válida", { align: "left" }), cel(`${q.cit_ok}/${q.respondidas}`), cel(`${g.cit_ok}/${g.respondidas}`), cel(`${q1.cit_ok}/${q1.respondidas}`)],
     [cel("Códigos BNCC removidos", { align: "left" }), cel(q.cod_rem), cel(g.cod_rem), cel(q1.cod_rem)],
     [cel("Latência média (s, M4)", { align: "left" }), cel(br(q.lat, 1)), cel(br(g.lat, 1)), cel(br(q1.lat, 1))],
-  ], { x: 5.25, y: 1.15, w: 4.25, colW: [1.9, 0.78, 0.79, 0.78], rowH: 0.42, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
-  txt(s, "Nota de 0 a 10 dada por outro modelo (rubrica do projeto). Indicador descritivo, não prova de eficácia pedagógica.", { x: 5.25, y: 4.25, w: 4.25, h: 0.6, fontSize: 10, italic: true, color: HEX.cinza2 });
+  ], { x: 5.25, y: 1.15, w: 4.25, colW: [1.9, 0.78, 0.79, 0.78], rowH: 0.38, border: { type: "solid", pt: 0.5, color: HEX.borda }, fill: { color: "FFFFFF" }, fontFace: "Calibri" });
+  txt(s, "Nota de 0 a 10 dada por outro modelo (rubrica do projeto). Indicador descritivo, não prova de eficácia pedagógica."
+    + (D.cpu ? ` Só em CPU (sem GPU): ${br(D.cpu.latencia_media_s / 60, 1)} min por resposta (n = ${D.cpu.n}).` : ""),
+    { x: 5.25, y: 4.45, w: 4.25, h: 0.65, fontSize: 10, italic: true, color: HEX.cinza2 });
   s.addNotes(`Resultados (1 min 30). Recuperação: com só a BNCC, Recall@5 de ${br(R.E2_C1.recall)}; com o corpus completo, ${br(R.E2_C4.recall)}. Os artigos em inglês sozinhos não ajudam a achar o trecho da BNCC. Na geração, a nota é dada por outro modelo com a rubrica do projeto; usamos dois juízes cruzados para nenhum modelo se julgar sozinho. Não são medidas clínicas.`);
 
   // 9. Modelo decide x sistema força --------------------------------------

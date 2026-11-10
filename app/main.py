@@ -82,7 +82,9 @@ def traco(tid: str):
     if not tid.isalnum() or len(tid) > 32:
         raise HTTPException(400, "id inválido")
     from .config import TRACOS_DIR
-    for arq in sorted(TRACOS_DIR.glob("tracos_*.jsonl"), reverse=True):
+    # Traços desta instalação + os traços de demonstração versionados no repositório.
+    arquivos = sorted(TRACOS_DIR.glob("tracos_*.jsonl"), reverse=True) + [RESULTADOS / "tracos_demo.jsonl"]
+    for arq in (a for a in arquivos if a.exists()):
         for linha in arq.open(encoding="utf-8"):
             if f'"id": "{tid}"' in linha:
                 t = json.loads(linha)

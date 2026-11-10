@@ -27,7 +27,7 @@ COPY web ./web
 COPY corpus/documentos.json ./corpus/documentos.json
 COPY index/chunks_E2.jsonl index/emb_E2_bge-m3.npy ./index/
 COPY benchmark ./benchmark
-COPY resultados/resumo.json ./resultados/resumo.json
+COPY resultados/resumo.json resultados/tracos_demo.jsonl ./resultados/
 COPY start.sh ./start.sh
 
 ENV PORT=7860 \

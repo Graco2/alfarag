@@ -104,7 +104,8 @@ def main(modelo_sige, saida):
         "quantizado, combina busca lexical e vetorial e envolve o modelo com um harness determinístico: bloqueio de dado pessoal, "
         "modo ressalva para pedidos de diagnóstico, recusa sem chamar o modelo quando as fontes não cobrem a pergunta e verificação "
         "das citações e dos códigos da BNCC na saída. Em 24 perguntas de referência, a recuperação com o corpus completo atingiu "
-        f"Recall@5 de {br(melhor_cob['recall'])} e as respostas foram julgadas por outro modelo com uma rubrica de 0 a 10. "
+        f"Recall@5 de {br(melhor_cob['recall'])}; julgadas por outro modelo com uma rubrica de 0 a 10, as respostas tiveram média "
+        f"{br(media_juiz(Q, 'C4', JUIZ_A)[0], 1)} com o corpus completo e {br(media_juiz(Q, 'C1', JUIZ_A)[0], 1)} só com a BNCC. "
         "Discutimos o que o sistema força, o que fica a cargo do modelo e os limites de verificabilidade que permanecem.")
     add("palavras", "Geração aumentada por recuperação, alfabetização, garantia de IA.")
 
@@ -181,6 +182,14 @@ def main(modelo_sige, saida):
         "substituídos por um aviso) e, no modo ressalva, se o modelo não declarar que não faz diagnóstico, o sistema insere o aviso. "
         "Uma fila atende uma geração por vez e cada resposta grava um traço JSONL com pergunta, trechos, versões, digest do modelo e "
         "verificações. A Fig. 1 resume o fluxo; a Tabela I separa o que o modelo decide do que o sistema força.")
+    add("subsecao", "D. AGENTS.md, Agent Skill e avaliação")
+    add("p",
+        "O repositório traz um AGENTS.md, que diz aos agentes de código o que podem mudar e o que exige revisão humana (prompt, harness e "
+        "benchmark), e um SKILL.md com o procedimento de avaliação. A avaliação separa recuperação e geração. Na recuperação, um trecho é "
+        "relevante se for da BNCC e contiver um dos códigos citados na fonte da resposta de referência, ou se for do Manual ABC e estiver no "
+        "capítulo citado; mede-se Recall@5 e MRR@10. É uma anotação por regra, ainda sem revisão humana dos trechos. Na geração, cada "
+        "resposta é julgada por outro modelo [10] com a rubrica do projeto (correção pedagógica, fundamentação documental, português do "
+        "Brasil, aplicabilidade e segurança, de 0 a 2 cada), com juízes cruzados para que nenhum modelo seja avaliado apenas por si mesmo.")
     add("fig", arquivo="fig1_arquitetura.png", largura_cm=8.3)
     add("legenda", "Fig. 1. Arquitetura do AlfaRAG: em vermelho, as etapas determinísticas do harness.")
     add("tabela_titulo", "tabela i. o que o modelo decide e o que o sistema força")
@@ -194,14 +203,6 @@ def main(modelo_sige, saida):
         ["–", "Bloqueio de CPF, telefone e e-mail"],
     ]})
     add("vazio")
-    add("subsecao", "D. AGENTS.md, Agent Skill e avaliação")
-    add("p",
-        "O repositório traz um AGENTS.md, que diz aos agentes de código o que podem mudar e o que exige revisão humana (prompt, harness e "
-        "benchmark), e um SKILL.md com o procedimento de avaliação. A avaliação separa recuperação e geração. Na recuperação, um trecho é "
-        "relevante se for da BNCC e contiver um dos códigos citados na fonte da resposta de referência, ou se for do Manual ABC e estiver no "
-        "capítulo citado; mede-se Recall@5 e MRR@10. É uma anotação por regra, ainda sem revisão humana dos trechos. Na geração, cada "
-        "resposta é julgada por outro modelo [10] com a rubrica do projeto (correção pedagógica, fundamentação documental, português do "
-        "Brasil, aplicabilidade e segurança, de 0 a 2 cada), com juízes cruzados para que nenhum modelo seja avaliado apenas por si mesmo.")
     add("p",
         f"O modelo principal é {Q} (Qwen3.5, 4,5 bilhões de parâmetros, quantização Q4_K_M, digest {q4['digest']}), comparado a {G} "
         f"(Gemma 4 E4B, digest {g4['digest']}), ambos servidos pelo Ollama 0.40.16 com temperatura 0 na avaliação e raciocínio estendido "
@@ -226,7 +227,7 @@ def main(modelo_sige, saida):
     if falhas:
         add("p",
             f"Com E2 e C4, {len(falhas)} perguntas não tiveram trecho relevante no top-5 ({', '.join(falhas)}). "
-            + (f"Destas, {', '.join(so_bncc_geral)} têm como fonte de referência apenas a BNCC sem código de habilidade, e o top-5 trouxe só outros documentos; "
+            + (f"Destas, {', '.join(so_bncc_geral)} {'tem' if len(so_bncc_geral) == 1 else 'têm'} como fonte de referência apenas a BNCC sem código de habilidade, e o top-5 trouxe só outros documentos; "
                if so_bncc_geral else "")
             + "nas demais, o top-5 trouxe trechos de outros capítulos do Manual ABC, do guia de dislexia ou dos artigos, que a anotação por regra não conta como relevantes. "
               "Parte dessas falhas é, portanto, da régua e não do recuperador, o que reforça a necessidade de revisão humana da anotação.")
@@ -239,7 +240,7 @@ def main(modelo_sige, saida):
     a1, a2 = mj(Q, "C4", JUIZ_A), mj(Q, "C4", JUIZ_B)
     b1, b2 = mj(G, "C4", JUIZ_A), mj(G, "C4", JUIZ_B)
     c1, c2 = mj(Q, "C1", JUIZ_A), mj(Q, "C1", JUIZ_B)
-    B.append({"t": "tabela", "larguras_cm": [2.4, 1.5, 1.5, 1.5, 1.6], "linhas": [
+    B.append({"t": "tabela", "larguras_cm": [3.3, 1.7, 1.7, 1.7], "linhas": [
         ["Medida", "Qwen C4", "Gemma C4", "Qwen C1"],
         ["Nota média (juiz Gemma)", a1[0], b1[0], c1[0]],
         ["Nota média (juiz Qwen)", a2[0], b2[0], c2[0]],
@@ -258,6 +259,20 @@ def main(modelo_sige, saida):
         ns = [n for n in ler(pth) if n.get("total") is not None] if pth.exists() else []
         return {c: (st.mean(n[c] for n in ns) if ns else None) for c in
                 ["correcao_pedagogica", "fundamentacao_documental", "portugues_brasileiro", "aplicabilidade", "seguranca"]}
+    c1_recusas = [r for r in ler(arq_resp(Q, "C1")) if r["desfecho"] == "sem_cobertura"]
+    g_forc = [r["id"] for r in ler(arq_resp(G, "C4")) if r["id"].startswith("B") and (r.get("verificacao") or {}).get("ressalva_forcada")]
+    txt3 = ""
+    if c1_recusas:
+        cs = [r["cobertura"]["melhor_cos"] for r in c1_recusas]
+        txt3 += (f"Só com a BNCC (C1), {len(c1_recusas)} das 24 perguntas foram recusadas pelo teste de cobertura sem chamar o modelo "
+                 f"(cosseno entre {br(min(cs), 3)} e {br(max(cs), 3)}): o recorte curricular não traz orientação de intervenção, e o "
+                 "sistema preferiu recusar a responder com trechos impróprios. ")
+    if g_forc:
+        txt3 += (f"Nas perguntas de referência, o Gemma deixou de declarar o limite de diagnóstico em {len(g_forc)} casos ({', '.join(g_forc)}), "
+                 "e o sistema inseriu o aviso; o Qwen declarou em todos. ")
+    txt3 += ("As notas ficaram perto do teto com o corpus completo, o que sugere leniência de juízes pequenos; a diferença mais nítida "
+             "entre C4 e C1 está na fundamentação documental.")
+    add("p", txt3)
     cq, cg, cc = crit(Q, "C4", JUIZ_A), crit(G, "C4", JUIZ_A), crit(Q, "C1", JUIZ_A)
     if any(v is not None for v in cq.values()):
         nomes = {"correcao_pedagogica": "Correção pedagógica", "fundamentacao_documental": "Fundamentação documental",
@@ -279,14 +294,15 @@ def main(modelo_sige, saida):
                 dif = [abs(ja[i] - jb[i]) for i in comuns]
                 add("p", f"Os dois juízes divergiram, em média, {br(st.mean(dif), 1)} ponto(s) por resposta do Qwen C4 "
                          f"(máximo {max(dif)}; {sum(d == 0 for d in dif)} de {len(comuns)} notas idênticas). Essa dispersão é da mesma ordem "
-                         "das diferenças entre configurações, o que impede ordenar os modelos com segurança a partir de 24 perguntas.")
+                         "da diferença entre Qwen e Gemma, o que impede ordenar os dois modelos com segurança a partir de 24 perguntas; "
+                         f"já a diferença entre C4 e C1 ({br(media_juiz(Q, 'C4', JUIZ_A)[0] - media_juiz(Q, 'C1', JUIZ_A)[0], 1)} ponto pelo juiz Gemma) é maior que ela.")
 
     # Caso que responde (B03) e casos que não fecham (L01–L06), lidos dos traços.
     b03 = next(r for r in ler(arq_resp(Q, "C4")) if r["id"] == "B03")
     cit = b03["verificacao"]["citacoes_validas"]
     docs03 = sorted({f"{t['rotulo']}, {t['pagina']}" for t in b03["trechos"] if t["n"] in cit})
     add("p",
-        "Caso que responde. À pergunta sobre o aluno que lê “pato” mas não lê “prato” (B03), o sistema devolveu as quatro partes pedidas, "
+        "*Caso que responde.* À pergunta sobre o aluno que lê “pato” mas não lê “prato” (B03), o sistema devolveu as quatro partes pedidas, "
         f"com {len(cit)} citações verificadas, apontando para " + "; ".join(docs03[:3]) + ". Nenhum código foi removido e o traço registra "
         f"{b03['ollama']['prompt_tokens']} tokens de entrada e {b03['ollama']['resposta_tokens']} de saída.")
 
@@ -294,7 +310,7 @@ def main(modelo_sige, saida):
         return {"sem_cobertura": "recusa sem chamar o modelo", "bloqueada": "bloqueio na entrada",
                 "respondida": "resposta"}.get(r["desfecho"], r["desfecho"])
     l02, l03, l01, l04, l05 = lim.get("L02"), lim.get("L03"), lim.get("L01"), lim.get("L04"), lim.get("L05")
-    txt = "Casos que não fecham. "
+    txt = "*Casos que não fecham.* "
     if l03:
         txt += (f"A receita de bolo (L03) teve cosseno máximo {br(l03['cobertura']['melhor_cos'], 3)} e foi recusada sem chamar o modelo. ")
     if l04:
@@ -311,8 +327,11 @@ def main(modelo_sige, saida):
             admitiu = "evidência suficiente" in (l02.get("resposta") or "")
             txt += (f"Já a pergunta sobre frações no 5º ano (L02) teve cosseno {br(cob, 3)}, acima do limiar, e chegou ao modelo: "
                     "é o caso que o filtro de similaridade não fecha, e a recusa passa a depender da regra 5 do prompt; "
-                    + ("nesta execução, o modelo declarou que os documentos não trazem evidência suficiente. " if admitiu
-                       else "nesta execução, o modelo respondeu mesmo assim, apoiado em trechos sobre alfabetização. "))
+                    + ("nesta execução, o modelo declarou que os documentos não trazem evidência suficiente" if admitiu
+                       else "nesta execução, o modelo respondeu mesmo assim, apoiado em trechos sobre alfabetização")
+                    + (f", mas anexou à frase as citações {', '.join('[' + str(n) + ']' for n in l02['verificacao']['citacoes_validas'])}, "
+                       "que o harness aceita por existirem na janela, embora nenhuma trate de frações. "
+                       if admitiu and (l02.get("verificacao") or {}).get("citacoes_validas") else ". "))
     if l05:
         v = l05["verificacao"] or {}
         rem = v.get("codigos_removidos") or []
@@ -330,8 +349,11 @@ def main(modelo_sige, saida):
                 base += ", ressalva" + (" forçada" if v.get("ressalva_forcada") else " do modelo")
             if v.get("codigos_removidos"):
                 base += f", {len(v['codigos_removidos'])} cód. removido(s)"
-            if r["id"] == "L02" and "evidência suficiente" in (r.get("resposta") or ""):
+            if "evidência suficiente" in (r.get("resposta") or ""):
                 base += ", admitiu falta de evidência"
+            citados = {t["doc"] for t in r.get("trechos", []) if t["n"] in (v.get("citacoes_validas") or [])}
+            if r["id"] == "L06" and "HALL" in citados:
+                base += ", citou Hall"
         return base
     if lim:
         add("tabela_titulo", "tabela v. casos-limite (desfecho registrado no traço)")
@@ -345,9 +367,12 @@ def main(modelo_sige, saida):
     if cpu:
         add("p",
             f"Em CPU, sem aceleração (Ollama com num_gpu = 0, mesmo M4), {cpu['n']} perguntas levaram em média {br(cpu['latencia_media_s'], 0)} s, "
-            f"a {br(cpu['tok_s_medio'], 1)} tokens/s na geração; o servidor gratuito de 2 vCPU usado no deploy tende a ser mais lento.")
+            f"a {br(cpu['tok_s_medio'], 1)} tokens/s na geração; esse é o custo de dispensar aceleração, e é o que um servidor sem GPU entregaria.")
 
-    # IV. AI Assurance
+    # V. AI Assurance
+    regs_q4 = ler(arq_resp(Q, "C4"))
+    min_cos_b = min(r["cobertura"]["melhor_cos"] for r in regs_q4 if r["id"].startswith("B") and r.get("cobertura"))
+    cos_l02 = next((r["cobertura"]["melhor_cos"] for r in regs_q4 if r["id"] == "L02" and r.get("cobertura")), float("nan"))
     add("secao", "v. ai assurance")
     add("p",
         "*O que o sistema não faz.* Não diagnostica, não avalia o aluno, não cobre outras disciplinas nem outros anos, não consulta a web e "
@@ -361,9 +386,9 @@ def main(modelo_sige, saida):
         "de referência e a anotação de relevância ainda aguardam revisão humana, o que limita o peso das métricas.")
     add("p",
         "*De onde vem o que o modelo afirma.* Somente dos trechos que entraram na janela, numerados e exibidos. Quando a fonte não cobre "
-        f"a pergunta, o limiar de cosseno ({br(LIMIAR_COBERTURA)}) recusa casos distantes, mas é grosseiro: nas 24 perguntas, a menor "
-        "similaridade de uma pergunta legítima ficou próxima à de perguntas de outra disciplina, como mostrou o caso L02. Nessa faixa, a "
-        "recusa depende de o modelo obedecer à instrução.")
+        f"a pergunta, o limiar de cosseno ({br(LIMIAR_COBERTURA)}) recusa casos distantes, mas é grosseiro: com o corpus completo, a menor "
+        f"similaridade entre as 24 perguntas legítimas foi {br(min_cos_b, 3)}, e a pergunta de frações (L02) teve {br(cos_l02, 3)}. Nessa "
+        "faixa, a recusa depende de o modelo obedecer à instrução, e a citação anexada a uma recusa pode não sustentar nada.")
     add("p",
         "*O que quebra se o modelo errar o ramo, inventar ou mudar de versão.* A detecção de pedido de diagnóstico é por expressão regular: "
         "uma paráfrase não prevista deixa o modo ressalva desligado e a verificação de saída não é acionada. Um fato inventado com citação "
