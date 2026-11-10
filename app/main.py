@@ -76,6 +76,22 @@ def avaliacao():
     return json.loads(arq.read_text(encoding="utf-8"))
 
 
+@app.get("/api/traco/{tid}")
+def traco(tid: str):
+    """Modo replay: devolve uma resposta já gerada (traço JSONL), sem chamar o modelo."""
+    if not tid.isalnum() or len(tid) > 32:
+        raise HTTPException(400, "id inválido")
+    from .config import TRACOS_DIR
+    for arq in sorted(TRACOS_DIR.glob("tracos_*.jsonl"), reverse=True):
+        for linha in arq.open(encoding="utf-8"):
+            if f'"id": "{tid}"' in linha:
+                t = json.loads(linha)
+                return {"pergunta": t["pergunta"], "janela": t.get("janela"),
+                        "final": {"tipo": "final", "desfecho": t["desfecho"], "resposta": t["resposta"],
+                                  "verificacao": t.get("verificacao"), "traco": t}}
+    raise HTTPException(404, "traço não encontrado")
+
+
 @app.post("/api/perguntar")
 def perguntar(p: Pergunta):
     modelo = p.modelo or MODELO_LLM

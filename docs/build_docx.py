@@ -17,9 +17,21 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
-PROTO_IDX = {
-    "titulo": 0, "autores": 3, "instituicao": 8, "vazio": 2, "resumo": 16, "palavras": 18, "secao": 20,
-    "p": 22, "subsecao": 24, "nota": 30, "tabela_titulo": 36, "fig": 75, "legenda": 77, "refs_titulo": 85, "ref": 87,
+# Protótipos localizados pelo texto do próprio modelo SIGE (robusto a índices).
+PROTO_TEXTO = {
+    "titulo": lambda t: t.startswith("Preparação de um Artigo"),
+    "autores": lambda t: t.startswith("Primeiro Autor"),
+    "instituicao": lambda t: t.startswith("1Instituto Tecnológico"),
+    "resumo": lambda t: t.startswith("Resumo"),
+    "palavras": lambda t: t.startswith("Palavras-Chave"),
+    "secao": lambda t: t == "i. introdução",
+    "p": lambda t: t.startswith("Este formato apresenta"),
+    "subsecao": lambda t: t.startswith("A. Preparação do artigo"),
+    "nota": lambda t: t.startswith("P. Autor"),
+    "tabela_titulo": lambda t: t.startswith("tabela i."),
+    "legenda": lambda t: t.startswith("Fig. 1."),
+    "refs_titulo": lambda t: t == "referências",
+    "ref": lambda t: t.startswith("G. Eason"),
 }
 
 
@@ -80,7 +92,14 @@ class Montador:
         self.doc = Document(modelo)
         corpo = self.doc.element.body
         ps = corpo.findall(qn("w:p"))
-        self.proto = {k: copy.deepcopy(ps[i]) for k, i in PROTO_IDX.items()}
+        def texto(p):
+            return "".join(x.text or "" for x in p.iter(qn("w:t"))).strip()
+        self.proto = {}
+        for k, f in PROTO_TEXTO.items():
+            self.proto[k] = copy.deepcopy(next(p for p in ps if f(texto(p))))
+        self.proto["vazio"] = copy.deepcopy(ps[2])
+        i_sec = next(i for i, p in enumerate(ps) if texto(p) == "i. introdução")
+        self.proto["vazio_col"] = copy.deepcopy(ps[i_sec + 1])  # linha em branco do corpo em 2 colunas
         self.run_proto = {}
         for k, p in self.proto.items():
             rs = p.findall(qn("w:r"))
@@ -95,6 +114,7 @@ class Montador:
             corpo.remove(el)
         self.corpo = corpo
         self.antes_quebra = True
+        self._ultimo = "inicio"
 
     def _inserir(self, el):
         if self.antes_quebra:
@@ -103,6 +123,10 @@ class Montador:
             self.corpo.find(qn("w:sectPr")).addprevious(el)
 
     def par(self, tipo, texto=""):
+        if tipo == "vazio" and not self.antes_quebra:
+            tipo = "vazio_col"
+        if tipo in ("secao", "subsecao", "refs_titulo") and not self.antes_quebra and self._ultimo not in ("inicio", "vazio_col"):
+            self._branco()
         p = copy.deepcopy(self.proto[tipo])
         _limpar_runs(p)
         rp = self.run_proto[tipo]
@@ -119,10 +143,20 @@ class Montador:
             for seg, b, i, s in _segmentos(texto):
                 p.append(_run(rp, seg, b, i, s))
         self._inserir(p)
+        self._ultimo = tipo
+        if tipo in ("secao", "subsecao", "refs_titulo"):
+            self._branco()
         return p
+
+    def _branco(self):
+        b = copy.deepcopy(self.proto["vazio_col"])
+        _limpar_runs(b)
+        self._inserir(b)
+        self._ultimo = "vazio_col"
 
     def coluna_dupla(self):
         self.antes_quebra = False
+        self._ultimo = "inicio"
 
     def figura(self, caminho, largura_cm):
         p = copy.deepcopy(self.proto["legenda"])

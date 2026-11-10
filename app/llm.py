@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Iterator
 
 import httpx
@@ -9,6 +10,7 @@ import httpx
 from .config import MAX_RESPOSTA, MODELO_EMBED, NUM_CTX, OLLAMA_URL, TEMPERATURA
 
 _TIMEOUT = httpx.Timeout(connect=10, read=600, write=60, pool=10)
+FORCAR_CPU = os.getenv("FORCAR_CPU") == "1"
 
 
 def embed(textos: list[str], modelo: str = MODELO_EMBED) -> list[list[float]]:
@@ -29,6 +31,7 @@ def _payload(modelo: str, mensagens: list[dict], stream: bool, temperatura: floa
             "num_ctx": NUM_CTX,
             "num_predict": max_tokens or MAX_RESPOSTA,
             "seed": 42,
+            **({"num_gpu": 0} if FORCAR_CPU else {}),  # FORCAR_CPU=1: nenhuma camada na GPU (medição só em CPU)
         },
     }
 
@@ -71,6 +74,18 @@ def chat(modelo: str, mensagens: list[dict], temperatura: float | None = None, m
         "done_reason": ev.get("done_reason"),
     }
     return ev["message"]["content"], meta
+
+
+def digest(modelo: str) -> str | None:
+    """Digest do artefato no Ollama: a mesma tag pode apontar para arquivos diferentes por plataforma."""
+    try:
+        r = httpx.get(f"{OLLAMA_URL}/api/tags", timeout=5)
+        for m in r.json().get("models", []):
+            if m["name"] == modelo or m.get("model") == modelo:
+                return m.get("digest", "")[:12]
+    except Exception:
+        pass
+    return None
 
 
 def modelos_disponiveis() -> list[str]:

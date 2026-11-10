@@ -10,7 +10,7 @@ description: Executa a avaliação completa do AlfaRAG (recuperação com Recall
 - Para gerar os números do artigo e dos slides (nunca escreva números à mão).
 
 ## Pré-requisitos
-- Ollama rodando em `OLLAMA_URL` (padrão `http://127.0.0.1:11434`) com `bge-m3`, `qwen3.5:4b` e `gemma4:e4b`.
+- Ollama rodando em `OLLAMA_URL` (padrão `http://127.0.0.1:11434`) com `bge-m3`, `qwen3.5:4b-q4_K_M` e `gemma4:e4b-it-q4_K_M`.
 - Índices em `index/` (gerar com `scripts/preparar_corpus.py --exp todos --embed`).
 
 ## Passos
@@ -18,15 +18,15 @@ description: Executa a avaliação completa do AlfaRAG (recuperação com Recall
    `python scripts/avaliar_retrieval.py` → `resultados/recuperacao.{csv,json}`
 2. **Respostas** (uma execução por configuração; retoma de onde parou):
    ```bash
-   python scripts/avaliar_respostas.py --modelo qwen3.5:4b --condicao C4 --exp E2
-   python scripts/avaliar_respostas.py --modelo qwen3.5:4b --condicao C1 --exp E2
-   python scripts/avaliar_respostas.py --modelo gemma4:e4b --condicao C4 --exp E2
+   python scripts/avaliar_respostas.py --modelo qwen3.5:4b-q4_K_M --condicao C4 --exp E2
+   python scripts/avaliar_respostas.py --modelo qwen3.5:4b-q4_K_M --condicao C1 --exp E2
+   python scripts/avaliar_respostas.py --modelo gemma4:e4b-it-q4_K_M --condicao C4 --exp E2
    ```
 3. **Juiz cruzado** (o juiz nunca é só o próprio modelo avaliado):
    ```bash
    for f in resultados/respostas_*_E2.jsonl; do
-     python scripts/julgar_respostas.py --respostas "$f" --juiz gemma4:e4b
-     python scripts/julgar_respostas.py --respostas "$f" --juiz qwen3.5:4b
+     python scripts/julgar_respostas.py --respostas "$f" --juiz gemma4:e4b-it-q4_K_M
+     python scripts/julgar_respostas.py --respostas "$f" --juiz qwen3.5:4b-q4_K_M
    done
    ```
 4. **Consolidar**: `python scripts/consolidar.py` → `resultados/resumo.json` (lido pela aba "Avaliação" do app).

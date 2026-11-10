@@ -58,6 +58,27 @@ async function init() {
       `<button type="button" class="exemplo ${e.id.startsWith("L") ? "limite" : ""}" data-q="${esc(e.pergunta)}"><span class="tag">${esc(e.id.startsWith("L") ? "limite" : e.categoria)}</span>${esc(e.pergunta)}</button>`).join("");
     $("#exemplos").addEventListener("click", (e) => { const b = e.target.closest(".exemplo"); if (b) { $("#entrada").value = b.dataset.q; enviar(); } });
   } catch { /* sem exemplos */ }
+  // Modo replay: /?traco=<id> reabre uma resposta gravada, sem chamar o modelo (plano B da apresentação).
+  const params = new URLSearchParams(location.search);
+  for (const id of (params.get("traco") || "").split(",").filter(Boolean)) await replay(id);
+  if (params.get("aba")) trocarAba(params.get("aba"));
+  if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
+}
+
+async function replay(id) {
+  try {
+    const r = await fetch(`api/traco/${encodeURIComponent(id)}`);
+    if (!r.ok) return;
+    const t = await r.json();
+    const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = t.pergunta;
+    const a = adicionar("#tpl-msg-assistente");
+    const reg = { pergunta: t.pergunta, janela: null, final: null, el: a, bruto: "" };
+    estado.respostas.push(reg);
+    a.addEventListener("click", (e) => { const c = e.target.closest(".cita"); selecionar(reg); if (c) destacarFonte(reg, +c.dataset.n); });
+    if (t.janela) tratar(reg, { tipo: "contexto", janela: t.janela });
+    tratar(reg, t.final);
+    selecionar(reg);
+  } catch { /* traço indisponível */ }
 }
 
 function trocarAba(aba) {
@@ -126,7 +147,7 @@ function tratar(reg, ev) {
     $(".texto", a).innerHTML = markdown(ev.resposta);
     renderSelos(reg); renderFontes(reg);
     const o = ev.traco?.ollama;
-    $(".meta", a).textContent = [ev.traco?.modelo, o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null, ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null, ev.traco?.id ? `traço ${ev.traco.id}` : null].filter(Boolean).join(" · ");
+    $(".meta", a).textContent = [ev.desfecho === "respondida" ? ev.traco?.modelo : "modelo não chamado", o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null, ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null, ev.traco?.id ? `traço ${ev.traco.id}` : null].filter(Boolean).join(" · ");
     if (estado.selecionada === reg) renderPainel(reg);
   }
   a.scrollIntoView({ block: "end" });
@@ -180,7 +201,8 @@ function renderPainel(reg) {
     p.innerHTML = f ? `<div class="bloco"><h3>Harness de entrada</h3><div class="check"><b>⛔</b><span>${esc(f.resposta)}</span></div><p class="vazio">Nada foi recuperado nem enviado ao modelo.</p></div>` : `<p class="vazio">Aguardando…</p>`;
     return;
   }
-  const sis = j.sistema.tokens, q = j.pergunta_tokens, t = j.usados, tot = Math.max(sis + q + j.orcamento, 1);
+  const enviado = j.cobertura.coberta;
+  const sis = j.sistema.tokens, q = j.pergunta_tokens, t = enviado ? j.usados : 0, tot = Math.max(sis + q + j.orcamento, 1);
   const pct = (x) => `${(100 * x / tot).toFixed(1)}%`;
   const v = f?.verificacao;
   const checks = [
@@ -199,8 +221,8 @@ function renderPainel(reg) {
       <div class="legenda"><span><i style="background:var(--muted-2)"></i>prompt de sistema ${j.sistema.versao} · ~${sis}</span><span><i style="background:var(--info)"></i>pergunta ~${q}</span><span><i style="background:var(--brand)"></i>trechos ~${t} / ${j.orcamento}</span></div>
     </div>
     <div class="bloco"><h3>Harness</h3>${checks.map(([i, txt]) => `<div class="check"><b>${i}</b><span>${esc(txt)}</span></div>`).join("")}</div>
-    <div class="bloco"><h3>Entrou na janela (top-${j.top_k})</h3>${j.trechos.length ? j.trechos.map((c) => `
-      <div class="trecho" data-n="${c.n}"><div class="cab"><span><span class="num">[${c.n}]</span>${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts" title="rank denso / rank BM25 / similaridade">D${c.rank_denso ?? "–"} · L${c.rank_bm25 ?? "–"} · cos ${c.cos}</span></div>
+    <div class="bloco"><h3>${enviado ? `Entrou na janela (top-${j.top_k})` : "Recuperados, mas NÃO enviados (modelo não chamado)"}</h3>${j.trechos.length ? j.trechos.map((c) => `
+      <div class="trecho${enviado ? "" : " fora"}" data-n="${c.n}"><div class="cab"><span><span class="num">[${c.n}]</span>${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts" title="rank denso / rank BM25 / similaridade">D${c.rank_denso ?? "–"} · L${c.rank_bm25 ?? "–"} · cos ${c.cos}</span></div>
       ${c.secao ? `<div class="sec">${esc(c.secao)}</div>` : ""}<details><summary>ver trecho (~${c.tokens} tokens)</summary><p>${esc(c.texto)}</p></details></div>`).join("") : '<p class="vazio">Nenhum trecho.</p>'}
     </div>
     <div class="bloco"><h3>Ficou de fora (${j.fora_total} candidatos)</h3>${j.fora.slice(0, 6).map((c) => `

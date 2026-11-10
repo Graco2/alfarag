@@ -42,7 +42,7 @@ pergunta ──► harness de entrada ──► busca híbrida (BM25 + bge-m3, R
                │ diagnóstico → modo ressalva                                 ▼
                                                      janela: prompt v1.2 + top-k trechos [n] (≤ orçamento)
                                                                              ▼
-                                                     LLM local (Ollama, qwen3.5:4b, CPU)
+                                                     LLM local (Ollama, qwen3.5:4b-q4_K_M, CPU)
                                                                              ▼
                               harness de saída: [n] existe? código BNCC está no trecho? ressalva presente?
                                                                              ▼
@@ -54,7 +54,7 @@ pergunta ──► harness de entrada ──► busca híbrida (BM25 + bge-m3, R
 Requer [Ollama](https://ollama.com) e Python 3.11+.
 
 ```bash
-ollama pull qwen3.5:4b && ollama pull bge-m3
+ollama pull qwen3.5:4b-q4_K_M && ollama pull bge-m3
 python -m venv .venv && .venv/bin/pip install -r requirements.txt pymupdf
 # o índice E2 já vem no repositório; para regenerar:
 .venv/bin/python scripts/preparar_corpus.py --exp E2 --embed

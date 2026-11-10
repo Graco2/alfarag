@@ -4,7 +4,7 @@ O juiz recebe: pergunta, resposta de referência, comportamento esperado, os tre
 que o RAG pôs na janela e a resposta final. Devolve JSON validado por esquema.
 
 Uso:
-    python scripts/julgar_respostas.py --respostas resultados/respostas_qwen3.5-4b_C4_E2.jsonl --juiz gemma4:e4b
+    python scripts/julgar_respostas.py --respostas resultados/respostas_qwen3.5-4b_C4_E2.jsonl --juiz gemma4:e4b-it-q4_K_M
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def julgar(reg: dict, gold: dict, juiz: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--respostas", required=True)
-    ap.add_argument("--juiz", default="gemma4:e4b")
+    ap.add_argument("--juiz", default="gemma4:e4b-it-q4_K_M")
     a = ap.parse_args()
     gold = {r["id"]: r for r in csv.DictReader((RAIZ / "benchmark" / "perguntas_gold.csv").open(encoding="utf-8"))}
     entrada = Path(a.respostas)

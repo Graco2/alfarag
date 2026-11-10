@@ -11,7 +11,7 @@ from . import harness
 from .config import (CONDICAO, CONDICOES, EXPERIMENTO, EXPERIMENTOS, MODELO_EMBED, MODELO_LLM, NUM_CTX,
                      ORCAMENTO_CONTEXTO, RAIZ, TEMPERATURA, TRACOS_DIR, aprox_tokens)
 from .indice import carregar, rotulo_pagina
-from .llm import chat_stream
+from .llm import chat_stream, digest
 from .prompts import PROMPT_SISTEMA, VERSAO_PROMPT, montar_mensagens
 
 ROTULOS = {d["id"]: d["rotulo"] for d in json.loads((RAIZ / "corpus" / "documentos.json").read_text(encoding="utf-8"))}
@@ -64,7 +64,8 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     t0 = time.time()
     traco: dict = {
         "id": uuid.uuid4().hex[:12], "quando": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "pergunta": pergunta, "modelo": modelo, "modelo_embed": MODELO_EMBED, "experimento": exp,
+        "pergunta": pergunta, "modelo": modelo, "modelo_digest": digest(modelo), "modelo_embed": MODELO_EMBED,
+        "embed_digest": digest(MODELO_EMBED if ":" in MODELO_EMBED else MODELO_EMBED + ":latest"), "experimento": exp,
         "condicao": condicao, "docs": CONDICOES[condicao], "versao_prompt": VERSAO_PROMPT,
         "num_ctx": NUM_CTX, "temperatura": TEMPERATURA if temperatura is None else temperatura,
     }
@@ -102,7 +103,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         "modo_ressalva": ent.pede_diagnostico,
         "cobertura": {"melhor_cos": cob.melhor_cos, "limiar": cob.limiar, "coberta": cob.coberta},
     }
-    traco["janela"] = {**janela, "trechos": [{k: v for k, v in t.items() if k != "texto"} for t in janela["trechos"]]}
+    traco["janela"] = janela  # completo (inclui o texto dos trechos): o traço reabre a resposta inteira no modo replay
     yield {"tipo": "contexto", "janela": janela}
 
     if not cob.coberta:

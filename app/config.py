@@ -12,9 +12,9 @@ TRACOS_DIR = Path(os.getenv("TRACOS_DIR", RAIZ / "resultados" / "tracos"))
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 
 # Modelos fixos durante cada comparação (Etapa 2 do projeto).
-MODELO_LLM = os.getenv("MODELO_LLM", "qwen3.5:4b")
+MODELO_LLM = os.getenv("MODELO_LLM", "qwen3.5:4b-q4_K_M")
 MODELO_EMBED = os.getenv("MODELO_EMBED", "bge-m3")
-MODELOS_PERMITIDOS = [m.strip() for m in os.getenv("MODELOS_PERMITIDOS", "qwen3.5:4b,gemma4:e4b").split(",") if m.strip()]
+MODELOS_PERMITIDOS = [m.strip() for m in os.getenv("MODELOS_PERMITIDOS", "qwen3.5:4b-q4_K_M,gemma4:e4b-it-q4_K_M").split(",") if m.strip()]
 
 # Experimentos de segmentação (Etapa 3). tokens=None -> segmentação por seção.
 EXPERIMENTOS = {

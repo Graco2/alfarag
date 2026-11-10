@@ -1,7 +1,7 @@
 """Etapa 6b — Gera as respostas do RAG para as 24 perguntas + casos-limite e grava o traço.
 
 Uso:
-    python scripts/avaliar_respostas.py --modelo qwen3.5:4b --condicao C4 --exp E2
+    python scripts/avaliar_respostas.py --modelo qwen3.5:4b-q4_K_M --condicao C4 --exp E2
 Saída: resultados/respostas_<modelo>_<condicao>_<exp>.jsonl
 """
 from __future__ import annotations
@@ -24,7 +24,7 @@ def nome_saida(modelo: str, cond: str, exp: str) -> Path:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--modelo", default="qwen3.5:4b")
+    ap.add_argument("--modelo", default="qwen3.5:4b-q4_K_M")
     ap.add_argument("--condicao", default="C4")
     ap.add_argument("--exp", default="E2")
     ap.add_argument("--sem-limites", action="store_true")
@@ -44,9 +44,12 @@ def main() -> None:
                 continue
             t0 = time.time()
             r = responder_sync(q["question"], modelo=a.modelo, exp=a.exp, condicao=a.condicao, temperatura=0.0)
+            if r.get("desfecho") == "erro":  # infraestrutura (modelo ausente/timeout): não grava; rode de novo
+                print(f"{q['id']} ERRO {r.get('traco', {}).get('erro', '')[:120]}")
+                continue
             reg = {
                 "id": q["id"], "pergunta": q["question"], "esperado": q["expected_behavior"], "categoria": q["category"],
-                "modelo": a.modelo, "condicao": a.condicao, "experimento": a.exp,
+                "modelo": a.modelo, "modelo_digest": r.get("traco", {}).get("modelo_digest"), "condicao": a.condicao, "experimento": a.exp,
                 "desfecho": r.get("desfecho"), "resposta": r.get("resposta"), "verificacao": r.get("verificacao"),
                 "trechos": [{k: t[k] for k in ("n", "id", "doc", "rotulo", "pagina", "secao", "cos", "texto")} for t in r.get("janela", {}).get("trechos", [])],
                 "cobertura": r.get("janela", {}).get("cobertura"),

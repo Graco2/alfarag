@@ -24,7 +24,7 @@ e **não faz diagnóstico** de transtornos. Modelo local via Ollama (CPU).
 ## Comandos
 ```bash
 python -m venv .venv && .venv/bin/pip install -r requirements.txt pymupdf
-ollama pull qwen3.5:4b && ollama pull bge-m3
+ollama pull qwen3.5:4b-q4_K_M && ollama pull bge-m3
 .venv/bin/python scripts/preparar_corpus.py --exp E2 --embed
 .venv/bin/uvicorn app.main:app --port 7860
 ```
