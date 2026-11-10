@@ -9,10 +9,11 @@ from matplotlib.patches import FancyBboxPatch
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
-from app.config import EXPERIMENTOS, LIMIAR_COBERTURA, MODELO_EMBED, MODELO_LLM, ORCAMENTO_CONTEXTO  # noqa: E402
+from app.config import CONDICOES, EXPERIMENTOS, LIMIAR_COBERTURA, MODELO_EMBED, MODELO_LLM, ORCAMENTO_CONTEXTO  # noqa: E402
 from app.prompts import VERSAO_PROMPT  # noqa: E402
 
-LARANJA, TINTA, CINZA, VERDE, VERMELHO, AZUL = "#E86600", "#1A1310", "#58514A", "#007B53", "#B3261E", "#2C4AA8"
+# Paleta fria do app (web/styles.css): ardósia + azul; vermelho marca as etapas determinísticas do harness.
+MARCA, TINTA, CINZA, VERDE, VERMELHO, ANIL = "#2563EB", "#0F172A", "#475569", "#0F766E", "#B91C1C", "#4F46E5"
 
 
 def caixa(ax, x, y, w, h, titulo, sub, cor, fundo="#FFFFFF"):
@@ -35,14 +36,14 @@ def main():
     ax.axis("off")
     W, H, X = 3.0, 0.44, 0.05
     ys = [4.38, 3.78, 3.18, 2.58, 1.98, 1.38, 0.78, 0.18]
-    caixa(ax, X, ys[0], W, H, "Pergunta do professor", "texto livre, sem identificação do aluno", CINZA, "#FCFAF7")
-    caixa(ax, X, ys[1], W, H, "Harness de entrada", "dado pessoal → bloqueia · diagnóstico → ressalva", VERMELHO, "#FDE2DF")
-    caixa(ax, X, ys[2], W, H, "Recuperação híbrida", f"BM25 + {MODELO_EMBED} → fusão RRF (k=60)", LARANJA, "#FFEBD4")
-    caixa(ax, X, ys[3], W, H, "Teste de cobertura", f"melhor cosseno ≥ {str(LIMIAR_COBERTURA).replace(".", ",")}?", VERMELHO, "#FDE2DF")
-    caixa(ax, X, ys[4], W, H, "Janela de contexto", f"prompt {VERSAO_PROMPT} + top-{k} trechos [n] ≤ {ORCAMENTO_CONTEXTO} tokens", AZUL, "#EAF0FF")
-    caixa(ax, X, ys[5], W, H, "LLM local (Ollama)", f"{MODELO_LLM}, temperatura 0,2, sem raciocínio", LARANJA, "#FFEBD4")
-    caixa(ax, X, ys[6], W, H, "Harness de saída", "[n] existe? · código BNCC no trecho? · ressalva?", VERMELHO, "#FDE2DF")
-    caixa(ax, X, ys[7], W, H, "Resposta + fontes + traço", "documento e página · JSONL por resposta", VERDE, "#DDF5EA")
+    caixa(ax, X, ys[0], W, H, "Pergunta do professor", "texto livre, sem identificação do aluno", CINZA, "#F8FAFC")
+    caixa(ax, X, ys[1], W, H, "Harness de entrada", "dado pessoal → bloqueia · diagnóstico → ressalva", VERMELHO, "#FEF2F2")
+    caixa(ax, X, ys[2], W, H, "Recuperação híbrida", f"BM25 + {MODELO_EMBED} → fusão RRF (k=60)", MARCA, "#EEF3FF")
+    caixa(ax, X, ys[3], W, H, "Teste de cobertura", f"melhor cosseno ≥ {str(LIMIAR_COBERTURA).replace(".", ",")}?", VERMELHO, "#FEF2F2")
+    caixa(ax, X, ys[4], W, H, "Janela de contexto", f"prompt {VERSAO_PROMPT} + top-{k} trechos [n] ≤ {ORCAMENTO_CONTEXTO} tokens", ANIL, "#EEF0FF")
+    caixa(ax, X, ys[5], W, H, "LLM local (Ollama)", f"{MODELO_LLM}, temperatura 0,2, sem raciocínio", MARCA, "#EEF3FF")
+    caixa(ax, X, ys[6], W, H, "Harness de saída", "[n] existe? · código BNCC no trecho? · ressalva?", VERMELHO, "#FEF2F2")
+    caixa(ax, X, ys[7], W, H, "Resposta + fontes + traço", "documento e página · JSONL por resposta", VERDE, "#E7F6F3")
     for a, b in zip(ys[:-1], ys[1:]):
         seta(ax, X + W / 2, a, X + W / 2, b + H)
     # Saídas laterais do harness
@@ -52,7 +53,7 @@ def main():
     ax.text(xr, ys[3] + H / 2, "não: recusa\nsem chamar\no LLM", fontsize=6.4, color=VERMELHO, va="center", fontweight="bold")
     ax.annotate("", xy=(xr - 0.02, ys[3] + H / 2), xytext=(X + W, ys[3] + H / 2), arrowprops=dict(arrowstyle="-|>", color=VERMELHO, lw=1))
     ax.text(xr, ys[6] + H / 2, "remove /\ninsere aviso", fontsize=6.4, color=VERMELHO, va="center", fontweight="bold")
-    ax.text(xr, ys[2] + H / 2, "corpus C4:\n6 documentos", fontsize=6.4, color=CINZA, va="center")
+    ax.text(xr, ys[2] + H / 2, f"corpus C4:\n{len(CONDICOES['C4'])} documentos", fontsize=6.4, color=CINZA, va="center")
     ax.text(xr, ys[5] + H / 2, "modelo\ndecide o texto", fontsize=6.4, color=CINZA, va="center")
     out = RAIZ / "docs"
     out.mkdir(exist_ok=True)

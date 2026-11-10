@@ -2,6 +2,7 @@
 
 Relevância por regra (ver montar_benchmark.py): um trecho é relevante se
   * é da BNCC e contém literalmente um dos códigos esperados (ou qualquer trecho BNCC quando a regra é bncc:*);
+  * é de Habilidades Essenciais do 2º ano e contém um dos códigos (he2:<códigos>), ou qualquer trecho dele (he2:*);
   * é do Manual ABC e está em um dos capítulos esperados.
 """
 from __future__ import annotations
@@ -21,24 +22,21 @@ K_RECALL, K_MRR = 5, 10
 
 
 def regra(gold: str) -> dict:
-    r = {"bncc": None, "bncc_any": False, "abc": set()}
+    # por_codigo: documento -> "*" (qualquer trecho) ou conjunto de códigos (BNCC e Habilidades Essenciais).
+    r = {"por_codigo": {}, "abc": set()}
     for parte in gold.split("|"):
         tipo, _, val = parte.partition(":")
-        if tipo == "bncc":
-            if val == "*":
-                r["bncc_any"] = True
-            else:
-                r["bncc"] = set(val.split(","))
-        elif tipo == "abc":
+        if tipo == "abc":
             r["abc"] = {int(x) for x in val.split(",") if x}
+        elif tipo:
+            r["por_codigo"][tipo.upper()] = "*" if val == "*" else set(val.split(","))
     return r
 
 
 def relevante(c: dict, r: dict) -> bool:
-    if c["doc"] == "BNCC":
-        if r["bncc_any"]:
-            return True
-        return bool(r["bncc"] and r["bncc"] & set(c["codigos_bncc"]))
+    alvo = r["por_codigo"].get(c["doc"])
+    if alvo is not None:
+        return alvo == "*" or bool(alvo & set(c["codigos_bncc"]))
     if c["doc"] == "ABC" and r["abc"]:
         m = re.search(r"Cap\. (\d+)", c.get("secao", ""))
         return bool(m and int(m.group(1)) in r["abc"])

@@ -4,9 +4,9 @@
 gold_passages é uma ANOTAÇÃO POR REGRA, derivada da linha "Fonte" de cada questão:
   * bncc:<códigos>  -> trecho da BNCC que contém literalmente um dos códigos;
   * bncc:*          -> qualquer trecho da BNCC (fonte citada sem código);
-  * abc:<capítulos> -> trecho do Manual ABC nesses capítulos (Parte A=2–7, B=8–12, C=13–20, D=21–23).
-O documento HE2 (Habilidades Essenciais) ainda não está no corpus; quando ele é
-a única fonte, a questão fica sem passagem recuperável e isso aparece na métrica.
+  * abc:<capítulos> -> trecho do Manual ABC nesses capítulos (Parte A=2–7, B=8–12, C=13–20, D=21–23);
+  * he2:<códigos>   -> trecho de Habilidades Essenciais do 2º ano que contém um dos códigos;
+  * he2:*           -> qualquer trecho de Habilidades Essenciais do 2º ano (fonte citada sem código).
 As respostas de referência ainda precisam de revisão humana (Etapa 5).
 """
 import csv
@@ -23,7 +23,7 @@ Q = [
   "BNCC EF01LP04, EF01LP05, EF01LP08; Manual ABC Parte C", f"bncc:EF01LP04,EF01LP05,EF01LP08|abc:{C}", "Alfabetização e BNCC", "responder"),
  ("B02","Como ensinar um aluno do 2º ano a escrever palavras que ele nunca viu?",
   "É importante ensinar o aluno a identificar os sons da palavra e relacioná-los às letras ou aos grupos de letras correspondentes. O professor pode pronunciar uma palavra, solicitar sua segmentação oral, orientar a identificação dos sons e, em seguida, apoiar sua representação escrita. A comparação com palavras familiares ajuda a reconhecer regularidades. Deve-se oferecer feedback sobre as relações entre sons e grafias, sem exigir que a criança memorize visualmente todas as palavras.",
-  "BNCC EF02LP02, EF01LP08; HE2 EF02LP02; Manual ABC Parte C", f"bncc:EF02LP02,EF01LP08|abc:{C}", "Alfabetização e BNCC", "responder"),
+  "BNCC EF02LP02, EF01LP08; HE2 EF02LP02; Manual ABC Parte C", f"bncc:EF02LP02,EF01LP08|abc:{C}|he2:EF02LP02", "Alfabetização e BNCC", "responder"),
  ("B03","Meu aluno lê palavras como “pato”, mas não consegue ler “prato” ou “porta”. Como posso ajudá-lo?",
   "O professor pode trabalhar progressivamente diferentes estruturas silábicas, começando pelas que o aluno já domina e introduzindo combinações mais complexas. Atividades de comparação entre “pato” e “prato”, segmentação oral, combinação de fonemas e leitura de palavras com padrões semelhantes ajudam a explicitar a estrutura das sílabas. É importante ensinar que todas as sílabas possuem um núcleo vocálico, mas podem apresentar diferentes combinações de consoantes e vogais.",
   "BNCC EF02LP04; Manual ABC Parte C", f"bncc:EF02LP04|abc:{C}", "Alfabetização e BNCC", "responder"),
@@ -35,7 +35,7 @@ Q = [
   "BNCC EF12LP17; Manual ABC Parte C", f"bncc:EF12LP17|abc:{C}", "Alfabetização e BNCC", "responder"),
  ("B06","Como planejar uma aula de alfabetização quando alguns alunos já leem textos e outros ainda estão aprendendo as letras?",
   "O professor pode estabelecer um objetivo comum e propor atividades com diferentes níveis de apoio. Em uma aula sobre um pequeno texto, por exemplo, alguns alunos podem localizar letras e palavras, outros podem ler frases e outros podem responder a perguntas de compreensão. É importante oferecer oportunidades de aprendizagem adequadas ao nível de cada estudante, sem limitar permanentemente os alunos a grupos fixos. A avaliação contínua deve orientar os ajustes do planejamento.",
-  "BNCC (anos iniciais, práticas de linguagem); HE2", "bncc:*", "Alfabetização e BNCC", "responder"),
+  "BNCC (anos iniciais, práticas de linguagem); HE2", "bncc:*|he2:*", "Alfabetização e BNCC", "responder"),
  ("B07","Como saber se uma criança apresenta apenas atraso na alfabetização ou sinais de risco para dislexia?",
   "O professor deve observar a persistência e a natureza das dificuldades, especialmente no reconhecimento de palavras, na precisão e fluência da leitura e na relação entre sons e letras. Também deve considerar as oportunidades de ensino oferecidas, a frequência escolar, a trajetória de aprendizagem e a resposta a intervenções pedagógicas estruturadas. Dificuldades persistentes, apesar de ensino adequado e apoio sistemático, justificam investigação mais aprofundada. A escola identifica sinais de risco e documenta o desempenho, mas não estabelece diagnóstico clínico apenas pela observação em sala.",
   "Manual ABC Cap. 22 (Parte D)", "abc:22", "Dificuldades e dislexia", "responder com ressalva"),
@@ -89,7 +89,7 @@ Q = [
   "Manual ABC Parte D, Caps. 21 e 22", "abc:21,22", "Avaliação e encaminhamento", "responder com ressalva"),
  ("B24","Como elaborar um plano de apoio para um aluno do 2º ou 3º ano que apresenta dificuldades persistentes de alfabetização?",
   "O plano deve partir de uma avaliação das habilidades já consolidadas e das dificuldades prioritárias. É recomendável definir poucos objetivos claros e observáveis, selecionar estratégias de ensino explícito, estabelecer uma rotina de intervenção e acompanhar periodicamente o progresso. Por exemplo, se o aluno ainda apresenta dificuldades para associar letras e sons, esse pode ser um objetivo inicial antes de exigir leitura autônoma de textos extensos. O plano também pode registrar adaptações necessárias, responsabilidades dos profissionais e critérios para revisão das estratégias.",
-  "BNCC EF01LP05, EF01LP08, EF02LP02, EF02LP04; HE2; Manual ABC Partes C e D", f"bncc:EF01LP05,EF01LP08,EF02LP02,EF02LP04|abc:{C},{D}", "Avaliação e encaminhamento", "responder"),
+  "BNCC EF01LP05, EF01LP08, EF02LP02, EF02LP04; HE2; Manual ABC Partes C e D", f"bncc:EF01LP05,EF01LP08,EF02LP02,EF02LP04|abc:{C},{D}|he2:*", "Avaliação e encaminhamento", "responder"),
 ]
 
 LIMITE = [

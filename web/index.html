@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AlfaRAG — Alfabetização Inclusiva</title>
   <meta name="description" content="Assistente RAG de apoio pedagógico à alfabetização (2º e 3º anos), com citação de fontes e verificação automática.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E86600'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <header class="topo">
@@ -14,18 +14,22 @@
       <span class="logo" aria-hidden="true">Aa</span>
       <div>
         <h1>AlfaRAG</h1>
-        <p class="sub">Apoio pedagógico à alfabetização · Língua Portuguesa · 2º e 3º anos</p>
+        <p class="sub">Apoio à alfabetização · 2º e 3º anos</p>
       </div>
     </div>
-    <nav class="abas" role="tablist">
+    <nav class="abas" role="tablist" aria-label="Seções">
       <button role="tab" class="aba ativa" data-aba="chat" aria-selected="true">Assistente</button>
       <button role="tab" class="aba" data-aba="aval" aria-selected="false">Como funciona e avaliação</button>
     </nav>
     <div class="estado">
-      <label class="seletor">Modelo
-        <select id="modelo"></select>
+      <label class="seletor"><span>Modelo</span>
+        <select id="modelo" aria-label="Modelo de linguagem"></select>
       </label>
-      <span id="pill" class="pill">conectando…</span>
+      <span id="pill" class="status"><i aria-hidden="true"></i><span>conectando…</span></span>
+      <button id="btn-painel" type="button" class="btn-sec" aria-pressed="true" title="Mostrar ou esconder a janela de contexto">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12.5 3.5v13" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Contexto</span>
+      </button>
     </div>
   </header>
 
@@ -33,25 +37,50 @@
     <section class="conversa" aria-label="Conversa">
       <div id="mensagens" class="mensagens" aria-live="polite">
         <div id="boasvindas" class="boasvindas">
-          <h2>Pergunte sobre alfabetização no 2º e 3º anos</h2>
-          <p>As respostas vêm <strong>só</strong> dos documentos da base (BNCC, Manual ABC, artigos sobre dislexia), sempre com a fonte e a página. O assistente <strong>não faz diagnóstico</strong>: a decisão pedagógica é do professor e da equipe escolar.</p>
-          <div id="exemplos" class="exemplos"></div>
+          <h2>Como posso ajudar na alfabetização da sua turma?</h2>
+          <p class="lead">Descreva o que você observa no aluno. A resposta vem <strong>só</strong> dos documentos da base, com fonte e página, e termina com uma sugestão de acompanhamento.</p>
+          <ul class="garantias">
+            <li><span class="ico ok" aria-hidden="true">✓</span>Cita documento e página</li>
+            <li><span class="ico warn" aria-hidden="true">!</span>Não faz diagnóstico</li>
+            <li><span class="ico info" aria-hidden="true">⌂</span>Roda localmente, sem internet</li>
+          </ul>
+          <p id="base" class="base"></p>
+          <div class="grupo-ex">
+            <h3>Perguntas de exemplo</h3>
+            <div id="exemplos" class="exemplos"></div>
+          </div>
+          <div class="grupo-ex">
+            <h3>Teste os limites</h3>
+            <div id="limites" class="exemplos limites"></div>
+          </div>
         </div>
       </div>
       <form id="form" class="composer">
-        <textarea id="entrada" rows="2" maxlength="1200" placeholder="Ex.: Meu aluno lê “pato”, mas não lê “prato”. Como posso ajudá-lo?" aria-label="Pergunta"></textarea>
-        <button id="enviar" type="submit" class="btn-primario">Perguntar</button>
+        <div class="campo">
+          <textarea id="entrada" rows="1" maxlength="1200" placeholder="Ex.: Meu aluno do 2º ano lê “pato”, mas não lê “prato”. Como posso ajudá-lo?" aria-label="Pergunta"></textarea>
+          <button id="enviar" type="submit" class="btn-primario" aria-label="Perguntar">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 10h12M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Perguntar</span>
+          </button>
+        </div>
+        <p class="rodape"><span><kbd>Enter</kbd> envia · <kbd>Shift</kbd>+<kbd>Enter</kbd> quebra a linha</span><span>Não escreva nome, CPF ou telefone do aluno. Modelo local: cada resposta leva de segundos a alguns minutos.</span></p>
       </form>
-      <p class="rodape">Não escreva nome, CPF ou telefone do aluno. Modelo local (Ollama) — cada resposta leva de segundos a alguns minutos, conforme a máquina.</p>
     </section>
 
-    <aside class="painel" aria-label="Janela de contexto">
+    <aside id="aside-painel" class="painel" aria-label="Janela de contexto">
       <div class="painel-cab">
         <h2>Janela de contexto</h2>
-        <p class="sub">O que o modelo recebeu na última resposta selecionada — e o que ficou de fora.</p>
+        <p class="sub">O que o modelo recebeu na resposta selecionada e o que ficou de fora.</p>
       </div>
       <div id="painel" class="painel-corpo">
-        <p class="vazio">Faça uma pergunta para ver os trechos recuperados, o orçamento de tokens e as verificações do harness.</p>
+        <div class="vazio-painel">
+          <p>Faça uma pergunta para ver aqui:</p>
+          <ul>
+            <li>o orçamento de tokens da janela;</li>
+            <li>as verificações do harness, antes e depois do modelo;</li>
+            <li>os trechos que entraram e os que ficaram de fora.</li>
+          </ul>
+        </div>
       </div>
     </aside>
   </main>
@@ -65,7 +94,7 @@
         <li><b>Cobertura</b> — se o melhor trecho não passa do limiar de similaridade, o sistema recusa <i>sem chamar o modelo</i>.</li>
         <li><b>Janela de contexto</b> — top-k trechos dentro de um orçamento de tokens; histórico da conversa não entra.</li>
         <li><b>Modelo local</b> — prompt de sistema versionado + trechos numerados [n].</li>
-        <li><b>Harness de saída</b> — citação [n] tem de existir; código BNCC tem de estar no trecho; ressalva de diagnóstico é forçada se faltar.</li>
+        <li><b>Harness de saída</b> — citação [n] tem de existir; código BNCC (inclusive desdobrado, como EF02LP01A) tem de estar no trecho; ressalva de diagnóstico é forçada se faltar.</li>
         <li><b>Traço</b> — cada resposta grava pergunta, trechos, versões e verificações (JSONL).</li>
       </ol>
       <div id="config" class="config"></div>
@@ -82,15 +111,24 @@
 
   <template id="tpl-msg-usuario"><div class="msg usuario"><div class="bolha"></div></div></template>
   <template id="tpl-msg-assistente">
-    <div class="msg assistente">
-      <div class="bolha">
+    <article class="msg assistente">
+      <div class="avatar" aria-hidden="true">Aa</div>
+      <div class="cartao-resp">
+        <div class="progresso">
+          <ol class="etapas">
+            <li data-etapa="entrada" class="ativa"><span class="marca" aria-hidden="true"></span><span class="rot">Verificando a pergunta</span></li>
+            <li data-etapa="busca"><span class="marca" aria-hidden="true"></span><span class="rot">Buscando nos documentos</span></li>
+            <li data-etapa="modelo"><span class="marca" aria-hidden="true"></span><span class="rot">Escrevendo a resposta</span></li>
+          </ol>
+          <span class="tempo" aria-label="tempo decorrido">0 s</span>
+        </div>
         <div class="selos"></div>
-        <div class="texto"><span class="digitando">buscando nas fontes…</span></div>
-        <details class="fontes" hidden><summary></summary><ol></ol></details>
+        <div class="texto"></div>
+        <section class="fontes" hidden></section>
         <div class="meta"></div>
       </div>
-    </div>
+    </article>
   </template>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

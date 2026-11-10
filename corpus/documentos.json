@@ -55,5 +55,45 @@
     "idioma": "pt-BR",
     "licenca": "Documento público",
     "nota": "Disponível apenas em Markdown (sem paginação); a citação usa a seção."
+  },
+  {
+    "id": "HE1",
+    "arquivo": "pdf/habilidades_essenciais_lp_1ano.pdf",
+    "titulo": "Habilidades Essenciais — Língua Portuguesa, 1º ano do Ensino Fundamental (quadro por bimestre)",
+    "rotulo": "Habilidades Essenciais LP, 1º ano",
+    "tipo": "curriculo",
+    "idioma": "pt-BR",
+    "licenca": "Documento de rede de ensino (arquivo de 2021); o arquivo não identifica a secretaria responsável",
+    "nota": "Quadro por bimestre (campo de atuação, prática de linguagem, habilidade com código, objeto de conhecimento, conteúdo). Cada linha da tabela vira um registro; sem paginação impressa, a citação usa a página do PDF."
+  },
+  {
+    "id": "HE2",
+    "arquivo": "pdf/habilidades_essenciais_lp_2ano.pdf",
+    "titulo": "Habilidades Essenciais — Língua Portuguesa, 2º ano do Ensino Fundamental (quadro por bimestre)",
+    "rotulo": "Habilidades Essenciais LP, 2º ano",
+    "tipo": "curriculo",
+    "idioma": "pt-BR",
+    "licenca": "Documento de rede de ensino (arquivo de 2021); o arquivo não identifica a secretaria responsável",
+    "nota": "Quadro por bimestre (campo de atuação, prática de linguagem, habilidade com código, objeto de conhecimento, conteúdo). Cada linha da tabela vira um registro; sem paginação impressa, a citação usa a página do PDF."
+  },
+  {
+    "id": "HE3",
+    "arquivo": "pdf/habilidades_essenciais_lp_3ano.pdf",
+    "titulo": "Habilidades Essenciais — Língua Portuguesa, 3º ano do Ensino Fundamental (quadro por bimestre)",
+    "rotulo": "Habilidades Essenciais LP, 3º ano",
+    "tipo": "curriculo",
+    "idioma": "pt-BR",
+    "licenca": "Documento de rede de ensino (arquivo de 2021); o arquivo não identifica a secretaria responsável",
+    "nota": "Quadro por bimestre (campo de atuação, prática de linguagem, habilidade com código, objeto de conhecimento, conteúdo). Cada linha da tabela vira um registro; sem paginação impressa, a citação usa a página do PDF."
+  },
+  {
+    "id": "VID",
+    "arquivo": "videos",
+    "titulo": "Resumos de 204 vídeos do YouTube sobre alfabetização e inclusão (produzidos pelo grupo)",
+    "rotulo": "Relato em vídeo (resumo por IA)",
+    "tipo": "video_resumo",
+    "idioma": "pt-BR",
+    "licenca": "Material derivado do grupo: legenda automática de vídeos públicos resumida por IA, para uso acadêmico; cada resumo traz canal, URL, data e minutagem",
+    "nota": "Usado só na condição C5 (experimento). São relatos de experiência de profissionais (vídeos do YouTube), resumidos por IA a partir da legenda automática: fonte secundária, fora da base da demonstração (C4)."
   }
 ]

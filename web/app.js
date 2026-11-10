@@ -1,9 +1,16 @@
 "use strict";
 // Front-end sem dependências: funciona offline na apresentação.
 const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const estado = { status: null, ocupado: false, respostas: [], selecionada: null };
+
+// Preferências do navegador (só conveniência; a página funciona sem elas).
+const pref = {
+  get(k, d) { try { const v = localStorage.getItem("alfarag:" + k); return v === null ? d : v; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("alfarag:" + k, v); } catch { /* sem armazenamento */ } },
+};
 
 // ---------- Markdown mínimo + citações ----------
 function inline(t) {
@@ -12,7 +19,7 @@ function inline(t) {
   h = h.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
   h = h.replace(/\[código BNCC removido pelo sistema: não consta nas fontes\]/g, '<span class="removido" title="O harness removeu um código que não aparece em nenhum trecho recuperado">código removido pelo sistema</span>');
   h = h.replace(/\[(\d{1,2}(?:\s*[,;]\s*\d{1,2})*)\]/g, (_, g) =>
-    g.split(/\s*[,;]\s*/).map((n) => `<button type="button" class="cita" data-n="${n}" title="Ver fonte ${n}">${n}</button>`).join(""));
+    g.split(/\s*[,;]\s*/).map((n) => `<button type="button" class="cita" data-n="${n}" title="Ver a fonte ${n}">${n}</button>`).join(""));
   return h;
 }
 function markdown(md) {
@@ -38,53 +45,62 @@ function markdown(md) {
 
 // ---------- Inicialização ----------
 async function init() {
-  document.querySelectorAll(".aba").forEach((b) => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
+  $$(".aba").forEach((b) => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
   $("#form").addEventListener("submit", (e) => { e.preventDefault(); enviar(); });
-  $("#entrada").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } });
+  const campo = $("#entrada");
+  campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); enviar(); } });
+  campo.addEventListener("input", ajustarAltura);
+  $("#btn-painel").addEventListener("click", () => mostrarPainel(document.body.classList.contains("sem-painel")));
+
+  const params = new URLSearchParams(location.search);
+  mostrarPainel(params.has("painel") ? params.get("painel") !== "0" : pref.get("painel", "1") === "1", false);
+
   try {
     const s = await (await fetch("api/status")).json();
     estado.status = s;
     const sel = $("#modelo");
     const modelos = s.modelos.length ? s.modelos : [s.modelo_padrao];
     sel.innerHTML = modelos.map((m) => `<option ${m === s.modelo_padrao ? "selected" : ""}>${esc(m)}</option>`).join("");
-    const pill = $("#pill");
-    pill.textContent = s.ollama ? `Ollama online · ${s.condicao}/${s.experimento}` : "modelo offline";
-    pill.className = "pill " + (s.ollama ? "on" : "off");
-  } catch { $("#pill").textContent = "API offline"; $("#pill").className = "pill off"; }
+    status(s.ollama ? "on" : "off", s.ollama ? `Modelo local pronto · ${s.condicao}` : "Modelo offline");
+    if (s.documentos?.length) $("#base").innerHTML = `<b>Base consultada:</b> ${s.documentos.map((d) => esc(d.rotulo)).join(" · ")}`;
+  } catch { status("off", "API offline"); }
   try {
     const ex = await (await fetch("api/exemplos")).json();
-    const escolhidos = ["B03", "B08", "B14", "B16", "B23", "L01", "L02", "L04"];
-    $("#exemplos").innerHTML = ex.filter((e) => escolhidos.includes(e.id)).map((e) =>
-      `<button type="button" class="exemplo ${e.id.startsWith("L") ? "limite" : ""}" data-q="${esc(e.pergunta)}"><span class="tag">${esc(e.id.startsWith("L") ? "limite" : e.categoria)}</span>${esc(e.pergunta)}</button>`).join("");
-    $("#exemplos").addEventListener("click", (e) => { const b = e.target.closest(".exemplo"); if (b) { $("#entrada").value = b.dataset.q; enviar(); } });
+    const exemplo = (e) => `<button type="button" class="exemplo" data-q="${esc(e.pergunta)}"><span class="tag">${esc(e.categoria)}</span>${esc(e.pergunta)}</button>`;
+    const bench = ["B02", "B03", "B08", "B14", "B16", "B23"], lim = ["L01", "L02", "L03", "L04"];
+    $("#exemplos").innerHTML = ex.filter((e) => bench.includes(e.id)).map(exemplo).join("");
+    $("#limites").innerHTML = ex.filter((e) => lim.includes(e.id)).map(exemplo).join("");
+    $("#boasvindas").addEventListener("click", (e) => { const b = e.target.closest(".exemplo"); if (b) { $("#entrada").value = b.dataset.q; enviar(); } });
   } catch { /* sem exemplos */ }
   // Modo replay: /?traco=<id> reabre uma resposta gravada, sem chamar o modelo (plano B da apresentação).
-  const params = new URLSearchParams(location.search);
   for (const id of (params.get("traco") || "").split(",").filter(Boolean)) await replay(id);
   if (params.get("aba")) trocarAba(params.get("aba"));
   if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
 }
 
-async function replay(id) {
-  try {
-    const r = await fetch(`api/traco/${encodeURIComponent(id)}`);
-    if (!r.ok) return;
-    const t = await r.json();
-    const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = t.pergunta;
-    const a = adicionar("#tpl-msg-assistente");
-    const reg = { pergunta: t.pergunta, janela: null, final: null, el: a, bruto: "" };
-    estado.respostas.push(reg);
-    a.addEventListener("click", (e) => { const c = e.target.closest(".cita"); selecionar(reg); if (c) destacarFonte(reg, +c.dataset.n); });
-    if (t.janela) tratar(reg, { tipo: "contexto", janela: t.janela });
-    tratar(reg, t.final);
-    selecionar(reg);
-  } catch { /* traço indisponível */ }
+function status(cls, texto) {
+  const p = $("#pill");
+  p.className = "status " + cls;
+  p.innerHTML = `<i aria-hidden="true"></i><span>${esc(texto)}</span>`;
+}
+
+function mostrarPainel(sim, salvar = true) {
+  document.body.classList.toggle("sem-painel", !sim);
+  $("#btn-painel").setAttribute("aria-pressed", String(sim));
+  if (salvar) pref.set("painel", sim ? "1" : "0");
+}
+
+function ajustarAltura() {
+  const t = $("#entrada");
+  t.style.height = "auto";
+  t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
 }
 
 function trocarAba(aba) {
-  document.querySelectorAll(".aba").forEach((b) => { const on = b.dataset.aba === aba; b.classList.toggle("ativa", on); b.setAttribute("aria-selected", on); });
+  $$(".aba").forEach((b) => { const on = b.dataset.aba === aba; b.classList.toggle("ativa", on); b.setAttribute("aria-selected", on); });
   $("#aba-chat").hidden = aba !== "chat";
   $("#aba-aval").hidden = aba !== "aval";
+  $("#btn-painel").hidden = aba !== "chat";
   if (aba === "aval") carregarAvaliacao();
 }
 
@@ -93,25 +109,53 @@ function adicionar(tpl) {
   const n = $(tpl).content.firstElementChild.cloneNode(true);
   $("#boasvindas")?.remove();
   $("#mensagens").appendChild(n);
-  n.scrollIntoView({ behavior: "smooth", block: "end" });
+  rolar(true);
   return n;
 }
 
-async function enviar() {
-  const pergunta = $("#entrada").value.trim();
-  if (!pergunta || estado.ocupado) return;
-  estado.ocupado = true; $("#enviar").disabled = true; $("#entrada").value = "";
-  const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = pergunta;
+function rolar(forcar = false) {
+  const m = $("#mensagens");
+  if (forcar || m.scrollHeight - m.scrollTop - m.clientHeight < 180) m.scrollTop = m.scrollHeight;
+}
+
+function novaResposta(pergunta) {
   const a = adicionar("#tpl-msg-assistente");
-  const reg = { pergunta, janela: null, final: null, el: a, bruto: "" };
+  const reg = { pergunta, janela: null, final: null, el: a, bruto: "", timer: null };
   estado.respostas.push(reg);
   a.addEventListener("click", (e) => {
     const c = e.target.closest(".cita");
-    selecionar(reg);
+    const f = e.target.closest(".fonte-cab");
+    if (estado.selecionada !== reg) selecionar(reg);
     if (c) destacarFonte(reg, +c.dataset.n);
+    else if (f) f.parentElement.classList.toggle("aberto");
   });
   selecionar(reg);
+  return reg;
+}
+
+async function replay(id) {
+  try {
+    const r = await fetch(`api/traco/${encodeURIComponent(id)}`);
+    if (!r.ok) return;
+    const t = await r.json();
+    const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = t.pergunta;
+    const reg = novaResposta(t.pergunta);
+    if (t.janela) tratar(reg, { tipo: "contexto", janela: t.janela });
+    tratar(reg, t.final);
+  } catch { /* traço indisponível */ }
+}
+
+async function enviar() {
+  const campo = $("#entrada");
+  const pergunta = campo.value.trim();
+  if (!pergunta || estado.ocupado) return;
+  estado.ocupado = true; $("#enviar").disabled = true; campo.value = ""; ajustarAltura();
+  const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = pergunta;
+  const reg = novaResposta(pergunta);
   const t0 = performance.now();
+  // O harness de entrada é instantâneo: se não houve bloqueio, a espera seguinte é a busca.
+  setTimeout(() => { if (!reg.janela && !reg.final) { etapa(reg, "entrada", "feita", "Pergunta verificada"); etapa(reg, "busca", "ativa"); } }, 500);
+  reg.timer = setInterval(() => { const t = $(".tempo", reg.el); if (t) t.textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
   try {
     const r = await fetch("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pergunta, modelo: $("#modelo").value }) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -125,67 +169,116 @@ async function enviar() {
     }
     if (buf.trim()) tratar(reg, JSON.parse(buf));
   } catch (err) {
-    $(".texto", a).innerHTML = `<p>Falha de conexão com o servidor (${esc(err.message)}).</p>`;
+    $(".progresso", reg.el)?.remove();
+    reg.el.classList.add("erro");
+    $(".texto", reg.el).innerHTML = `<p>Falha de conexão com o servidor (${esc(err.message)}).</p>`;
   } finally {
-    estado.ocupado = false; $("#enviar").disabled = false;
-    const seg = ((performance.now() - t0) / 1000).toFixed(1);
-    const m = $(".meta", a); if (!m.textContent) m.textContent = `${seg} s`;
+    clearInterval(reg.timer);
+    estado.ocupado = false; $("#enviar").disabled = false; campo.focus();
+    const m = $(".meta", reg.el);
+    if (!m.textContent) m.textContent = `${((performance.now() - t0) / 1000).toFixed(1)} s`;
   }
+}
+
+function etapa(reg, nome, classe, rotulo) {
+  const li = $(`.etapas li[data-etapa="${nome}"]`, reg.el);
+  if (!li) return;
+  li.className = classe;
+  if (rotulo) $(".rot", li).textContent = rotulo;
 }
 
 function tratar(reg, ev) {
   const a = reg.el;
   if (ev.tipo === "contexto") {
     reg.janela = ev.janela;
-    $(".texto", a).innerHTML = `<span class="digitando">${ev.janela.cobertura.coberta ? `${ev.janela.trechos.length} trechos recuperados — o modelo está escrevendo` : "verificando cobertura"}</span>`;
+    const j = ev.janela;
+    etapa(reg, "entrada", "feita", j.modo_ressalva ? "Pergunta verificada · modo ressalva ligado" : "Pergunta verificada");
+    if (j.cobertura.coberta) {
+      etapa(reg, "busca", "feita", `${j.trechos.length} trechos selecionados nos documentos`);
+      etapa(reg, "modelo", "ativa", "Escrevendo a resposta com o modelo local");
+    } else {
+      etapa(reg, "busca", "feita", "Documentos consultados");
+      etapa(reg, "modelo", "pulada", "Modelo não chamado: as fontes não cobrem a pergunta");
+    }
     if (estado.selecionada === reg) renderPainel(reg);
   } else if (ev.tipo === "delta") {
     reg.bruto += ev.texto;
-    $(".texto", a).innerHTML = markdown(reg.bruto) + '<span class="digitando"></span>';
+    $(".texto", a).innerHTML = markdown(reg.bruto) + '<span class="cursor"></span>';
   } else if (ev.tipo === "final") {
     reg.final = ev;
-    $(".texto", a).innerHTML = markdown(ev.resposta);
+    clearInterval(reg.timer);
+    $(".progresso", a)?.remove();
+    a.classList.toggle("recusa", ev.desfecho === "sem_cobertura");
+    a.classList.toggle("bloqueada", ev.desfecho === "bloqueada");
+    a.classList.toggle("erro", ev.desfecho === "erro" || ev.desfecho === "ocupado");
+    $(".texto", a).innerHTML = markdown(ev.resposta) + dica(ev, reg.pergunta);
     renderSelos(reg); renderFontes(reg);
     const o = ev.traco?.ollama;
-    $(".meta", a).textContent = [ev.desfecho === "respondida" ? ev.traco?.modelo : "modelo não chamado", o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null, ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null, ev.traco?.id ? `traço ${ev.traco.id}` : null].filter(Boolean).join(" · ");
+    $(".meta", a).textContent = [
+      ev.desfecho === "respondida" ? ev.traco?.modelo : "modelo não chamado",
+      o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null,
+      ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null,
+      ev.traco?.id ? `traço ${ev.traco.id}` : null,
+    ].filter(Boolean).join(" · ");
     if (estado.selecionada === reg) renderPainel(reg);
   }
-  a.scrollIntoView({ block: "end" });
+  rolar();
+}
+
+function dica(ev, pergunta = "") {
+  if (ev.desfecho !== "sem_cobertura") return "";
+  // Sem acentos, a similaridade cai e pode ficar abaixo do limiar (resultados/grafia.json).
+  const semAcento = !/[áàâãéêíóôõúüç]/i.test(pergunta);
+  return `<div class="dica"><b>Como reformular</b><ul>
+    ${semAcento ? "<li>Escreva com acentos: “lê” e “não” aproximam a pergunta dos documentos mais do que “le” e “nao”.</li>" : ""}
+    <li>Diga a série e o que o aluno faz ou não faz (ex.: “aluno do 2º ano troca letras ao escrever”).</li>
+    <li>Use os termos da sala de aula: leitura, escrita, sílabas, compreensão.</li></ul></div>`;
 }
 
 function renderSelos(reg) {
   const f = reg.final, v = f.verificacao, s = [];
   const d = f.desfecho;
-  if (d === "bloqueada") s.push(["bad", "bloqueada pelo harness de entrada"]);
-  if (d === "sem_cobertura") s.push(["warn", "recusa: fontes não cobrem a pergunta (modelo não foi chamado)"]);
+  if (d === "bloqueada") s.push(["bad", "bloqueada antes da busca"]);
+  if (d === "sem_cobertura") s.push(["warn", "recusa sem chamar o modelo"]);
   if (d === "erro" || d === "ocupado") s.push(["bad", d === "erro" ? "erro do modelo" : "servidor ocupado"]);
   if (v) {
     if (v.citacoes_validas.length) s.push(["ok", `${v.citacoes_validas.length} fonte(s) citada(s) e conferida(s)`]);
     if (v.sem_citacao) s.push(["warn", "sem citação"]);
     if (v.citacoes_invalidas.length) s.push(["bad", `citação inexistente removida: ${v.citacoes_invalidas.join(", ")}`]);
     if (v.codigos_ok.length) s.push(["ok", `BNCC conferida: ${v.codigos_ok.join(", ")}`]);
-    if (v.codigos_removidos.length) s.push(["bad", `código BNCC removido: ${v.codigos_removidos.join(", ")}`]);
-    if (v.modo_ressalva) s.push([v.ressalva_forcada ? "warn" : "info", v.ressalva_forcada ? "modo ressalva: aviso de diagnóstico inserido pelo sistema" : "modo ressalva: limite de diagnóstico declarado"]);
+    if (v.codigos_removidos.length) s.push(["bad", `código removido: ${v.codigos_removidos.join(", ")}`]);
+    if (v.modo_ressalva) s.push([v.ressalva_forcada ? "warn" : "info", v.ressalva_forcada ? "aviso de diagnóstico inserido pelo sistema" : "limite de diagnóstico declarado"]);
     if (v.truncada) s.push(["warn", "resposta cortada"]);
   }
   $(".selos", reg.el).innerHTML = s.map(([c, t]) => `<span class="selo ${c}">${esc(t)}</span>`).join("");
 }
 
 function renderFontes(reg) {
-  const j = reg.janela; const det = $(".fontes", reg.el);
+  const j = reg.janela; const sec = $(".fontes", reg.el);
   if (!j || !j.trechos.length || reg.final.desfecho !== "respondida") return;
   const usadas = new Set(reg.final.verificacao?.citacoes_validas || []);
-  $("summary", det).textContent = `${j.trechos.length} trechos na janela · ${usadas.size} citados`;
-  $("ol", det).innerHTML = j.trechos.map((t) => `<li data-n="${t.n}"><span class="n">[${t.n}]</span><div><span class="doc">${esc(t.rotulo)}</span><span class="pag">${esc(t.pagina)}${usadas.has(t.n) ? " · citado" : ""}</span><span class="exc">${esc(t.secao ? t.secao + " — " : "")}${esc(t.texto.slice(0, 260))}…</span></div></li>`).join("");
-  det.hidden = false;
+  const item = (t) => `<li data-n="${t.n}"><button type="button" class="fonte-cab"><span class="n">${t.n}</span><span class="doc">${esc(t.rotulo)}</span><span class="pag">${esc(t.pagina)}</span></button>
+    <div class="exc">${t.secao ? `<span class="sec">${esc(t.secao)}</span>` : ""}${esc(t.texto.slice(0, 480))}${t.texto.length > 480 ? "…" : ""}</div></li>`;
+  const cit = j.trechos.filter((t) => usadas.has(t.n)), nao = j.trechos.filter((t) => !usadas.has(t.n));
+  sec.innerHTML = `<h4>Fontes citadas <span>${cit.length} de ${j.trechos.length} trechos da janela · clique para ler</span></h4>`
+    + (cit.length ? `<ol>${cit.map(item).join("")}</ol>` : "")
+    + (nao.length ? `<details><summary>Trechos que o modelo recebeu e não citou (${nao.length})</summary><ol>${nao.map(item).join("")}</ol></details>` : "");
+  sec.hidden = false;
 }
 
 function destacarFonte(reg, n) {
-  const det = $(".fontes", reg.el); if (det.hidden) return;
-  det.open = true;
-  det.querySelectorAll("li").forEach((li) => li.classList.toggle("destaque", +li.dataset.n === n));
-  det.querySelector(`li[data-n="${n}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  document.querySelector(`#painel .trecho[data-n="${n}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  const sec = $(".fontes", reg.el);
+  if (!sec.hidden) {
+    $$("li", sec).forEach((li) => li.classList.toggle("destaque", +li.dataset.n === n));
+    const li = $(`li[data-n="${n}"]`, sec);
+    if (li) {
+      li.classList.add("aberto");
+      const d = li.closest("details"); if (d) d.open = true;
+      li.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }
+  $$("#painel .trecho").forEach((t) => t.classList.toggle("destaque", +t.dataset.n === n));
+  $(`#painel .trecho[data-n="${n}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function selecionar(reg) {
@@ -194,11 +287,16 @@ function selecionar(reg) {
 }
 
 // ---------- Painel: janela de contexto ----------
+const ICONE = { ok: "✓", warn: "!", bad: "✕" };
+const chk = (cls, tit, det = "") => `<li class="chk ${cls}"><span class="dot" aria-hidden="true">${ICONE[cls]}</span><div><b>${esc(tit)}</b>${det ? `<small>${esc(det)}</small>` : ""}</div></li>`;
+
 function renderPainel(reg) {
   const p = $("#painel");
   const j = reg.janela, f = reg.final;
   if (!j) {
-    p.innerHTML = f ? `<div class="bloco"><h3>Harness de entrada</h3><div class="check"><b>⛔</b><span>${esc(f.resposta)}</span></div><p class="vazio">Nada foi recuperado nem enviado ao modelo.</p></div>` : `<p class="vazio">Aguardando…</p>`;
+    p.innerHTML = f
+      ? `<div class="bloco"><h3>Harness de entrada</h3><ul class="checks">${chk("bad", "Pergunta bloqueada antes da busca", f.resposta)}</ul><p class="vazio" style="margin:10px 0 0">Nada foi recuperado nem enviado ao modelo.</p></div>`
+      : `<div class="vazio-painel"><p>Verificando a pergunta…</p></div>`;
     return;
   }
   const enviado = j.cobertura.coberta;
@@ -206,29 +304,41 @@ function renderPainel(reg) {
   const pct = (x) => `${(100 * x / tot).toFixed(1)}%`;
   const v = f?.verificacao;
   const checks = [
-    ["✅", "Entrada aceita (sem dado pessoal)"],
-    [j.modo_ressalva ? "⚠️" : "✅", j.modo_ressalva ? "Pedido de diagnóstico detectado → modo ressalva" : "Sem pedido de diagnóstico"],
-    [j.cobertura.coberta ? "✅" : "⛔", `Cobertura: melhor similaridade ${j.cobertura.melhor_cos} (limiar ${j.cobertura.limiar})${j.cobertura.coberta ? "" : " → recusa sem chamar o modelo"}`],
+    chk("ok", "Entrada aceita", "sem dado pessoal na pergunta"),
+    j.modo_ressalva ? chk("warn", "Pedido de diagnóstico detectado", "modo ressalva ligado") : chk("ok", "Sem pedido de diagnóstico"),
+    enviado
+      ? chk("ok", "Fontes cobrem a pergunta", `melhor similaridade ${j.cobertura.melhor_cos} ≥ limiar ${j.cobertura.limiar}`)
+      : chk("bad", "Fontes não cobrem a pergunta", `melhor similaridade ${j.cobertura.melhor_cos} < limiar ${j.cobertura.limiar}: recusa sem chamar o modelo`),
   ];
   if (v) {
-    checks.push([v.citacoes_invalidas.length ? "⛔" : v.sem_citacao ? "⚠️" : "✅", `Citações válidas: ${v.citacoes_validas.join(", ") || "nenhuma"}${v.citacoes_invalidas.length ? ` · inválidas removidas: ${v.citacoes_invalidas.join(", ")}` : ""}`]);
-    checks.push([v.codigos_removidos.length ? "⛔" : "✅", `Códigos BNCC: ${v.codigos_ok.join(", ") || "nenhum citado"}${v.codigos_removidos.length ? ` · removidos: ${v.codigos_removidos.join(", ")}` : ""}`]);
-    if (v.modo_ressalva) checks.push([v.ressalva_forcada ? "⚠️" : "✅", v.ressalva_forcada ? "Modelo não declarou o limite → aviso inserido pelo sistema" : "Modelo declarou que não diagnostica"]);
+    checks.push(v.citacoes_invalidas.length ? chk("bad", "Citação inexistente removida", `[${v.citacoes_invalidas.join("], [")}] não estava na janela`)
+      : v.sem_citacao ? chk("warn", "Resposta sem citação") : chk("ok", "Citações conferidas", `[${v.citacoes_validas.join("], [")}] existem na janela`));
+    checks.push(v.codigos_removidos.length ? chk("bad", "Código BNCC removido", `fora das fontes: ${v.codigos_removidos.join(", ")}`)
+      : chk("ok", "Códigos BNCC conferidos", v.codigos_ok.join(", ") || "nenhum citado"));
+    if (v.modo_ressalva) checks.push(v.ressalva_forcada ? chk("warn", "Aviso de diagnóstico inserido pelo sistema", "o modelo não declarou o limite") : chk("ok", "Limite de diagnóstico declarado", "pelo próprio modelo"));
+    if (v.truncada) checks.push(chk("warn", "Resposta cortada", "limite de tokens"));
   }
+  const cartao = (c) => `
+    <div class="trecho${enviado ? "" : " fora"}" data-n="${c.n}">
+      <div class="cab"><span class="tit"><span class="num">${c.n}</span>${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts" title="posição na busca vetorial / lexical e similaridade">D${c.rank_denso ?? "–"} · L${c.rank_bm25 ?? "–"} · cos ${c.cos}</span></div>
+      ${c.secao ? `<div class="sec">${esc(c.secao)}</div>` : ""}
+      <details><summary>ver trecho (~${c.tokens} tokens)</summary><p>${esc(c.texto)}</p></details>
+    </div>`;
   p.innerHTML = `
     <div class="bloco"><h3>Orçamento da janela</h3>
       <div class="barra" title="tokens aproximados"><span class="s" style="width:${pct(sis)}"></span><span class="q" style="width:${pct(q)}"></span><span class="t" style="width:${pct(t)}"></span></div>
-      <div class="legenda"><span><i style="background:var(--muted-2)"></i>prompt de sistema ${j.sistema.versao} · ~${sis}</span><span><i style="background:var(--info)"></i>pergunta ~${q}</span><span><i style="background:var(--brand)"></i>trechos ~${t} / ${j.orcamento}</span></div>
+      <div class="legenda"><span><i style="background:var(--muted-3)"></i>prompt ${esc(j.sistema.versao)} · ~${sis}</span><span><i style="background:var(--info)"></i>pergunta · ~${q}</span><span><i style="background:var(--brand)"></i>trechos · ~${t} de ${j.orcamento}</span></div>
     </div>
-    <div class="bloco"><h3>Harness</h3>${checks.map(([i, txt]) => `<div class="check"><b>${i}</b><span>${esc(txt)}</span></div>`).join("")}</div>
-    <div class="bloco"><h3>${enviado ? `Entrou na janela (top-${j.top_k})` : "Recuperados, mas NÃO enviados (modelo não chamado)"}</h3>${j.trechos.length ? j.trechos.map((c) => `
-      <div class="trecho${enviado ? "" : " fora"}" data-n="${c.n}"><div class="cab"><span><span class="num">[${c.n}]</span>${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts" title="rank denso / rank BM25 / similaridade">D${c.rank_denso ?? "–"} · L${c.rank_bm25 ?? "–"} · cos ${c.cos}</span></div>
-      ${c.secao ? `<div class="sec">${esc(c.secao)}</div>` : ""}<details><summary>ver trecho (~${c.tokens} tokens)</summary><p>${esc(c.texto)}</p></details></div>`).join("") : '<p class="vazio">Nenhum trecho.</p>'}
+    <div class="bloco"><h3>Verificações do harness</h3><ul class="checks">${checks.join("")}</ul></div>
+    <div class="bloco"><h3>${enviado ? `Entrou na janela · top-${j.top_k}` : "Recuperados, mas não enviados"}</h3>
+      ${enviado ? "" : '<p class="aviso-fora">O modelo não foi chamado: estes trechos ficaram abaixo do limiar de similaridade.</p>'}
+      <div class="trechos">${j.trechos.length ? j.trechos.map(cartao).join("") : '<p class="vazio">Nenhum trecho.</p>'}</div>
     </div>
-    <div class="bloco"><h3>Ficou de fora (${j.fora_total} candidatos)</h3>${j.fora.slice(0, 6).map((c) => `
-      <div class="trecho fora"><div class="cab"><span>${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts">cos ${c.cos}</span></div><div class="mot">${esc(c.motivo)}</div></div>`).join("")}
-      <h3 style="margin-top:10px">Nunca entra</h3><ul class="lista-simples">${j.nao_entra.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-    </div>`;
+    <details class="bloco"><summary>Ficou de fora · ${j.fora_total} candidatos</summary>
+      <div class="trechos">${j.fora.slice(0, 6).map((c) => `
+        <div class="trecho fora"><div class="cab"><span class="tit">${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts">cos ${c.cos}</span></div><span class="mot">${esc(c.motivo)}</span></div>`).join("")}</div>
+    </details>
+    <details class="bloco"><summary>Nunca entra na janela</summary><ul class="lista-simples">${j.nao_entra.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
 }
 
 // ---------- Aba de avaliação ----------
@@ -257,8 +367,8 @@ function tabela(cab, linhas) {
 function renderAvaliacao(a) {
   let h = `<p class="nota">Executada em ${esc(a.quando)} · ${esc(a.hardware || "")}. ${esc(a.nota || "")}</p>`;
   if (a.recuperacao) h += `<h3>Recuperação (24 perguntas, anotação por regra)</h3>` + tabela(["Chunking", "Corpus", "Recall@k", "MRR", "k"], a.recuperacao.map((r) => [r.experimento, r.condicao, r.recall, r.mrr, r.k]));
-  if (a.geracao) h += `<h3>Geração (rubrica 0–10, juiz: ${esc(a.juiz || "")})</h3>` + tabela(["Modelo", "Corpus", "Média", "≥ 8", "Citação válida", "Código removido", "Latência média (s)"], a.geracao.map((r) => [r.modelo, r.condicao, r.media, r.prop_8, r.cit_ok, r.cod_removidos, r.latencia]));
-  if (a.limites) h += `<h3>Casos-limite</h3>` + tabela(["Caso", "Esperado", "Desfecho", "Passou"], a.limites.map((r) => [r.id, r.esperado, r.desfecho, r.passou ? "sim" : "não"]));
+  if (a.geracao) h += `<h3>Geração (rubrica 0–10, juiz: ${esc(a.juiz || "")})</h3>` + tabela(["Modelo", "Corpus", "Juiz", "Média", "≥ 8", "Citação válida", "Código removido", "Latência média (s)"], a.geracao.map((r) => [r.modelo, r.condicao, r.juiz, r.media, r.prop_8, r.cit_ok, r.cod_removidos, r.latencia]));
+  if (a.limites) h += `<h3>Casos-limite</h3>` + tabela(["Caso", "Modelo", "Corpus", "Esperado", "Desfecho", "Passou"], a.limites.map((r) => [r.id, r.modelo, r.condicao, r.esperado, r.desfecho, r.passou ? "sim" : "não"]));
   return h;
 }
 
