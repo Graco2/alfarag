@@ -65,7 +65,8 @@ async function init() {
     estado.status = s;
     const sel = $("#modelo");
     montarSeletor(s);
-    $("#btn-conexoes").hidden = !s.conexoes_editaveis;  // servidor público: a tela nem aparece
+    // Servidor público: a tela nem aparece. No compartilhado (chave por usuário) ela é onde cada pessoa cola a própria chave.
+    $("#btn-conexoes").hidden = !(s.conexoes_editaveis || s.chave_do_usuario);
     status(s.ollama ? "on" : "off", s.ollama ? `Modelo local pronto · ${s.condicao}` : "Modelo offline");
     if (s.documentos?.length) $("#base").innerHTML = `<b>Base consultada:</b> ${s.documentos.map((d) => esc(d.rotulo)).join(" · ")}`;
   } catch { status("off", "API offline"); }
