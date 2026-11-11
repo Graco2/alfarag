@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from .config import CONEXOES_ARQ
+from .config import CHAVE_DO_USUARIO, CONEXOES_ARQ
 
 # Provedores conhecidos. `extra` entra no corpo de cada requisição de chat.
 PROVEDORES: dict[str, dict] = {
@@ -65,6 +65,9 @@ def _chave_env(provedor: str) -> str:
 
 
 def chave(provedor: str) -> str:
+    """Chave do servidor (ambiente > arquivo). No modo CHAVE_DO_USUARIO o servidor não tem chave própria."""
+    if CHAVE_DO_USUARIO:
+        return ""
     return _chave_env(provedor) or str(_ler().get(provedor, {}).get("chave", "")).strip()
 
 
@@ -89,9 +92,16 @@ def mascarar(k: str) -> str:
     return f"{k[:3]}…{k[-4:]}" if len(k) >= 16 else "••••••••"
 
 
-def sanitizar(texto: object) -> str:
-    """Remove qualquer chave conhecida e padrões de credencial de um texto."""
+def chave_valida(k: str | None) -> bool:
+    return bool(k) and 8 <= len(k) <= 300 and not re.search(r"\s", k)
+
+
+def sanitizar(texto: object, *extras: str | None) -> str:
+    """Remove qualquer chave conhecida (e as passadas em `extras`) e padrões de credencial de um texto."""
     t = str(texto)
+    for k in extras:
+        if k:
+            t = t.replace(k, "[chave]")
     for p in PROVEDORES:
         k = chave(p)
         if k:
@@ -115,8 +125,8 @@ def publico() -> list[dict]:
 
 
 def modelos_remotos() -> list[str]:
-    """Ids com prefixo dos modelos remotos disponíveis (só provedores com chave)."""
-    return [f"{p}:{m}" for p in PROVEDORES if configurada(p) for m in modelos_do_provedor(p)]
+    """Ids com prefixo dos modelos remotos disponíveis (só provedores com chave; no modo CHAVE_DO_USUARIO, todos)."""
+    return [f"{p}:{m}" for p in PROVEDORES if CHAVE_DO_USUARIO or configurada(p) for m in modelos_do_provedor(p)]
 
 
 def salvar(provedor: str, url: str | None = None, nova_chave: str | None = None, modelos: list[str] | None = None) -> None:
@@ -150,10 +160,11 @@ def remover(provedor: str) -> None:
         _gravar(dados)
 
 
-def cabecalhos(provedor: str) -> dict:
-    k = chave(provedor)
+def cabecalhos(provedor: str, chave_usuario: str | None = None) -> dict:
+    k = chave_usuario or chave(provedor)
     if not k:
-        raise ErroConexao("Conexão sem chave. Configure em Conexões ou defina " + PROVEDORES[provedor]["env"] + ".")
+        raise ErroConexao("Conexão sem chave. Informe sua chave em Conexões." if CHAVE_DO_USUARIO
+                          else "Conexão sem chave. Configure em Conexões ou defina " + PROVEDORES[provedor]["env"] + ".")
     return {"Authorization": f"Bearer {k}"}
 
 
@@ -169,10 +180,10 @@ def mensagem_http(status: int) -> str:
     }.get(status, f"Provedor indisponível (HTTP {status}).")
 
 
-def testar(provedor: str, cliente: httpx.Client | None = None) -> dict:
+def testar(provedor: str, cliente: httpx.Client | None = None, chave_usuario: str | None = None) -> dict:
     """GET {base}/models. Devolve {ok, mensagem, modelos?}; nunca levanta nem vaza a chave."""
     try:
-        h = cabecalhos(provedor)
+        h = cabecalhos(provedor, chave_usuario)
     except ErroConexao as e:
         return {"ok": False, "mensagem": str(e)}
     c = cliente or httpx.Client(timeout=httpx.Timeout(15))

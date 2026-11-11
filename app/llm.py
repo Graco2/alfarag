@@ -132,7 +132,7 @@ def _meta_remoto(uso: dict | None, finish: str | None, t0: float, n_delta: int) 
     }
 
 
-def _remoto_stream(provedor: str, nome: str, mensagens: list[dict], temperatura: float | None) -> Iterator[dict]:
+def _remoto_stream(provedor: str, nome: str, mensagens: list[dict], temperatura: float | None, chave: str | None = None) -> Iterator[dict]:
     t0 = time.monotonic()
     uso: dict | None = None
     finish: str | None = None
@@ -140,7 +140,7 @@ def _remoto_stream(provedor: str, nome: str, mensagens: list[dict], temperatura:
     try:
         url = f"{conexoes.url_base(provedor)}/chat/completions"
         with httpx.Client(timeout=_TIMEOUT_REMOTO, transport=_TRANSPORT_REMOTO) as c:
-            with c.stream("POST", url, headers=conexoes.cabecalhos(provedor),
+            with c.stream("POST", url, headers=conexoes.cabecalhos(provedor, chave),
                           json=_payload_remoto(provedor, nome, mensagens, True, temperatura, None)) as r:
                 r.raise_for_status()
                 for linha in r.iter_lines():
@@ -166,11 +166,11 @@ def _remoto_stream(provedor: str, nome: str, mensagens: list[dict], temperatura:
     yield {"fim": _meta_remoto(uso, finish, t0, n)}
 
 
-def _remoto_chat(provedor: str, nome: str, mensagens: list[dict], temperatura: float | None, max_tokens: int | None) -> tuple[str, dict]:
+def _remoto_chat(provedor: str, nome: str, mensagens: list[dict], temperatura: float | None, max_tokens: int | None, chave: str | None = None) -> tuple[str, dict]:
     t0 = time.monotonic()
     try:
         with httpx.Client(timeout=_TIMEOUT_REMOTO, transport=_TRANSPORT_REMOTO) as c:
-            r = c.post(f"{conexoes.url_base(provedor)}/chat/completions", headers=conexoes.cabecalhos(provedor),
+            r = c.post(f"{conexoes.url_base(provedor)}/chat/completions", headers=conexoes.cabecalhos(provedor, chave),
                        json=_payload_remoto(provedor, nome, mensagens, False, temperatura, max_tokens))
             r.raise_for_status()
             ev = r.json()
@@ -180,20 +180,20 @@ def _remoto_chat(provedor: str, nome: str, mensagens: list[dict], temperatura: f
         raise _erro_remoto(e) from None
 
 
-def chat_stream(modelo: str, mensagens: list[dict], temperatura: float | None = None) -> Iterator[dict]:
+def chat_stream(modelo: str, mensagens: list[dict], temperatura: float | None = None, chave: str | None = None) -> Iterator[dict]:
     """Gera eventos {'delta': str} e, ao final, {'fim': {...métricas...}} (mesmo formato nos dois provedores)."""
     provedor, nome = resolver(modelo)
     if provedor == "ollama":
         yield from _ollama_stream(nome, mensagens, temperatura)
     else:
-        yield from _remoto_stream(provedor, nome, mensagens, temperatura)
+        yield from _remoto_stream(provedor, nome, mensagens, temperatura, chave)
 
 
-def chat(modelo: str, mensagens: list[dict], temperatura: float | None = None, max_tokens: int | None = None, formato: dict | None = None) -> tuple[str, dict]:
+def chat(modelo: str, mensagens: list[dict], temperatura: float | None = None, max_tokens: int | None = None, formato: dict | None = None, chave: str | None = None) -> tuple[str, dict]:
     provedor, nome = resolver(modelo)
     if provedor == "ollama":
         return _ollama_chat(nome, mensagens, temperatura, max_tokens, formato)
-    return _remoto_chat(provedor, nome, mensagens, temperatura, max_tokens)  # 'formato' é recurso do Ollama
+    return _remoto_chat(provedor, nome, mensagens, temperatura, max_tokens, chave)  # 'formato' é recurso do Ollama
 
 
 def digest(modelo: str) -> str | None:

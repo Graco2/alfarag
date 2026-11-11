@@ -60,7 +60,8 @@ def salvar_traco(traco: dict) -> None:
 
 
 def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, condicao: str = CONDICAO,
-              temperatura: float | None = None) -> Iterator[dict]:
+              temperatura: float | None = None, chave: str | None = None) -> Iterator[dict]:
+    """`chave`: chave do usuário para modelo remoto (modo CHAVE_DO_USUARIO). Nunca vai para o traço."""
     t0 = time.time()
     provedor, modelo_id = resolver(modelo)
     traco: dict = {
@@ -90,7 +91,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     except Exception as e:  # embeddings são sempre locais (Ollama/bge-m3), mesmo com modelo de geração remoto
         msg = (f"A busca nos documentos falhou ({type(e).__name__}): o embedding da pergunta ({MODELO_EMBED}) "
                "roda no Ollama local, mesmo com modelo remoto. Verifique se o Ollama está rodando. Nenhuma resposta foi gerada.")
-        traco.update({"desfecho": "erro", "erro": conexoes.sanitizar(e)[:300], "resposta": msg, "latencia_s": round(time.time() - t0, 2)})
+        traco.update({"desfecho": "erro", "erro": conexoes.sanitizar(e, chave)[:300], "resposta": msg, "latencia_s": round(time.time() - t0, 2)})
         salvar_traco(traco)
         yield {"tipo": "final", "desfecho": "erro", "resposta": msg, "traco": traco}
         return
@@ -128,14 +129,14 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     bruto = ""
     meta: dict = {}
     try:
-        for ev in chat_stream(modelo, mensagens, temperatura):
+        for ev in chat_stream(modelo, mensagens, temperatura, chave):
             if "delta" in ev:
                 bruto += ev["delta"]
                 yield {"tipo": "delta", "texto": ev["delta"]}
             else:
                 meta = ev["fim"]
     except Exception as e:  # modelo indisponível, timeout etc.
-        detalhe = conexoes.sanitizar(e)[:300]
+        detalhe = conexoes.sanitizar(e, chave)[:300]
         if provedor == "ollama":
             msg = f"O modelo local não respondeu ({type(e).__name__}). Nenhuma resposta foi gerada."
         else:

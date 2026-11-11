@@ -80,14 +80,43 @@ async function init() {
   if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
 }
 
+// ---------- Senha de acesso (servidor compartilhado) ----------
+function pedirAcesso() {
+  const dlg = $("#dlg-acesso"), form = $("#form-acesso");
+  dlg.addEventListener("cancel", (e) => e.preventDefault());  // sem senha não há como fechar
+  dlg.showModal(); $("#acesso-senha").focus();
+  return new Promise((resolve) => {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const r = await fetch("api/entrar", { method: "POST", headers: JSON_HDR, body: JSON.stringify({ senha: $("#acesso-senha").value }) });
+      if (r.ok) { $("#acesso-senha").value = ""; dlg.close(); resolve(); }
+      else $("#acesso-res").textContent = (await r.json().catch(() => ({}))).detail || `Falha (${r.status}).`;
+    };
+  });
+}
+
+// ---------- Chave do usuário (servidor compartilhado): fica só neste navegador ----------
+const chaveLocal = {
+  get(p) { try { return localStorage.getItem("alfarag:chave:" + p) || ""; } catch { return ""; } },
+  set(p, k) { try { localStorage.setItem("alfarag:chave:" + p, k); return true; } catch { return false; } },
+  del(p) { try { localStorage.removeItem("alfarag:chave:" + p); } catch { /* sem armazenamento */ } },
+};
+const mascara = (k) => (k.length >= 16 ? `${k.slice(0, 3)}…${k.slice(-4)}` : "••••••••");
+const provedorDe = (m) => m.split(":")[0];
+function cabecalhoChave(modelo) {
+  const k = estado.status?.chave_do_usuario && ehRemoto(modelo) ? chaveLocal.get(provedorDe(modelo)) : "";
+  return k ? { "X-Chave-Remoto": k } : {};
+}
+
 // ---------- Modelos locais e remotos ----------
 const ehRemoto = (m) => /^[a-z0-9_-]+:/.test(m || "") && (estado.status?.modelos_remotos || []).includes(m);
 const rotuloProvedor = (m) => (estado.status?.remoto || []).find((r) => m.startsWith(r.provedor + ":"));
 
 function montarSeletor(s) {
   const sel = $("#modelo"), atual = sel.value;
-  const remotos = s.modelos_remotos || [];
-  const locais = s.modelos.filter((m) => !remotos.includes(m));
+  // servidor compartilhado: o modelo remoto só aparece para quem já guardou a própria chave
+  const remotos = (s.modelos_remotos || []).filter((m) => !s.chave_do_usuario || chaveLocal.get(provedorDe(m)));
+  const locais = s.modelos.filter((m) => !(s.modelos_remotos || []).includes(m));
   const opt = (m, rot) => `<option value="${esc(m)}" ${m === (atual || s.modelo_padrao) ? "selected" : ""}>${esc(rot || m)}</option>`;
   const locaisHtml = (locais.length ? locais : [s.modelo_padrao]).map((m) => opt(m)).join("");
   sel.innerHTML = remotos.length
@@ -100,7 +129,9 @@ function atualizarAvisoRemoto() {
   const m = $("#modelo").value, remoto = ehRemoto(m), p = remoto ? rotuloProvedor(m) : null;
   const av = $("#aviso-remoto");
   av.hidden = !remoto;
-  if (remoto) av.textContent = `Modelo remoto: a pergunta e os trechos recuperados serão enviados à ${p?.rotulo || "um terceiro"} (${p?.pais || "fora do seu controle"}). Não escreva dados de alunos. A resposta pode variar entre execuções.`;
+  if (remoto) av.textContent = `Modelo remoto: a pergunta e os trechos recuperados serão enviados à ${p?.rotulo || "um terceiro"} (${p?.pais || "fora do seu controle"}), com a sua chave.`
+    + (estado.status?.chave_do_usuario ? " A chave fica só neste navegador e passa pelo servidor sem ser gravada." : "")
+    + " Não escreva dados de alunos. A resposta pode variar entre execuções.";
   const g = $("#garantia-local span:last-child");
   if (g) g.textContent = remoto ? "Modelo remoto: dados saem desta máquina" : "Roda localmente, sem internet";
 }
@@ -113,8 +144,27 @@ async function abrirConexoes() {
   $("#dlg-conexoes").showModal();
 }
 
+function renderChavesUsuario(msg) {
+  const box = $("#lista-conexoes");
+  box.innerHTML = (estado.status.remoto || []).map((c) => {
+    const k = chaveLocal.get(c.provedor), m = msg?.p === c.provedor ? msg : null;
+    return `<section class="conexao" data-p="${esc(c.provedor)}" data-usuario="1">
+      <h3>${esc(c.rotulo)} <span class="selo ${k ? "ok" : "info"}">${k ? "chave neste navegador" : "sem chave"}</span></h3>
+      <label for="chave-${esc(c.provedor)}">Sua chave de API</label>
+      <input id="chave-${esc(c.provedor)}" class="f-chave" type="password" autocomplete="off" spellcheck="false" placeholder="${k ? esc(mascara(k)) : "cole a sua chave aqui"}">
+      <p class="dica-chave">A chave fica só no armazenamento deste navegador. A cada pergunta ela é enviada ao servidor (use HTTPS) e repassada à ${esc(c.rotulo)}; o servidor não a grava. Servidor da ${esc(c.rotulo)}: ${esc(c.pais)}.</p>
+      <div class="linha">
+        <button type="button" class="btn-sec a-salvar">Salvar</button>
+        <button type="button" class="btn-sec a-testar" ${k ? "" : "disabled"}>Testar</button>
+        <button type="button" class="btn-sec btn-perigo a-remover" ${k ? "" : "disabled"}>Remover</button>
+      </div>
+      <p class="res ${m ? m.cls : ""}" role="status">${m ? esc(m.texto) : ""}</p></section>`;
+  }).join("");
+}
+
 async function renderConexoes(msg) {
   const box = $("#lista-conexoes");
+  if (estado.status?.chave_do_usuario) return renderChavesUsuario(msg);
   try {
     const r = await fetch("api/conexoes");
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -145,6 +195,23 @@ $("#lista-conexoes").addEventListener("click", async (e) => {
   const p = sec.dataset.p, aviso = (cls, texto) => renderConexoes({ p, cls, texto });
   b.disabled = true;
   try {
+    if (sec.dataset.usuario) {  // servidor compartilhado: tudo acontece neste navegador
+      if (b.classList.contains("a-salvar")) {
+        const k = $(".f-chave", sec).value.trim();
+        if (!k) { await aviso("bad", "Cole a chave para salvar."); return; }
+        if (k.length < 8 || /\s/.test(k)) { await aviso("bad", "Chave inválida."); return; }
+        if (!chaveLocal.set(p, k)) { await aviso("bad", "O navegador bloqueou o armazenamento: a chave não foi salva."); return; }
+        montarSeletor(estado.status);
+        await aviso("ok", "Salva neste navegador.");
+      } else if (b.classList.contains("a-testar")) {
+        const t = await (await fetch(`api/remoto/${p}/testar`, { method: "POST", headers: { "X-Chave-Remoto": chaveLocal.get(p) } })).json();
+        await aviso(t.ok ? "ok" : "bad", t.mensagem);
+      } else if (b.classList.contains("a-remover")) {
+        chaveLocal.del(p); montarSeletor(estado.status);
+        await aviso("ok", "Chave removida deste navegador.");
+      }
+      return;
+    }
     if (b.classList.contains("a-salvar")) {
       const corpo = { url_base: $(".f-url", sec).value };
       const k = $(".f-chave", sec).value.trim(); if (k) corpo.chave = k;
@@ -242,8 +309,10 @@ async function enviar() {
   setTimeout(() => { if (!reg.janela && !reg.final) { etapa(reg, "entrada", "feita", "Pergunta verificada"); etapa(reg, "busca", "ativa"); } }, 500);
   reg.timer = setInterval(() => { const t = $(".tempo", reg.el); if (t) t.textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
   try {
-    const r = await fetch("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pergunta, modelo: $("#modelo").value }) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const modelo = $("#modelo").value;
+    const r = await fetch("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }) });
+    if (r.status === 401) { await pedirAcesso(); throw new Error("sessão expirada: envie a pergunta de novo"); }
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
     const leitor = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
     for (;;) {
       const { value, done } = await leitor.read();

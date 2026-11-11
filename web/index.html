@@ -6,7 +6,7 @@
   <title>AlfaRAG — Alfabetização Inclusiva</title>
   <meta name="description" content="Assistente RAG de apoio pedagógico à alfabetização (2º e 3º anos), com citação de fontes e verificação automática.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <header class="topo">
@@ -120,6 +120,17 @@
     <div id="lista-conexoes"></div>
   </dialog>
 
+  <dialog id="dlg-acesso" class="dlg" aria-labelledby="acesso-titulo">
+    <form id="form-acesso" class="conexao">
+      <h2 id="acesso-titulo">Acesso restrito</h2>
+      <p class="dlg-nota">Este servidor é de teste e só abre para o grupo. Informe a senha combinada.</p>
+      <label for="acesso-senha">Senha</label>
+      <input id="acesso-senha" type="password" autocomplete="current-password" required>
+      <div class="linha"><button class="btn-sec" type="submit">Entrar</button></div>
+      <p id="acesso-res" class="res bad" role="status"></p>
+    </form>
+  </dialog>
+
   <template id="tpl-msg-usuario"><div class="msg usuario"><div class="bolha"></div></div></template>
   <template id="tpl-msg-assistente">
     <article class="msg assistente">
@@ -140,6 +151,6 @@
       </div>
     </article>
   </template>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

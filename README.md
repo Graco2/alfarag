@@ -90,6 +90,26 @@ A interface avisa isso ao escolher o modelo. Não escreva dados de alunos.
 - O provedor vem do prefixo do modelo (`deepseek:deepseek-flash`); nome sem prefixo continua sendo Ollama.
 - Os números de `resultados/` são todos do modelo local; nenhuma avaliação do modelo remoto foi executada.
 
+### Servidor compartilhado (cada pessoa com a própria chave)
+
+Para abrir um servidor de teste ao grupo, sem guardar chave nenhuma na VPS:
+
+```bash
+read -rs ACESSO_SENHA && export ACESSO_SENHA        # senha combinada com o grupo
+docker run -d --name alfarag --restart unless-stopped -p 127.0.0.1:7860:7860 \
+  -e CHAVE_DO_USUARIO=1 -e ACESSO_SENHA alfarag
+unset ACESSO_SENHA
+```
+
+- `CHAVE_DO_USUARIO=1`: o servidor **ignora** `DEEPSEEK_API_KEY` e `config/conexoes.json`. Cada pessoa cola a própria chave em
+  **Conexões**; ela fica só no `localStorage` do navegador e segue no cabeçalho `X-Chave-Remoto` a cada pergunta. O servidor a
+  repassa ao provedor naquela requisição e não a grava nem a põe em traço, log ou erro. Quem não tem chave só vê os modelos locais.
+- `ACESSO_SENHA`: toda a API (exceto `/api/entrar`) exige a senha, por cookie `HttpOnly`/`SameSite=Strict` (7 dias), com bloqueio
+  de 5 minutos após 8 tentativas erradas por IP. Troque a senha para invalidar todos os acessos.
+- **Use HTTPS** na frente (Caddy ou outro proxy), porque a chave e a senha trafegam em cada requisição. Sem HTTPS, só por túnel SSH.
+- A tela de Conexões do servidor (URL e chave em arquivo) fica desativada nesse modo.
+- Ainda vale a privacidade: pergunta e trechos vão ao provedor de cada pessoa, e a CPU da VPS (Ollama/embeddings) é compartilhada.
+
 **Deploy público e Docker.** O `Dockerfile` e o `start.sh` não mudam: o servidor público não permite editar conexões (403).
 Num `docker run -p 7860:7860` o cliente chega como IP da ponte; para liberar a tela de Conexões no **seu** Docker local, use
 `-e CONEXOES_LOCAL=1`. Nunca defina essa variável num deploy público.

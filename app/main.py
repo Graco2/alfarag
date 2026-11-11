@@ -2,18 +2,21 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import hmac
 import json
 import threading
+import time
 
 from urllib.parse import urlparse
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import conexoes
-from .config import (CONDICAO, CONDICOES, CONEXOES_LOCAL, EXPERIMENTO, EXPERIMENTOS, LIMIAR_COBERTURA, MODELO_EMBED,
+from .config import (ACESSO_SENHA, CHAVE_DO_USUARIO, CONDICAO, CONDICOES, CONEXOES_LOCAL, EXPERIMENTO, EXPERIMENTOS, LIMIAR_COBERTURA, MODELO_EMBED,
                      MODELO_LLM, MODELOS_PERMITIDOS, ORCAMENTO_CONTEXTO, RAIZ)
 from .llm import modelos_disponiveis, resolver
 from .pipeline import ROTULOS, responder
@@ -32,12 +35,67 @@ class Pergunta(BaseModel):
     modelo: str | None = None
 
 
+# ---------- Senha de acesso compartilhada (ACESSO_SENHA) ----------
+_COOKIE = "alfarag_acesso"
+_FALHAS: dict[str, list[float]] = {}  # ip -> instantes das falhas recentes (memória do processo)
+_MAX_FALHAS, _JANELA_S = 8, 300
+
+
+def _token_acesso() -> str:
+    return hmac.new(ACESSO_SENHA.encode(), b"alfarag-acesso-v1", hashlib.sha256).hexdigest()
+
+
+def _acesso_ok(request: Request) -> bool:
+    return not ACESSO_SENHA or hmac.compare_digest(request.cookies.get(_COOKIE, ""), _token_acesso())
+
+
+@app.middleware("http")
+async def exigir_acesso(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.url.path != "/api/entrar" and not _acesso_ok(request):
+        return JSONResponse({"detail": "Acesso restrito: informe a senha.", "acesso_necessario": True}, status_code=401)
+    return await call_next(request)
+
+
+class Entrada(BaseModel):
+    senha: str = Field("", max_length=200)
+
+
+@app.post("/api/entrar")
+def entrar(e: Entrada, request: Request, response: Response):
+    if not ACESSO_SENHA:
+        return {"ok": True}
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
+    agora = time.time()
+    falhas = [t for t in _FALHAS.get(ip, []) if agora - t < _JANELA_S]
+    if len(falhas) >= _MAX_FALHAS:
+        raise HTTPException(429, "Tentativas demais. Espere alguns minutos.")
+    if not hmac.compare_digest(e.senha.encode(), ACESSO_SENHA.encode()):
+        _FALHAS[ip] = falhas + [agora]
+        raise HTTPException(401, "Senha incorreta.")
+    _FALHAS.pop(ip, None)
+    https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+    response.set_cookie(_COOKIE, _token_acesso(), max_age=7 * 86400, httponly=True, samesite="strict", secure=https)
+    return {"ok": True}
+
+
+def chave_do_cabecalho(x_chave_remoto: str | None = Header(None)) -> str | None:
+    """Chave do usuário (modo CHAVE_DO_USUARIO). Só vive nesta requisição: não é gravada, logada nem posta no traço."""
+    if x_chave_remoto is None:
+        return None
+    k = x_chave_remoto.strip()
+    if not conexoes.chave_valida(k):
+        raise HTTPException(400, "Chave inválida no cabeçalho X-Chave-Remoto.")
+    return k
+
+
 _PROXY_HDRS = ("x-forwarded-for", "forwarded", "x-real-ip", "x-forwarded-host")
 
 
 def servidor_local(request: Request) -> bool:
     """A tela de Conexões só vale quando o servidor é do próprio usuário: cliente loopback e sem proxy na frente,
     ou CONEXOES_LOCAL=1 (docker run -p, onde o cliente chega como IP da ponte)."""
+    if CHAVE_DO_USUARIO:  # servidor compartilhado: ninguém grava chave no servidor
+        return False
     if CONEXOES_LOCAL:
         return True
     host = request.client.host if request.client else ""
@@ -96,6 +154,14 @@ def conexoes_testar(provedor: str):
     return conexoes.testar(_provedor(provedor))
 
 
+@app.post("/api/remoto/{provedor}/testar")
+def remoto_testar(provedor: str, chave: str | None = Depends(chave_do_cabecalho)):
+    """Testa a chave do próprio usuário (cabeçalho). Usa sempre a URL padrão do provedor, nunca uma enviada pelo cliente."""
+    if not CHAVE_DO_USUARIO:
+        raise HTTPException(404, "Disponível só no modo de chave por usuário.")
+    return conexoes.testar(_provedor(provedor), chave_usuario=chave)
+
+
 @app.get("/api/status")
 def status(request: Request):
     disp = modelos_disponiveis()
@@ -106,7 +172,9 @@ def status(request: Request):
         "modelos": [m for m in MODELOS_PERMITIDOS if m in disp] + remotos,
         "modelos_remotos": remotos,
         "conexoes_editaveis": servidor_local(request),
-        "remoto": [{"provedor": c["provedor"], "rotulo": c["rotulo"], "pais": c["pais"], "configurada": c["configurada"]}
+        "chave_do_usuario": CHAVE_DO_USUARIO,
+        "acesso_protegido": bool(ACESSO_SENHA),
+        "remoto": [{"provedor": c["provedor"], "rotulo": c["rotulo"], "pais": c["pais"], "configurada": c["configurada"] or CHAVE_DO_USUARIO}
                    for c in conexoes.publico()],
         "modelo_embed": MODELO_EMBED,
         "experimento": EXPERIMENTO,
@@ -167,7 +235,7 @@ def traco(tid: str):
 
 
 @app.post("/api/perguntar")
-def perguntar(p: Pergunta):
+def perguntar(p: Pergunta, chave: str | None = Depends(chave_do_cabecalho)):
     modelo = p.modelo or MODELO_LLM
     provedor, nome = resolver(modelo)
     if provedor == "ollama":
@@ -175,10 +243,14 @@ def perguntar(p: Pergunta):
             raise HTTPException(400, f"Modelo não permitido: {modelo}")
     elif modelo not in conexoes.modelos_remotos():
         raise HTTPException(400, f"Modelo remoto indisponível: {modelo}. Configure a conexão em Conexões.")
+    elif CHAVE_DO_USUARIO and not chave:
+        raise HTTPException(400, "Informe a sua chave em Conexões para usar o modelo remoto.")
+    if provedor == "ollama":
+        chave = None  # modelo local não usa chave
 
     def gerar():
         if provedor != "ollama":  # o semáforo protege a CPU local; modelo remoto não disputa a máquina
-            for ev in responder(p.pergunta, modelo=modelo):
+            for ev in responder(p.pergunta, modelo=modelo, chave=chave):
                 yield json.dumps(ev, ensure_ascii=False) + "\n"
             return
         if not _GERACAO.acquire(timeout=120):
