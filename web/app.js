@@ -53,17 +53,19 @@ async function init() {
   $("#btn-painel").addEventListener("click", () => mostrarPainel(document.body.classList.contains("sem-painel")));
   $("#modelo").addEventListener("change", atualizarAvisoRemoto);
   $("#btn-conexoes").addEventListener("click", abrirConexoes);
+  $("#btn-senha").addEventListener("click", abrirTrocaSenha);
+  $("#form-senha").addEventListener("submit", trocarSenha);
+  $("#btn-sair").addEventListener("click", sair);
+  document.addEventListener("click", (e) => { const m = $("#menu-conta"); if (m.open && !m.contains(e.target)) m.open = false; });
 
   const params = new URLSearchParams(location.search);
   mostrarPainel(params.has("painel") ? params.get("painel") !== "0" : pref.get("painel", "1") === "1", false);
 
-  // Servidor com ACESSO_SENHA: /api/status responde 401 até a senha ser informada. Pede antes de carregar o resto.
-  try { if ((await fetch("api/status")).status === 401) await pedirAcesso(); } catch { /* o bloco abaixo mostra "API offline" */ }
-
   try {
-    const s = await (await fetch("api/status")).json();
+    const s = await (await api("api/status")).json();
     estado.status = s;
-    const sel = $("#modelo");
+    if (s.login_ativo) chaveLocal.limparSemDono();
+    montarConta(s);
     montarSeletor(s);
     // Servidor público: a tela nem aparece. No compartilhado (chave por usuário) ela é onde cada pessoa cola a própria chave.
     $("#btn-conexoes").hidden = !(s.conexoes_editaveis || s.chave_do_usuario);
@@ -71,7 +73,7 @@ async function init() {
     if (s.documentos?.length) $("#base").innerHTML = `<b>Base consultada:</b> ${s.documentos.map((d) => esc(d.rotulo)).join(" · ")}`;
   } catch { status("off", "API offline"); }
   try {
-    const ex = await (await fetch("api/exemplos")).json();
+    const ex = await (await api("api/exemplos")).json();
     const exemplo = (e) => `<button type="button" class="exemplo" data-q="${esc(e.pergunta)}"><span class="tag">${esc(e.categoria)}</span>${esc(e.pergunta)}</button>`;
     const bench = ["B02", "B03", "B08", "B14", "B16", "B23"], lim = ["L01", "L02", "L03", "L04"];
     $("#exemplos").innerHTML = ex.filter((e) => bench.includes(e.id)).map(exemplo).join("");
@@ -84,26 +86,66 @@ async function init() {
   if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
 }
 
-// ---------- Senha de acesso (servidor compartilhado) ----------
-function pedirAcesso() {
-  const dlg = $("#dlg-acesso"), form = $("#form-acesso");
-  dlg.addEventListener("cancel", (e) => e.preventDefault());  // sem senha não há como fechar
-  dlg.showModal(); $("#acesso-senha").focus();
-  return new Promise((resolve) => {
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const r = await fetch("api/entrar", { method: "POST", headers: JSON_HDR, body: JSON.stringify({ senha: $("#acesso-senha").value }) });
-      if (r.ok) { $("#acesso-senha").value = ""; dlg.close(); resolve(); }
-      else $("#acesso-res").textContent = (await r.json().catch(() => ({}))).detail || `Falha (${r.status}).`;
-    };
-  });
+// ---------- Conta (servidor aberto na web, login ativo) ----------
+// Com login, qualquer 401 quer dizer sessão encerrada (Sair em outra aba, conta desativada, senha redefinida).
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.replace("entrar"); throw new Error("sessão encerrada: entre de novo"); }
+  return r;
+}
+const detalhe = (d, status) => (typeof d?.detail === "string" ? d.detail : `Falha (${status}).`);
+
+function montarConta(s) {
+  const c = s.conta;
+  $("#menu-conta").hidden = !c;
+  if (!c) return;
+  $("#conta-nome").textContent = c.usuario;
+  $("#link-admin").hidden = !c.admin;
+  $("#senha-usuario").defaultValue = c.usuario;  // para o gerenciador de senhas saber de qual conta é
+}
+
+async function sair() {
+  chaveLocal.limparConta();  // antes da rede: mesmo se a requisição falhar, a chave não fica neste navegador
+  try { await fetch("api/sair", { method: "POST", headers: JSON_HDR, body: "{}" }); } catch { /* a sessão vence no servidor */ }
+  location.replace("entrar");
+}
+
+function abrirTrocaSenha() {
+  $("#menu-conta").open = false;
+  $("#form-senha").reset();
+  avisoSenha("", "");
+  $("#dlg-senha").showModal(); $("#senha-atual").focus();
+}
+function avisoSenha(cls, texto) { const r = $("#senha-res"); r.className = "res " + cls; r.textContent = texto; }
+
+async function trocarSenha(e) {
+  e.preventDefault();
+  const nova = $("#senha-nova").value, confirmacao = $("#senha-conf").value;
+  if (nova !== confirmacao) return avisoSenha("bad", "As senhas novas não conferem.");
+  const b = $("#form-senha button[type=submit]"); b.disabled = true;
+  try {
+    const r = await api("api/senha", { method: "POST", headers: JSON_HDR, body: JSON.stringify({ atual: $("#senha-atual").value, nova, confirmacao }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return avisoSenha("bad", detalhe(d, r.status));
+    $("#form-senha").reset();
+    avisoSenha("ok", "Senha alterada. As outras sessões desta conta foram encerradas.");
+  } catch (err) { avisoSenha("bad", `Falha de conexão com o servidor (${err.message}).`); }
+  finally { b.disabled = false; }
 }
 
 // ---------- Chave do usuário (servidor compartilhado): fica só neste navegador ----------
+// Com login, a chave fica sob o nome da conta (alfarag:chave:<usuario>:<provedor>) e o Sair a apaga.
+const PREFIXO_CHAVE = "alfarag:chave:";
 const chaveLocal = {
-  get(p) { try { return localStorage.getItem("alfarag:chave:" + p) || ""; } catch { return ""; } },
-  set(p, k) { try { localStorage.setItem("alfarag:chave:" + p, k); return true; } catch { return false; } },
-  del(p) { try { localStorage.removeItem("alfarag:chave:" + p); } catch { /* sem armazenamento */ } },
+  prefixo() { const u = estado.status?.conta?.usuario; return u ? `${PREFIXO_CHAVE}${u}:` : PREFIXO_CHAVE; },
+  get(p) { try { return localStorage.getItem(this.prefixo() + p) || ""; } catch { return ""; } },
+  set(p, k) { try { localStorage.setItem(this.prefixo() + p, k); return true; } catch { return false; } },
+  del(p) { try { localStorage.removeItem(this.prefixo() + p); } catch { /* sem armazenamento */ } },
+  limpar(filtro) {  // filtro recebe o que vem depois de "alfarag:chave:"
+    try { Object.keys(localStorage).filter((n) => n.startsWith(PREFIXO_CHAVE) && filtro(n.slice(PREFIXO_CHAVE.length))).forEach((n) => localStorage.removeItem(n)); } catch { /* sem armazenamento */ }
+  },
+  limparConta() { const u = estado.status?.conta?.usuario; if (u) this.limpar((resto) => resto.startsWith(u + ":")); },
+  limparSemDono() { this.limpar((resto) => !resto.includes(":")); },  // chaves de antes do login (alfarag:chave:<provedor>)
 };
 const mascara = (k) => (k.length >= 16 ? `${k.slice(0, 3)}…${k.slice(-4)}` : "••••••••");
 const provedorDe = (m) => m.split(":")[0];
@@ -170,7 +212,7 @@ async function renderConexoes(msg) {
   const box = $("#lista-conexoes");
   if (estado.status?.chave_do_usuario) return renderChavesUsuario(msg);
   try {
-    const r = await fetch("api/conexoes");
+    const r = await api("api/conexoes");
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const { conexoes } = await r.json();
     box.innerHTML = conexoes.map((c) => `
@@ -208,7 +250,7 @@ $("#lista-conexoes").addEventListener("click", async (e) => {
         montarSeletor(estado.status);
         await aviso("ok", "Salva neste navegador.");
       } else if (b.classList.contains("a-testar")) {
-        const t = await (await fetch(`api/remoto/${p}/testar`, { method: "POST", headers: { "X-Chave-Remoto": chaveLocal.get(p) } })).json();
+        const t = await (await api(`api/remoto/${p}/testar`, { method: "POST", headers: { "X-Chave-Remoto": chaveLocal.get(p) } })).json();
         await aviso(t.ok ? "ok" : "bad", t.mensagem);
       } else if (b.classList.contains("a-remover")) {
         chaveLocal.del(p); montarSeletor(estado.status);
@@ -219,19 +261,19 @@ $("#lista-conexoes").addEventListener("click", async (e) => {
     if (b.classList.contains("a-salvar")) {
       const corpo = { url_base: $(".f-url", sec).value };
       const k = $(".f-chave", sec).value.trim(); if (k) corpo.chave = k;
-      const r = await fetch(`api/conexoes/${p}`, { method: "PUT", headers: JSON_HDR, body: JSON.stringify(corpo) });
+      const r = await api(`api/conexoes/${p}`, { method: "PUT", headers: JSON_HDR, body: JSON.stringify(corpo) });
       if (!r.ok) { await aviso("bad", (await r.json().catch(() => ({}))).detail || `Falha (${r.status}).`); return; }
       await aviso("ok", "Salvo.");
     } else if (b.classList.contains("a-testar")) {
-      const t = await (await fetch(`api/conexoes/${p}/testar`, { method: "POST", headers: JSON_HDR, body: "{}" })).json();
+      const t = await (await api(`api/conexoes/${p}/testar`, { method: "POST", headers: JSON_HDR, body: "{}" })).json();
       await aviso(t.ok ? "ok" : "bad", t.mensagem);
     } else if (b.classList.contains("a-remover")) {
-      await fetch(`api/conexoes/${p}`, { method: "DELETE", headers: JSON_HDR });
+      await api(`api/conexoes/${p}`, { method: "DELETE", headers: JSON_HDR });
       await aviso("ok", "Conexão removida.");
     }
   } catch (err) { await aviso("bad", `Falha de conexão com o servidor (${err.message}).`); }
   // o seletor de modelos depende de quais conexões estão configuradas
-  try { const s = await (await fetch("api/status")).json(); estado.status = s; montarSeletor(s); } catch { /* mantém o seletor atual */ }
+  try { const s = await (await api("api/status")).json(); estado.status = s; montarSeletor(s); } catch { /* mantém o seletor atual */ }
 });
 
 function status(cls, texto) {
@@ -291,7 +333,7 @@ function novaResposta(pergunta) {
 
 async function replay(id) {
   try {
-    const r = await fetch(`api/traco/${encodeURIComponent(id)}`);
+    const r = await api(`api/traco/${encodeURIComponent(id)}`);
     if (!r.ok) return;
     const t = await r.json();
     const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = t.pergunta;
@@ -314,8 +356,7 @@ async function enviar() {
   reg.timer = setInterval(() => { const t = $(".tempo", reg.el); if (t) t.textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
   try {
     const modelo = $("#modelo").value;
-    const r = await fetch("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }) });
-    if (r.status === 401) { await pedirAcesso(); throw new Error("sessão expirada: envie a pergunta de novo"); }
+    const r = await api("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }) });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
     const leitor = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
     for (;;) {
@@ -455,7 +496,7 @@ function renderPainel(reg) {
   const j = reg.janela, f = reg.final;
   if (!j) {
     p.innerHTML = f
-      ? `<div class="bloco"><h3>Harness de entrada</h3><ul class="checks">${chk("bad", "Pergunta bloqueada antes da busca", f.resposta)}</ul><p class="vazio" style="margin:10px 0 0">Nada foi recuperado nem enviado ao modelo.</p></div>`
+      ? `<div class="bloco"><h3>Harness de entrada</h3><ul class="checks">${chk("bad", "Pergunta bloqueada antes da busca", f.resposta)}</ul><p class="vazio nada-enviado">Nada foi recuperado nem enviado ao modelo.</p></div>`
       : `<div class="vazio-painel"><p>Verificando a pergunta…</p></div>`;
     return;
   }
@@ -486,8 +527,8 @@ function renderPainel(reg) {
     </div>`;
   p.innerHTML = `
     <div class="bloco"><h3>Orçamento da janela</h3>
-      <div class="barra" title="tokens aproximados"><span class="s" style="width:${pct(sis)}"></span><span class="q" style="width:${pct(q)}"></span><span class="t" style="width:${pct(t)}"></span></div>
-      <div class="legenda"><span><i style="background:var(--muted-3)"></i>prompt ${esc(j.sistema.versao)} · ~${sis}</span><span><i style="background:var(--info)"></i>pergunta · ~${q}</span><span><i style="background:var(--brand)"></i>trechos · ~${t} de ${j.orcamento}</span></div>
+      <div class="barra" title="tokens aproximados"><span class="s"></span><span class="q"></span><span class="t"></span></div>
+      <div class="legenda"><span><i class="s"></i>prompt ${esc(j.sistema.versao)} · ~${sis}</span><span><i class="q"></i>pergunta · ~${q}</span><span><i class="t"></i>trechos · ~${t} de ${j.orcamento}</span></div>
     </div>
     <div class="bloco"><h3>Verificações do harness</h3><ul class="checks">${checks.join("")}</ul></div>
     <div class="bloco"><h3>${enviado ? `Entrou na janela · top-${j.top_k}` : "Recuperados, mas não enviados"}</h3>
@@ -499,6 +540,8 @@ function renderPainel(reg) {
         <div class="trecho fora"><div class="cab"><span class="tit">${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts">cos ${c.cos}</span></div><span class="mot">${esc(c.motivo)}</span></div>`).join("")}</div>
     </details>
     <details class="bloco"><summary>Nunca entra na janela</summary><ul class="lista-simples">${j.nao_entra.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
+  // Largura pelo CSSOM: a CSP do servidor aberto na web bloqueia atributo style="" vindo de HTML.
+  for (const [cls, x] of [["s", sis], ["q", q], ["t", t]]) $(`.barra .${cls}`, p).style.width = pct(x);
 }
 
 // ---------- Aba de avaliação ----------
@@ -506,7 +549,7 @@ let avaliacaoCarregada = false;
 async function carregarAvaliacao() {
   if (avaliacaoCarregada) return; avaliacaoCarregada = true;
   try {
-    const pr = await (await fetch("api/prompt")).json();
+    const pr = await (await api("api/prompt")).json();
     $("#prompt").textContent = `[${pr.versao}]\n\n${pr.sistema}`;
   } catch { $("#prompt").textContent = "indisponível"; }
   const s = estado.status;
@@ -515,7 +558,7 @@ async function carregarAvaliacao() {
     `corpus ${s.condicao}: ${s.documentos.map((d) => d.id).join(", ")}`, `orçamento: ${s.orcamento_contexto} tokens`, `limiar de cobertura: ${s.limiar_cobertura}`,
   ].map((x) => `<span>${esc(x)}</span>`).join("");
   try {
-    const a = await (await fetch("api/avaliacao")).json();
+    const a = await (await api("api/avaliacao")).json();
     if (a.disponivel === false) { $("#avaliacao").innerHTML = '<p class="vazio">A avaliação ainda não foi executada neste servidor.</p>'; return; }
     $("#avaliacao").innerHTML = renderAvaliacao(a);
   } catch { $("#avaliacao").innerHTML = '<p class="vazio">indisponível</p>'; }

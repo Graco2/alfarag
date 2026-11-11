@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Entrar · AlfaRAG</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css?v=13">
+</head>
+<body class="pagina-acesso">
+  <main class="acesso">
+    <div class="marca">
+      <span class="logo" aria-hidden="true">Aa</span>
+      <div>
+        <h1>AlfaRAG</h1>
+        <p class="sub">Apoio à alfabetização · 2º e 3º anos</p>
+      </div>
+    </div>
+
+    <section class="cartao-acesso">
+      <nav class="abas" role="tablist" aria-label="Acesso">
+        <button type="button" role="tab" class="aba ativa" data-modo="entrar" aria-selected="true" aria-controls="form-entrar">Entrar</button>
+        <button type="button" role="tab" class="aba" data-modo="criar" aria-selected="false" aria-controls="form-criar">Criar conta</button>
+      </nav>
+
+      <!-- method="post": se o JS falhar, usuário e senha vão no corpo, nunca na URL, no histórico ou no log -->
+      <form id="form-entrar" class="conexao" method="post" role="tabpanel">
+        <label for="e-usuario">Usuário</label>
+        <input id="e-usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="32">
+        <label for="e-senha">Senha</label>
+        <input id="e-senha" name="senha" type="password" autocomplete="current-password" required maxlength="200">
+        <div class="linha"><button class="btn-primario" type="submit">Entrar</button></div>
+        <p id="e-res" class="res" role="status"></p>
+      </form>
+
+      <form id="form-criar" class="conexao" method="post" role="tabpanel" hidden>
+        <label for="c-usuario">Nome de usuário</label>
+        <input id="c-usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="32" aria-describedby="c-dica">
+        <p id="c-dica" class="dica-chave">3 a 32 caracteres: letras, números, ponto ou hífen. Não precisa ser o seu nome.</p>
+        <label for="c-senha">Senha (8 a 200 caracteres)</label>
+        <input id="c-senha" name="senha" type="password" autocomplete="new-password" required minlength="8" maxlength="200">
+        <label for="c-conf">Repita a senha</label>
+        <input id="c-conf" name="confirmacao" type="password" autocomplete="new-password" required minlength="8" maxlength="200">
+        <div class="linha"><button class="btn-primario" type="submit">Criar conta</button></div>
+        <p id="c-res" class="res" role="status"></p>
+      </form>
+    </section>
+
+    <p class="nota-acesso">Servidor de teste do grupo. Uma conta nova só entra depois que um admin libera o acesso. Não escreva dados de alunos.</p>
+  </main>
+  <script src="entrar.js?v=13"></script>
+</body>
+</html>

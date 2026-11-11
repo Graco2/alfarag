@@ -1,4 +1,4 @@
-"""Servidor compartilhado: chave por usuário (CHAVE_DO_USUARIO) e senha de acesso (ACESSO_SENHA)."""
+"""Servidor compartilhado: chave por usuário (CHAVE_DO_USUARIO). O login com contas está em test_login.py."""
 import json
 
 import httpx
@@ -93,42 +93,3 @@ def test_testar_chave_do_usuario(byok, cli):
 
 def test_testar_do_usuario_nao_existe_fora_do_modo(cli):
     assert cli.post("/api/remoto/deepseek/testar", headers={"X-Chave-Remoto": CHAVE_A}).status_code == 404
-
-
-# ---------- senha de acesso ----------
-@pytest.fixture
-def com_senha(monkeypatch):
-    monkeypatch.setattr(main, "ACESSO_SENHA", "senha-do-grupo")
-    monkeypatch.setattr(main, "_FALHAS", {})
-    monkeypatch.setattr(main, "modelos_disponiveis", lambda: [])
-
-
-def test_api_bloqueada_sem_senha(com_senha, cli):
-    for rota in ("/api/status", "/api/exemplos", "/api/prompt", "/api/avaliacao"):
-        r = cli.get(rota)
-        assert r.status_code == 401 and r.json()["acesso_necessario"] is True
-    assert cli.post("/api/perguntar", json={"pergunta": "oi"}).status_code == 401
-    assert cli.get("/").status_code == 200  # a página abre e mostra o pedido de senha
-
-
-def test_entrar_com_senha_certa_libera(com_senha, cli):
-    r = cli.post("/api/entrar", json={"senha": "senha-do-grupo"})
-    assert r.status_code == 200 and "httponly" in r.headers["set-cookie"].lower() and "samesite=strict" in r.headers["set-cookie"].lower()
-    assert "senha-do-grupo" not in r.headers["set-cookie"]
-    assert cli.get("/api/status").status_code == 200
-
-
-def test_cookie_falso_nao_passa(com_senha, cli):
-    assert cli.get("/api/status", cookies={"alfarag_acesso": "qualquer"}).status_code == 401
-
-
-def test_senha_errada_e_bloqueio_por_tentativas(com_senha, cli):
-    for _ in range(8):
-        assert cli.post("/api/entrar", json={"senha": "errada"}).status_code == 401
-    assert cli.post("/api/entrar", json={"senha": "senha-do-grupo"}).status_code == 429  # travado até a janela passar
-
-
-def test_sem_senha_configurada_tudo_aberto(cli, monkeypatch):
-    monkeypatch.setattr(main, "modelos_disponiveis", lambda: [])
-    assert cli.get("/api/status").status_code == 200
-    assert cli.get("/api/status").json()["acesso_protegido"] is False

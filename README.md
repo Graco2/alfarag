@@ -90,25 +90,110 @@ A interface avisa isso ao escolher o modelo. Não escreva dados de alunos.
 - O provedor vem do prefixo do modelo (`deepseek:deepseek-flash`); nome sem prefixo continua sendo Ollama.
 - Os números de `resultados/` são todos do modelo local; nenhuma avaliação do modelo remoto foi executada.
 
-### Servidor compartilhado (cada pessoa com a própria chave)
+### Servidor aberto na web (contas individuais, chave de cada pessoa)
 
-Para abrir um servidor de teste ao grupo, sem guardar chave nenhuma na VPS:
+Para abrir o servidor do grupo direto na internet, pelo IP e com HTTPS. Sem `CONTAS_DB` (uso local, HF Spaces) nada
+disto vale e tudo fica aberto, como antes.
 
-```bash
-read -rs ACESSO_SENHA && export ACESSO_SENHA        # senha combinada com o grupo
-docker run -d --name alfarag --restart unless-stopped -p 127.0.0.1:7860:7860 \
-  -e CHAVE_DO_USUARIO=1 -e ACESSO_SENHA alfarag
-unset ACESSO_SENHA
+**Container.** `/etc/alfarag.env` (permissão 600, fora do git):
+
+```
+CHAVE_DO_USUARIO=1
+CONTAS_DB=/data/contas.db
 ```
 
+```bash
+docker run -d --name alfarag --restart unless-stopped -p 127.0.0.1:7860:7860 \
+  -v alfarag-dados:/data --env-file /etc/alfarag.env alfarag
+```
+
+- `-p 127.0.0.1:7860:7860`, **nunca** `-p 7860:7860`: o Docker ignora o ufw nas portas que publica. Só o Caddy, no próprio host,
+  fala com o container. A porta 11434 do Ollama não é publicada.
+- `-v alfarag-dados:/data`: contas e sessões (SQLite) ficam no volume e sobrevivem à recriação do container.
 - `CHAVE_DO_USUARIO=1`: o servidor **ignora** `DEEPSEEK_API_KEY` e `config/conexoes.json`. Cada pessoa cola a própria chave em
-  **Conexões**; ela fica só no `localStorage` do navegador e segue no cabeçalho `X-Chave-Remoto` a cada pergunta. O servidor a
-  repassa ao provedor naquela requisição e não a grava nem a põe em traço, log ou erro. Quem não tem chave só vê os modelos locais.
-- `ACESSO_SENHA`: toda a API (exceto `/api/entrar`) exige a senha, por cookie `HttpOnly`/`SameSite=Strict` (7 dias), com bloqueio
-  de 5 minutos após 8 tentativas erradas por IP. Troque a senha para invalidar todos os acessos.
-- **Use HTTPS** na frente (Caddy ou outro proxy), porque a chave e a senha trafegam em cada requisição. Sem HTTPS, só por túnel SSH.
-- A tela de Conexões do servidor (URL e chave em arquivo) fica desativada nesse modo.
-- Ainda vale a privacidade: pergunta e trechos vão ao provedor de cada pessoa, e a CPU da VPS (Ollama/embeddings) é compartilhada.
+  **Conexões**; ela fica só no `localStorage` do navegador, sob o nome da conta (`alfarag:chave:<usuario>:<provedor>`), e segue
+  no cabeçalho `X-Chave-Remoto` a cada pergunta. O servidor a repassa ao provedor naquela requisição e não a grava nem a põe em
+  traço, log ou erro. Quem não tem chave só vê os modelos locais. A tela de Conexões do servidor fica desativada nesse modo.
+
+**Primeiro admin** (na VPS; a senha é pedida no terminal):
+
+```bash
+docker exec -it alfarag /opt/venv/bin/python -m app.contas criar-admin <usuario>
+docker exec -it alfarag /opt/venv/bin/python -m app.contas listar
+docker exec -it alfarag /opt/venv/bin/python -m app.contas redefinir <usuario>   # senha provisória, se o admin esquecer a dele
+```
+
+**Fluxo.**
+- Sem sessão, `/` redireciona para `/entrar` (o HTML do chat não é entregue) e todo `/api/*` responde 401. Só abrem sem login
+  `/entrar`, `/entrar.js`, `/styles.css`, `POST /api/entrar` e `POST /api/cadastrar`.
+- **Criar conta** pede usuário (3 a 32 caracteres: letras, números, ponto ou hífen; maiúsculas não contam), senha (8 a 200
+  caracteres) e confirmação. A conta nasce **pendente** e só entra depois que um admin aprova.
+- Em `/ademir` (menu da conta → **Administrar contas**) o admin aprova ou recusa, desativa ou reativa, exclui, redefine a senha
+  (provisória, mostrada uma vez), promove ou rebaixa e vê o último acesso. O último admin ativo não pode ser rebaixado,
+  desativado nem excluído. Desativar, excluir ou redefinir derruba na hora as sessões abertas da conta.
+- Cada pessoa troca a própria senha em **Trocar senha**, no menu da conta; a troca encerra as outras sessões dela. **Sair** apaga a
+  sessão no servidor e as chaves de API da conta neste navegador. Se a sessão cair no meio do uso, a página volta para `/entrar`
+  (a conversa aberta se perde).
+- A identidade serve só para acesso e revogação: o traço das respostas não grava o usuário e não há cota.
+
+**O que o servidor faz para nenhuma requisição vazar segredo.**
+- Senha guardada como scrypt com sal (`hashlib.scrypt`, n = 2¹⁴); sessão guardada só como SHA-256 do token. Cookie
+  `alfarag_sessao` `HttpOnly`, `SameSite=Strict` e `Secure`, sem `Max-Age`: vale até fechar o navegador (o servidor corta em 7 dias).
+- Resposta única para login errado ("Usuário ou senha incorretos"). "Aguardando liberação" e "desativada" só aparecem para quem
+  acertou a senha. Conta inexistente passa por um hash fictício, para o tempo de resposta não denunciar o nome.
+- Limites por IP antes do hash: 8 senhas erradas a cada 5 min e 5 cadastros por hora. No máximo 2 hashes ao mesmo tempo e 50
+  cadastros pendentes, para não derrubar a CPU que também roda o Ollama. O IP é o **último** item do `X-Forwarded-For` (o que o
+  Caddy põe); os da esquerda vêm do cliente.
+- Toda resposta leva `Cache-Control: no-store` (nada no cache nem no "Voltar" depois do Sair), CSP sem script nem estilo inline,
+  `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`. `/api/docs` e `/openapi.json` respondem 404, e o uvicorn
+  sobe com `--no-server-header`. O replay `/api/traco` só serve `resultados/tracos_demo.jsonl`.
+- Formulários com `method="post"` e nenhum segredo em URL. As ações de admin levam o usuário no corpo, porque o access log grava o
+  caminho. O erro 422 não devolve o valor recebido.
+
+**HTTPS com Caddy, no host da VPS.** Caddy ≥ 2.11 (a correção de IP do issue caddyserver/caddy#7399 entrou depois da 2.10).
+O certificado Let's Encrypt para IP usa o perfil `shortlived` (160 h) e o Caddy o renova sozinho. Modelo de `/etc/caddy/Caddyfile`
+(o IP real fica só na VPS: `sudo systemctl edit caddy` → `[Service]` / `Environment=ALFARAG_IP=<IP da VPS>`):
+
+```
+{$ALFARAG_IP} {
+    tls {
+        issuer acme {
+            profile shortlived
+        }
+    }
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy 127.0.0.1:7860 {
+        flush_interval -1
+    }
+}
+```
+
+```bash
+sudo ufw allow 80,443/tcp     # a 80 é obrigatória para o desafio HTTP-01; a 7860 continua fechada
+sudo systemctl restart caddy
+```
+
+- `flush_interval -1` entrega a resposta do modelo em streaming, sem buffer.
+- O navegador ignora HSTS quando o endereço é um IP (RFC 6797). Quem protege é o redirecionamento HTTP→HTTPS do Caddy e o cookie
+  `Secure`; divulgue o link já com `https://`.
+- Plano B, se o Caddy recusar o IP: `sudo certbot certonly --standalone --ip-address <IP> --required-profile shortlived`
+  (com `--pre-hook "systemctl stop caddy" --post-hook "systemctl start caddy"`, porque o standalone precisa da porta 80),
+  `tls <cert> <chave>` no Caddyfile e um `--deploy-hook "systemctl reload caddy"`. O usuário `caddy` precisa conseguir ler o
+  certificado e a chave.
+
+**Migração de `ACESSO_SENHA`.** A senha única saiu. Com `ACESSO_SENHA` no ambiente o servidor **não sobe** e explica por quê,
+para um env antigo não deixar tudo aberto. Tire a linha do `/etc/alfarag.env`, acrescente `CONTAS_DB=/data/contas.db`, recrie o
+container com o volume e crie o 1º admin. Quem usava a senha do grupo cria a própria conta em `/entrar`.
+
+**Conferir de fora da VPS:**
+
+```bash
+curl -sI https://<IP>/ | grep -iE '^(HTTP|location|strict-transport)'   # 303 para /entrar, com HSTS
+curl -s -o /dev/null -w '%{http_code}\n' https://<IP>/openapi.json        # 404
+curl -m 5 http://<IP>:7860/                                               # tem de falhar: porta fechada
+```
+
+Ainda vale a privacidade: pergunta e trechos vão ao provedor de cada pessoa, e a CPU da VPS (Ollama e embeddings) é compartilhada.
 
 **Deploy público e Docker.** O `Dockerfile` e o `start.sh` não mudam: o servidor público não permite editar conexões (403).
 Num `docker run -p 7860:7860` o cliente chega como IP da ponte; para liberar a tela de Conexões no **seu** Docker local, use

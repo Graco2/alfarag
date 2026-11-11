@@ -3,16 +3,18 @@ import json
 import httpx
 import pytest
 
-from app import conexoes, llm, pipeline
+from app import conexoes, contas, llm, pipeline
 
 CHAVE = "sk-teste-0123456789abcdef"
 
 
 @pytest.fixture(autouse=True)
 def isolado(tmp_path, monkeypatch):
-    """Cada teste usa arquivo de conexões e pasta de traços próprios e nunca enxerga a chave real do ambiente."""
+    """Cada teste usa arquivo de conexões e pasta de traços próprios, nunca enxerga a chave real do ambiente
+    e começa com o login desligado (os testes de contas ligam com CONTAS_DB em tmp_path)."""
     monkeypatch.setattr(conexoes, "CONEXOES_ARQ", tmp_path / "config" / "conexoes.json")
     monkeypatch.setattr(pipeline, "TRACOS_DIR", tmp_path / "tracos")
+    monkeypatch.setattr(contas, "CONTAS_DB", "")
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.setattr(llm, "_TRANSPORT_REMOTO", None)
 
