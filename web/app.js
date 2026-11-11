@@ -51,6 +51,8 @@ async function init() {
   campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); enviar(); } });
   campo.addEventListener("input", ajustarAltura);
   $("#btn-painel").addEventListener("click", () => mostrarPainel(document.body.classList.contains("sem-painel")));
+  $("#modelo").addEventListener("change", atualizarAvisoRemoto);
+  $("#btn-conexoes").addEventListener("click", abrirConexoes);
 
   const params = new URLSearchParams(location.search);
   mostrarPainel(params.has("painel") ? params.get("painel") !== "0" : pref.get("painel", "1") === "1", false);
@@ -59,8 +61,8 @@ async function init() {
     const s = await (await fetch("api/status")).json();
     estado.status = s;
     const sel = $("#modelo");
-    const modelos = s.modelos.length ? s.modelos : [s.modelo_padrao];
-    sel.innerHTML = modelos.map((m) => `<option ${m === s.modelo_padrao ? "selected" : ""}>${esc(m)}</option>`).join("");
+    montarSeletor(s);
+    $("#btn-conexoes").hidden = !s.conexoes_editaveis;  // servidor público: a tela nem aparece
     status(s.ollama ? "on" : "off", s.ollama ? `Modelo local pronto · ${s.condicao}` : "Modelo offline");
     if (s.documentos?.length) $("#base").innerHTML = `<b>Base consultada:</b> ${s.documentos.map((d) => esc(d.rotulo)).join(" · ")}`;
   } catch { status("off", "API offline"); }
@@ -77,6 +79,89 @@ async function init() {
   if (params.get("aba")) trocarAba(params.get("aba"));
   if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
 }
+
+// ---------- Modelos locais e remotos ----------
+const ehRemoto = (m) => /^[a-z0-9_-]+:/.test(m || "") && (estado.status?.modelos_remotos || []).includes(m);
+const rotuloProvedor = (m) => (estado.status?.remoto || []).find((r) => m.startsWith(r.provedor + ":"));
+
+function montarSeletor(s) {
+  const sel = $("#modelo"), atual = sel.value;
+  const remotos = s.modelos_remotos || [];
+  const locais = s.modelos.filter((m) => !remotos.includes(m));
+  const opt = (m, rot) => `<option value="${esc(m)}" ${m === (atual || s.modelo_padrao) ? "selected" : ""}>${esc(rot || m)}</option>`;
+  const locaisHtml = (locais.length ? locais : [s.modelo_padrao]).map((m) => opt(m)).join("");
+  sel.innerHTML = remotos.length
+    ? `<optgroup label="Local (Ollama)">${locaisHtml}</optgroup><optgroup label="Remoto">${remotos.map((m) => opt(m, m.replace(":", " · "))).join("")}</optgroup>`
+    : locaisHtml;
+  atualizarAvisoRemoto();
+}
+
+function atualizarAvisoRemoto() {
+  const m = $("#modelo").value, remoto = ehRemoto(m), p = remoto ? rotuloProvedor(m) : null;
+  const av = $("#aviso-remoto");
+  av.hidden = !remoto;
+  if (remoto) av.textContent = `Modelo remoto: a pergunta e os trechos recuperados serão enviados à ${p?.rotulo || "um terceiro"} (${p?.pais || "fora do seu controle"}). Não escreva dados de alunos. A resposta pode variar entre execuções.`;
+  const g = $("#garantia-local span:last-child");
+  if (g) g.textContent = remoto ? "Modelo remoto: dados saem desta máquina" : "Roda localmente, sem internet";
+}
+
+// ---------- Diálogo de conexões (somente servidor local) ----------
+const JSON_HDR = { "Content-Type": "application/json" };
+
+async function abrirConexoes() {
+  await renderConexoes();
+  $("#dlg-conexoes").showModal();
+}
+
+async function renderConexoes(msg) {
+  const box = $("#lista-conexoes");
+  try {
+    const r = await fetch("api/conexoes");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const { conexoes } = await r.json();
+    box.innerHTML = conexoes.map((c) => `
+      <section class="conexao" data-p="${esc(c.provedor)}">
+        <h3>${esc(c.rotulo)} <span class="selo ${c.configurada ? "ok" : "info"}">${c.configurada ? "configurada" : "desligada"}</span></h3>
+        <label for="url-${esc(c.provedor)}">URL base</label>
+        <input id="url-${esc(c.provedor)}" class="f-url" value="${esc(c.url_base)}" autocomplete="off" spellcheck="false">
+        <label for="chave-${esc(c.provedor)}">Chave de API</label>
+        <input id="chave-${esc(c.provedor)}" class="f-chave" type="password" autocomplete="off" spellcheck="false"
+               placeholder="${c.configurada ? esc(c.chave_mascarada) : "cole a chave aqui"}">
+        <p class="dica-chave">${c.origem === "ambiente" ? "Chave vinda da variável de ambiente (tem prioridade sobre a salva)." : c.configurada ? "Chave salva neste computador (config/conexoes.json). Deixe em branco para manter." : "Fica salva só neste computador, fora do repositório."}</p>
+        <p class="dica-chave">Modelos: ${c.modelos.map(esc).join(", ")} · servidor ${esc(c.pais)}</p>
+        <div class="linha">
+          <button type="button" class="btn-sec a-salvar">Salvar</button>
+          <button type="button" class="btn-sec a-testar" ${c.configurada ? "" : "disabled"}>Testar</button>
+          <button type="button" class="btn-sec btn-perigo a-remover" ${c.configurada || c.origem ? "" : "disabled"}>Remover</button>
+        </div>
+        <p class="res ${msg?.p === c.provedor ? msg.cls : ""}" role="status">${msg?.p === c.provedor ? esc(msg.texto) : ""}</p>
+      </section>`).join("");
+  } catch (e) { box.innerHTML = `<p class="vazio">Conexões indisponíveis neste servidor (${esc(e.message)}).</p>`; }
+}
+
+$("#lista-conexoes").addEventListener("click", async (e) => {
+  const sec = e.target.closest(".conexao"), b = e.target.closest("button");
+  if (!sec || !b) return;
+  const p = sec.dataset.p, aviso = (cls, texto) => renderConexoes({ p, cls, texto });
+  b.disabled = true;
+  try {
+    if (b.classList.contains("a-salvar")) {
+      const corpo = { url_base: $(".f-url", sec).value };
+      const k = $(".f-chave", sec).value.trim(); if (k) corpo.chave = k;
+      const r = await fetch(`api/conexoes/${p}`, { method: "PUT", headers: JSON_HDR, body: JSON.stringify(corpo) });
+      if (!r.ok) { await aviso("bad", (await r.json().catch(() => ({}))).detail || `Falha (${r.status}).`); return; }
+      await aviso("ok", "Salvo.");
+    } else if (b.classList.contains("a-testar")) {
+      const t = await (await fetch(`api/conexoes/${p}/testar`, { method: "POST", headers: JSON_HDR, body: "{}" })).json();
+      await aviso(t.ok ? "ok" : "bad", t.mensagem);
+    } else if (b.classList.contains("a-remover")) {
+      await fetch(`api/conexoes/${p}`, { method: "DELETE", headers: JSON_HDR });
+      await aviso("ok", "Conexão removida.");
+    }
+  } catch (err) { await aviso("bad", `Falha de conexão com o servidor (${err.message}).`); }
+  // o seletor de modelos depende de quais conexões estão configuradas
+  try { const s = await (await fetch("api/status")).json(); estado.status = s; montarSeletor(s); } catch { /* mantém o seletor atual */ }
+});
 
 function status(cls, texto) {
   const p = $("#pill");
@@ -120,7 +205,7 @@ function rolar(forcar = false) {
 
 function novaResposta(pergunta) {
   const a = adicionar("#tpl-msg-assistente");
-  const reg = { pergunta, janela: null, final: null, el: a, bruto: "", timer: null };
+  const reg = { pergunta, janela: null, final: null, el: a, bruto: "", timer: null, modelo: $("#modelo").value };
   estado.respostas.push(reg);
   a.addEventListener("click", (e) => {
     const c = e.target.closest(".cita");
@@ -195,7 +280,7 @@ function tratar(reg, ev) {
     etapa(reg, "entrada", "feita", j.modo_ressalva ? "Pergunta verificada · modo ressalva ligado" : "Pergunta verificada");
     if (j.cobertura.coberta) {
       etapa(reg, "busca", "feita", `${j.trechos.length} trechos selecionados nos documentos`);
-      etapa(reg, "modelo", "ativa", "Escrevendo a resposta com o modelo local");
+      etapa(reg, "modelo", "ativa", ehRemoto(reg.modelo) ? `Escrevendo a resposta com ${reg.modelo.split(":")[0]} (remoto)` : "Escrevendo a resposta com o modelo local");
     } else {
       etapa(reg, "busca", "feita", "Documentos consultados");
       etapa(reg, "modelo", "pulada", "Modelo não chamado: as fontes não cobrem a pergunta");
@@ -213,10 +298,11 @@ function tratar(reg, ev) {
     a.classList.toggle("erro", ev.desfecho === "erro" || ev.desfecho === "ocupado");
     $(".texto", a).innerHTML = markdown(ev.resposta) + dica(ev, reg.pergunta);
     renderSelos(reg); renderFontes(reg);
-    const o = ev.traco?.ollama;
+    const o = ev.traco?.ollama, rm = ev.traco?.remoto;
     $(".meta", a).textContent = [
       ev.desfecho === "respondida" ? ev.traco?.modelo : "modelo não chamado",
       o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null,
+      rm ? `${rm.resposta_tokens ?? "?"} tokens (remoto, não reprodutível)` : null,
       ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null,
       ev.traco?.id ? `traço ${ev.traco.id}` : null,
     ].filter(Boolean).join(" · ");
@@ -241,6 +327,7 @@ function renderSelos(reg) {
   if (d === "bloqueada") s.push(["bad", "bloqueada antes da busca"]);
   if (d === "sem_cobertura") s.push(["warn", "recusa sem chamar o modelo"]);
   if (d === "erro" || d === "ocupado") s.push(["bad", d === "erro" ? "erro do modelo" : "servidor ocupado"]);
+  if (f.traco?.provedor && f.traco.provedor !== "ollama") s.push(["warn", `modelo remoto (${f.traco.provedor})`]);
   if (v) {
     if (v.citacoes_validas.length) s.push(["ok", `${v.citacoes_validas.length} fonte(s) citada(s) e conferida(s)`]);
     if (v.sem_citacao) s.push(["warn", "sem citação"]);

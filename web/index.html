@@ -6,7 +6,7 @@
   <title>AlfaRAG — Alfabetização Inclusiva</title>
   <meta name="description" content="Assistente RAG de apoio pedagógico à alfabetização (2º e 3º anos), com citação de fontes e verificação automática.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563EB'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EAa%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <header class="topo">
@@ -25,6 +25,10 @@
       <label class="seletor"><span>Modelo</span>
         <select id="modelo" aria-label="Modelo de linguagem"></select>
       </label>
+      <button id="btn-conexoes" type="button" class="btn-sec" hidden title="Configurar modelos remotos (somente no servidor local)">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 12.5 12.5 7.5M8.5 5.5l1-1a3 3 0 0 1 4.2 4.2l-1 1M11.5 14.5l-1 1a3 3 0 0 1-4.2-4.2l1-1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Conexões</span>
+      </button>
       <span id="pill" class="status"><i aria-hidden="true"></i><span>conectando…</span></span>
       <button id="btn-painel" type="button" class="btn-sec" aria-pressed="true" title="Mostrar ou esconder a janela de contexto">
         <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12.5 3.5v13" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -42,7 +46,7 @@
           <ul class="garantias">
             <li><span class="ico ok" aria-hidden="true">✓</span>Cita documento e página</li>
             <li><span class="ico warn" aria-hidden="true">!</span>Não faz diagnóstico</li>
-            <li><span class="ico info" aria-hidden="true">⌂</span>Roda localmente, sem internet</li>
+            <li id="garantia-local"><span class="ico info" aria-hidden="true">⌂</span><span>Roda localmente, sem internet</span></li>
           </ul>
           <p id="base" class="base"></p>
           <div class="grupo-ex">
@@ -56,6 +60,7 @@
         </div>
       </div>
       <form id="form" class="composer">
+        <p id="aviso-remoto" class="aviso-remoto" role="note" hidden></p>
         <div class="campo">
           <textarea id="entrada" rows="1" maxlength="1200" placeholder="Ex.: Meu aluno do 2º ano lê “pato”, mas não lê “prato”. Como posso ajudá-lo?" aria-label="Pergunta"></textarea>
           <button id="enviar" type="submit" class="btn-primario" aria-label="Perguntar">
@@ -109,6 +114,12 @@
     </section>
   </main>
 
+  <dialog id="dlg-conexoes" class="dlg" aria-labelledby="dlg-titulo">
+    <form method="dialog" class="dlg-cab"><h2 id="dlg-titulo">Conexões</h2><button class="btn-sec" aria-label="Fechar">Fechar</button></form>
+    <p class="dlg-nota">Modelos remotos ficam <b>desligados</b> até você informar uma chave. Ao usá-los, a pergunta e os trechos recuperados são enviados ao provedor. O conteúdo da base continua sendo a única fonte permitida; os embeddings seguem locais.</p>
+    <div id="lista-conexoes"></div>
+  </dialog>
+
   <template id="tpl-msg-usuario"><div class="msg usuario"><div class="bolha"></div></div></template>
   <template id="tpl-msg-assistente">
     <article class="msg assistente">
@@ -129,6 +140,6 @@
       </div>
     </article>
   </template>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

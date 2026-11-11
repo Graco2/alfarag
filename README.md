@@ -69,6 +69,33 @@ Com Docker (só CPU; ver latência medida em `resultados/latencia_cpu.json`):
 docker build -t alfarag . && docker run -p 7860:7860 alfarag
 ```
 
+## Modelos remotos (opcional)
+
+Por padrão tudo roda local. Também é possível gerar a resposta com um modelo remoto
+OpenAI-compatível; o primeiro provedor é o **DeepSeek** (`deepseek-flash`, `deepseek-v4-pro`).
+A recuperação, o prompt (`VERSAO_PROMPT`) e o harness não mudam, e os **embeddings continuam locais** (bge-m3).
+
+**Configuração (só no servidor local).** Botão **Conexões** na barra superior: URL base, chave, *Testar* e *Remover*.
+A chave fica em `config/conexoes.json` (permissão 600, fora do git). A variável `DEEPSEEK_API_KEY` tem prioridade sobre o
+arquivo. A interface só mostra a chave mascarada; ela não aparece em traço, log, erro nem em `/api/status`.
+Sem chave, os modelos remotos nem aparecem no seletor.
+
+**Privacidade.** Com um modelo remoto, a pergunta e os trechos recuperados são enviados a um terceiro (DeepSeek, servidor fora do Brasil).
+A interface avisa isso ao escolher o modelo. Não escreva dados de alunos.
+
+**Limites.**
+- Sem fallback: se o provedor falhar (chave recusada, saldo, timeout), o desfecho é `erro` com a mensagem do motivo.
+- Resposta **não reprodutível**: sem `seed` nem digest. O traço registra `provedor`, `modelo_id`, tokens e `reprodutivel: false`.
+- Raciocínio estendido desligado (`thinking: disabled`); temperatura e limite de tokens vêm de `app/config.py`.
+- O provedor vem do prefixo do modelo (`deepseek:deepseek-flash`); nome sem prefixo continua sendo Ollama.
+- Os números de `resultados/` são todos do modelo local; nenhuma avaliação do modelo remoto foi executada.
+
+**Deploy público e Docker.** O `Dockerfile` e o `start.sh` não mudam: o servidor público não permite editar conexões (403).
+Num `docker run -p 7860:7860` o cliente chega como IP da ponte; para liberar a tela de Conexões no **seu** Docker local, use
+`-e CONEXOES_LOCAL=1`. Nunca defina essa variável num deploy público.
+
+Testes (HTTP simulado, sem chamar a API real): `.venv/bin/pip install -r requirements-dev.txt && .venv/bin/pytest`.
+
 ## Deploy (Railway ou qualquer host Docker)
 
 O container precisa de **~5 GB de RAM** (Qwen3.5 4B Q4_K_M + bge-m3) — não cabe em

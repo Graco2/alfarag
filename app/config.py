@@ -11,6 +11,12 @@ TRACOS_DIR = Path(os.getenv("TRACOS_DIR", RAIZ / "resultados" / "tracos"))
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 
+# Modelos remotos (opt-in). A chave fica fora do repositório: config/conexoes.json (permissão 600) ou variável de ambiente.
+CONEXOES_ARQ = Path(os.getenv("CONEXOES_ARQ", RAIZ / "config" / "conexoes.json"))
+# CONEXOES_LOCAL=1: trata o servidor como local mesmo quando o cliente chega por IP da ponte (docker run -p). Nunca no deploy público.
+CONEXOES_LOCAL = os.getenv("CONEXOES_LOCAL") == "1"
+TIMEOUT_REMOTO_S = float(os.getenv("TIMEOUT_REMOTO_S", "120"))
+
 # Modelos fixos durante cada comparação (Etapa 2 do projeto).
 MODELO_LLM = os.getenv("MODELO_LLM", "qwen3.5:4b-q4_K_M")
 MODELO_EMBED = os.getenv("MODELO_EMBED", "bge-m3")
