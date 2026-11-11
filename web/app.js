@@ -57,6 +57,9 @@ async function init() {
   const params = new URLSearchParams(location.search);
   mostrarPainel(params.has("painel") ? params.get("painel") !== "0" : pref.get("painel", "1") === "1", false);
 
+  // Servidor com ACESSO_SENHA: /api/status responde 401 até a senha ser informada. Pede antes de carregar o resto.
+  try { if ((await fetch("api/status")).status === 401) await pedirAcesso(); } catch { /* o bloco abaixo mostra "API offline" */ }
+
   try {
     const s = await (await fetch("api/status")).json();
     estado.status = s;
