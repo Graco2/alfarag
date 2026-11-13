@@ -213,7 +213,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         return
 
     # 4) Harness de saída
-    final, ver = harness.verificar_saida(bruto, dentro, ent.pede_diagnostico, meta.get("done_reason"))
+    final, ver = harness.verificar_saida(bruto, dentro, ent.pede_diagnostico, meta.get("done_reason"), modo)
     traco.update({
         "desfecho": "respondida", "resposta_bruta": bruto, "resposta": final, "verificacao": ver.dict(),
         ("ollama" if provedor == "ollama" else "remoto"): meta, "latencia_s": round(time.time() - t0, 2),
