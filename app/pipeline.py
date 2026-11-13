@@ -151,6 +151,8 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         dentro, fora = selecionar_janela(c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
     else:  # "referencia", "unico" (fluxo antigo) e "sem_cobertura" (só para mostrar o que ficou abaixo do limiar)
         dentro, fora = selecionar_janela(c_ref or c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
+    if por_grupo:  # numeração [n]: referências na ordem de relevância da busca, depois os relatos (ordem estável)
+        dentro = sorted(dentro, key=lambda c: grupo_do_doc(c["doc"]) == "experiencia")
     coberta = modo != "sem_cobertura"
     melhor_cos = max(cob_ref.melhor_cos, cob_exp.melhor_cos)
     decisao = {
@@ -189,7 +191,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         return
 
     # 3) Modelo
-    mensagens = montar_mensagens(pergunta, dentro, ROTULOS, ent.pede_diagnostico)
+    mensagens = montar_mensagens(pergunta, dentro, ROTULOS, ent.pede_diagnostico, modo)
     bruto = ""
     meta: dict = {}
     try:
