@@ -8,9 +8,10 @@ from datetime import datetime, timezone
 from typing import Iterator
 
 from . import conexoes, harness
-from .config import (CONDICAO, CONDICOES, EXPERIMENTO, EXPERIMENTOS, MODELO_EMBED, MODELO_LLM, NUM_CTX,
-                     ORCAMENTO_CONTEXTO, RAIZ, TEMPERATURA, TRACOS_DIR, aprox_tokens)
-from .indice import carregar, rotulo_pagina
+from .config import (CASCATA, CONDICAO, CONDICOES, EXPERIMENTO, EXPERIMENTOS, GRUPOS, LIMIAR_EXPERIENCIA,
+                     LIMIAR_RESPALDO, MODELO_EMBED, MODELO_LLM, NUM_CTX, ORCAMENTO_CONTEXTO, RAIZ, REFERENCIAS,
+                     TEMPERATURA, TOP_K_GRUPO, TRACOS_DIR, aprox_tokens)
+from .indice import carregar, docs_do_grupo, grupo_do_doc, rotulo_pagina, vetor_pergunta
 from .llm import chat_stream, digest, resolver
 from .prompts import PROMPT_SISTEMA, VERSAO_PROMPT, montar_mensagens
 
@@ -34,9 +35,33 @@ def selecionar_janela(candidatos: list[dict], top_k: int, orcamento: int) -> tup
     return dentro, fora
 
 
+def _cobertura(candidatos: list[dict], limiar: float) -> harness.Cobertura:
+    """Mesmo critério de harness.checar_cobertura (melhor cosseno), com limiar próprio de cada grupo."""
+    melhor = max((c["cos"] for c in candidatos), default=0.0)
+    return harness.Cobertura(melhor >= limiar, round(melhor, 4), limiar)
+
+
+def _cob_dict(cob: harness.Cobertura) -> dict:
+    return {"melhor_cos": cob.melhor_cos, "limiar": cob.limiar, "coberta": cob.coberta}
+
+
+def decidir_modo(ref_coberta: bool, exp_coberta: bool) -> str:
+    """Tabela de decisão: as referências (documentos oficiais + produção científica) são a base quando existem;
+    o relato de experiência entra junto ou sozinho."""
+    if ref_coberta and exp_coberta:
+        return "referencia+experiencia"
+    if ref_coberta:
+        return "referencia"
+    if exp_coberta:
+        return "experiencia"
+    return "sem_cobertura"
+
+
 def _resumo(c: dict, n: int | None = None) -> dict:
+    grupo = grupo_do_doc(c["doc"])
     out = {
         "id": c["id"], "doc": c["doc"], "rotulo": ROTULOS.get(c["doc"], c["doc"]), "pagina": rotulo_pagina(c),
+        "grupo": grupo, "rotulo_grupo": GRUPOS[grupo],
         "secao": c.get("secao", ""), "tokens": c["tokens"], "rrf": c.get("rrf"), "cos": c.get("cos"),
         "rank_denso": c.get("rank_denso"), "rank_bm25": c.get("rank_bm25"), "codigos_bncc": c.get("codigos_bncc", []),
     }
@@ -83,11 +108,29 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         yield {"tipo": "final", "desfecho": "bloqueada", "resposta": ent.mensagem, "traco": traco}
         return
 
-    # 2) Recuperação híbrida
+    # 2) Recuperação híbrida por grupo + tabela de decisão
     cfg = EXPERIMENTOS[exp]
     indice = carregar(exp)
+    ref_docs, exp_docs = docs_do_grupo(REFERENCIAS, condicao), docs_do_grupo("experiencia", condicao)
+    por_grupo = CASCATA and bool(exp_docs)  # sem vídeos na condição (C1–C4) ou CASCATA=0: busca única, como antes
+    confirmacao = None
     try:
-        candidatos = indice.buscar(pergunta, CONDICOES[condicao])
+        if por_grupo:
+            q = vetor_pergunta(pergunta)  # um embedding só, reaproveitado nas duas buscas
+            c_ref = indice.buscar(pergunta, ref_docs, q_vec=q)
+            c_exp = indice.buscar(pergunta, exp_docs, q_vec=q)
+        else:
+            c_ref, c_exp = indice.buscar(pergunta, CONDICOES[condicao]), []
+        cob_ref = harness.checar_cobertura(c_ref)
+        cob_exp = _cobertura(c_exp, LIMIAR_EXPERIENCIA)
+        if por_grupo and not cob_ref.coberta and cob_exp.coberta:
+            # Busca de confirmação: antes de dizer "não encontrado nas referências", procura nelas a PRÁTICA do melhor relato.
+            relato = max(c_exp, key=lambda c: c["cos"])
+            c_conf = indice.buscar(pergunta + "\n" + relato["texto"][:600], ref_docs)
+            cob_conf = _cobertura(c_conf, LIMIAR_RESPALDO)
+            confirmacao = {**_cob_dict(cob_conf), "relato": relato["id"]}
+            if cob_conf.coberta:
+                c_ref, cob_ref = c_conf, cob_conf
     except Exception as e:  # embeddings são sempre locais (Ollama/bge-m3), mesmo com modelo de geração remoto
         msg = (f"A busca nos documentos falhou ({type(e).__name__}): o embedding da pergunta ({MODELO_EMBED}) "
                "roda no Ollama local, mesmo com modelo remoto. Verifique se o Ollama está rodando. Nenhuma resposta foi gerada.")
@@ -95,8 +138,29 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         salvar_traco(traco)
         yield {"tipo": "final", "desfecho": "erro", "resposta": msg, "traco": traco}
         return
-    cob = harness.checar_cobertura(candidatos)
-    dentro, fora = selecionar_janela(candidatos, cfg["top_k"], ORCAMENTO_CONTEXTO)
+    modo = decidir_modo(cob_ref.coberta, cob_exp.coberta) if por_grupo else ("unico" if cob_ref.coberta else "sem_cobertura")
+
+    # Janela: referências primeiro (numeradas [1..k]), relatos depois.
+    if modo == "referencia+experiencia":
+        orc_ref = ORCAMENTO_CONTEXTO * 2 // 3  # as referências são a base; os relatos ficam com o restante
+        d_ref, f_ref = selecionar_janela(c_ref, TOP_K_GRUPO["referencia"], orc_ref)
+        d_exp, f_exp = selecionar_janela(c_exp, TOP_K_GRUPO["experiencia"],
+                                         ORCAMENTO_CONTEXTO - sum(c["tokens"] for c in d_ref))
+        dentro, fora = d_ref + d_exp, f_ref + f_exp
+    elif modo == "experiencia":
+        dentro, fora = selecionar_janela(c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
+    else:  # "referencia", "unico" (fluxo antigo) e "sem_cobertura" (só para mostrar o que ficou abaixo do limiar)
+        dentro, fora = selecionar_janela(c_ref or c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
+    if por_grupo:  # numeração [n]: referências na ordem de relevância da busca, depois os relatos (ordem estável)
+        dentro = sorted(dentro, key=lambda c: grupo_do_doc(c["doc"]) == "experiencia")
+    coberta = modo != "sem_cobertura"
+    melhor_cos = max(cob_ref.melhor_cos, cob_exp.melhor_cos)
+    decisao = {
+        "modo": modo,
+        "referencia": _cob_dict(cob_ref),
+        "experiencia": _cob_dict(cob_exp) if por_grupo else None,
+        "confirmacao": confirmacao,
+    }
     janela = {
         "sistema": {"versao": VERSAO_PROMPT, "tokens": aprox_tokens(PROMPT_SISTEMA)},
         "pergunta_tokens": aprox_tokens(pergunta),
@@ -113,19 +177,21 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
             "dados do aluno: o sistema bloqueia CPF, telefone e e-mail",
         ],
         "modo_ressalva": ent.pede_diagnostico,
-        "cobertura": {"melhor_cos": cob.melhor_cos, "limiar": cob.limiar, "coberta": cob.coberta},
+        "cobertura": {"melhor_cos": melhor_cos, "limiar": cob_ref.limiar, "coberta": coberta},
+        "decisao": decisao,
     }
     traco["janela"] = janela  # completo (inclui o texto dos trechos): o traço reabre a resposta inteira no modo replay
+    traco["decisao"] = decisao
     yield {"tipo": "contexto", "janela": janela}
 
-    if not cob.coberta:
+    if not coberta:
         traco.update({"desfecho": "sem_cobertura", "resposta": harness.FRASE_SEM_COBERTURA, "latencia_s": round(time.time() - t0, 2)})
         salvar_traco(traco)
         yield {"tipo": "final", "desfecho": "sem_cobertura", "resposta": harness.FRASE_SEM_COBERTURA, "traco": traco}
         return
 
     # 3) Modelo
-    mensagens = montar_mensagens(pergunta, dentro, ROTULOS, ent.pede_diagnostico)
+    mensagens = montar_mensagens(pergunta, dentro, ROTULOS, ent.pede_diagnostico, modo)
     bruto = ""
     meta: dict = {}
     try:
@@ -147,7 +213,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         return
 
     # 4) Harness de saída
-    final, ver = harness.verificar_saida(bruto, dentro, ent.pede_diagnostico, meta.get("done_reason"))
+    final, ver = harness.verificar_saida(bruto, dentro, ent.pede_diagnostico, meta.get("done_reason"), modo)
     traco.update({
         "desfecho": "respondida", "resposta_bruta": bruto, "resposta": final, "verificacao": ver.dict(),
         ("ollama" if provedor == "ollama" else "remoto"): meta, "latencia_s": round(time.time() - t0, 2),

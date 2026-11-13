@@ -8,13 +8,20 @@ Depois do modelo (o que o sistema obriga):
   * citação [n] tem de apontar para um trecho que entrou na janela;
   * código BNCC citado tem de existir literalmente em um trecho recuperado;
   * em modo ressalva, a resposta tem de declarar que não faz diagnóstico.
+Depois do modelo, nos modos da tabela de decisão (prompt v2.0):
+  * "Fundamentado nas referências: Sim / Em parte" tem de citar uma REFERÊNCIA (documento oficial ou produção
+    científica); citando só relato ou nada, a linha vira "Não encontrado nas referências";
+  * no modo "experiencia", a resposta tem de avisar que a orientação não foi encontrada nas referências;
+  * no modo "referencia+experiencia", relato citado fora da seção "Relatos de experiência" gera alerta.
 """
 from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass, field
 
-from .config import LIMIAR_COBERTURA, MAX_PERGUNTA_CHARS
+from .config import LIMIAR_COBERTURA, MAX_PERGUNTA_CHARS, REFERENCIAS
+from .indice import grupo_do_doc
+from .prompts import ETIQUETA_GRUPO, PREFIXO_FUNDAMENTACAO
 
 # Código BNCC; os quadros de Habilidades Essenciais desdobram alguns com uma letra (EF02LP01A).
 BNCC_RE = re.compile(r"\b(EF\d{2}LP\d{2}[A-Z]?)\b")
@@ -47,6 +54,16 @@ FRASE_SEM_COBERTURA = (
     "O assistente cobre alfabetização em Língua Portuguesa no 2º e 3º anos (BNCC, Habilidades Essenciais, Manual ABC e artigos sobre dislexia). "
     "Reformule a pergunta dentro desse escopo ou consulte a coordenação pedagógica."
 )
+FRASE_SO_EXPERIENCIA = (
+    "> **Aviso do sistema:** esta orientação vem de relatos de experiência e não foi encontrada nas referências "
+    "da base (documentos oficiais e produção científica)."
+)
+# Aviso do modo "experiencia" (o prompt pede: "…e não foi encontrada nas referências da base.").
+# "foi encontrad" não casa com a linha de fundamentação "Não encontrado nas referências".
+_AVISO_EXP_RE = re.compile(r"n[ãa]o foi encontrad\w* nas refer[êe]ncias", re.I)
+_SECAO_RELATOS_RE = re.compile(r"^[ \t]*(?:#{1,6}[ \t]*)?\**[ \t]*Relatos de experi[êe]ncia\b", re.I | re.M)
+_FUND_RE = re.compile(re.escape(PREFIXO_FUNDAMENTACAO) + r"[ \t]*(Sim|Em parte|N[ãa]o encontrado nas refer[êe]ncias)([^\n*]*)", re.I)
+MODOS_POR_GRUPO = ("referencia", "referencia+experiencia", "experiencia")
 
 
 @dataclass
@@ -92,6 +109,13 @@ class Verificacao:
     modo_ressalva: bool = False
     ressalva_forcada: bool = False
     truncada: bool = False
+    # Modos da tabela de decisão (prompt v2.0)
+    modo: str | None = None
+    fundamentacao_corrigida: int = 0           # linhas "Sim / Em parte" sem referência, reescritas pelo sistema
+    fundamentacao_tipo_divergente: int = 0     # tipo escrito (documento oficial / produção científica) ≠ fonte citada
+    aviso_experiencia_forcado: bool = False
+    relatos_fora_da_secao: list[int] = field(default_factory=list)
+    secao_relatos_ausente: bool = False
     veredito: str = "ok"
     alertas: list[str] = field(default_factory=list)
 
@@ -99,8 +123,60 @@ class Verificacao:
         return asdict(self)
 
 
-def verificar_saida(resposta: str, trechos: list[dict], pede_diagnostico: bool, done_reason: str | None) -> tuple[str, Verificacao]:
-    v = Verificacao(modo_ressalva=pede_diagnostico, truncada=(done_reason == "length"))
+def _numeros(texto: str) -> list[int]:
+    return [int(n) for g in CITA_RE.findall(texto) for n in re.split(r"\s*[,;]\s*", g)]
+
+
+def _verificar_grupos(texto: str, trechos: list[dict], modo: str, v: Verificacao) -> str:
+    """Regras do prompt v2.0. Roda depois da limpeza de citações: todo [n] restante existe na janela."""
+    grupo = {i: grupo_do_doc(c["doc"]) for i, c in enumerate(trechos, 1)}
+    relatos = {n for n, g in grupo.items() if g == "experiencia"}
+
+    # 4) Linha de fundamentação: "Sim" / "Em parte" só valem citando uma referência.
+    def _fund(m: re.Match) -> str:
+        rotulo, resto = m.group(1), m.group(2)
+        if rotulo.lower().startswith("n"):  # "Não encontrado nas referências": nada a conferir
+            return m.group(0)
+        refs = [n for n in _numeros(resto) if grupo.get(n) in REFERENCIAS]
+        if not refs:
+            v.fundamentacao_corrigida += 1
+            return f"{PREFIXO_FUNDAMENTACAO} Não encontrado nas referências"
+        escritos = {g for g, rot in ETIQUETA_GRUPO.items() if rot in resto.lower()}
+        if escritos and escritos != {grupo[n] for n in refs}:
+            v.fundamentacao_tipo_divergente += 1
+        return m.group(0)
+
+    texto = _FUND_RE.sub(_fund, texto)
+    if v.fundamentacao_corrigida:
+        v.alertas.append(f"Fundamentação sem referência citada reescrita como \"Não encontrado nas referências\": {v.fundamentacao_corrigida} linha(s)")
+    if v.fundamentacao_tipo_divergente:
+        v.alertas.append(f"Tipo de referência na fundamentação não confere com a fonte citada: {v.fundamentacao_tipo_divergente} linha(s)")
+
+    secao = _SECAO_RELATOS_RE.search(texto)
+    # 5) Só relatos: a resposta tem de avisar que não há base nas referências; se não avisar, o sistema avisa.
+    if modo == "experiencia":
+        inicio = texto[: secao.start()] if secao else texto[:400]
+        if not _AVISO_EXP_RE.search(inicio):
+            texto = FRASE_SO_EXPERIENCIA + "\n\n" + texto
+            v.aviso_experiencia_forcado = True
+            v.alertas.append("O modelo não avisou que a orientação vem só de relatos; o sistema inseriu o aviso.")
+
+    # 6) Misto: Orientação, Atividade e Acompanhamento se baseiam só nas referências.
+    if modo == "referencia+experiencia" and relatos:
+        antes = texto[: secao.start()] if secao else texto
+        v.relatos_fora_da_secao = sorted({n for n in _numeros(antes) if n in relatos})
+        if v.relatos_fora_da_secao:
+            v.alertas.append(f"Relato citado fora da seção \"Relatos de experiência\": {v.relatos_fora_da_secao}")
+        if not secao:
+            v.secao_relatos_ausente = True
+            v.alertas.append("A seção \"Relatos de experiência\" não aparece na resposta.")
+    return texto
+
+
+def verificar_saida(resposta: str, trechos: list[dict], pede_diagnostico: bool, done_reason: str | None,
+                    modo: str | None = None) -> tuple[str, Verificacao]:
+    """`modo`: da tabela de decisão do pipeline. None ou "unico" (fluxo antigo): só as regras 1–3."""
+    v = Verificacao(modo_ressalva=pede_diagnostico, truncada=(done_reason == "length"), modo=modo)
     texto = resposta
 
     # 1) Citações [n] (ou [n, m]) precisam existir na janela.
@@ -133,7 +209,11 @@ def verificar_saida(resposta: str, trechos: list[dict], pede_diagnostico: bool, 
         texto = BNCC_RE.sub(lambda m: m.group(1) if m.group(1) in no_contexto else "[código BNCC removido pelo sistema: não consta nas fontes]", texto)
         v.alertas.append(f"Código(s) BNCC fora das fontes removido(s): {', '.join(v.codigos_removidos)}")
 
+    if modo in MODOS_POR_GRUPO:
+        texto = _verificar_grupos(texto, trechos, modo, v)
+
     # 3) Modo ressalva: a resposta tem de negar o diagnóstico; se não negar, o sistema força o aviso.
+    # Fica por último para o aviso de diagnóstico ser sempre a primeira linha.
     if pede_diagnostico and not _NEGA_DIAG.search(texto):
         texto = FRASE_DIAGNOSTICO + "\n\n" + texto
         v.ressalva_forcada = True

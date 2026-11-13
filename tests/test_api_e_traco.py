@@ -78,7 +78,9 @@ def test_perguntar_valida_modelo(local):
 
 
 class _Indice:
-    def buscar(self, pergunta, docs):
+    def buscar(self, pergunta, docs, **kw):
+        if "BNCC" not in docs:  # busca no grupo de experiências: nenhum relato
+            return []
         return [{"id": "c1", "doc": "BNCC", "texto": "A consciência fonológica é habilidade de base.", "tokens": 12, "secao": "",
                  "pagina_ini": 3, "pagina_fim": 3, "cos": 0.9, "rrf": 0.03, "bm25": 5.0, "rank_denso": 1, "rank_bm25": 1,
                  "codigos_bncc": []}]
@@ -139,7 +141,7 @@ def test_semaforo_so_para_ollama(local, com_chave, monkeypatch):
 
 def test_embedding_local_fora_do_ar_vira_erro_claro(com_chave, monkeypatch):
     class Quebrado:
-        def buscar(self, pergunta, docs):
+        def buscar(self, pergunta, docs, **kw):
             raise httpx.ConnectError("[Errno 111] Connection refused")
     monkeypatch.setattr(pipeline, "carregar", lambda exp: Quebrado())
     vistas = transporte(lambda r: httpx.Response(200, content=sse("x")))

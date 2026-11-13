@@ -450,6 +450,11 @@ function renderSelos(reg) {
     if (v.codigos_removidos.length) s.push(["bad", `código removido: ${v.codigos_removidos.join(", ")}`]);
     if (v.modo_ressalva) s.push([v.ressalva_forcada ? "warn" : "info", v.ressalva_forcada ? "aviso de diagnóstico inserido pelo sistema" : "limite de diagnóstico declarado"]);
     if (v.truncada) s.push(["warn", "resposta cortada"]);
+    if (v.fundamentacao_corrigida) s.push(["bad", `fundamentação sem referência corrigida (${v.fundamentacao_corrigida})`]);
+    if (v.fundamentacao_tipo_divergente) s.push(["warn", "tipo de referência não confere"]);
+    if (v.aviso_experiencia_forcado) s.push(["warn", "aviso de “só relatos” inserido pelo sistema"]);
+    if (v.relatos_fora_da_secao?.length) s.push(["warn", `relato citado fora da seção: ${v.relatos_fora_da_secao.join(", ")}`]);
+    if (v.secao_relatos_ausente) s.push(["warn", "seção de relatos ausente"]);
   }
   $(".selos", reg.el).innerHTML = s.map(([c, t]) => `<span class="selo ${c}">${esc(t)}</span>`).join("");
 }
@@ -518,6 +523,18 @@ function renderPainel(reg) {
       : chk("ok", "Códigos BNCC conferidos", v.codigos_ok.join(", ") || "nenhum citado"));
     if (v.modo_ressalva) checks.push(v.ressalva_forcada ? chk("warn", "Aviso de diagnóstico inserido pelo sistema", "o modelo não declarou o limite") : chk("ok", "Limite de diagnóstico declarado", "pelo próprio modelo"));
     if (v.truncada) checks.push(chk("warn", "Resposta cortada", "limite de tokens"));
+    const grupos = ["referencia", "referencia+experiencia", "experiencia"].includes(v.modo);
+    if (grupos && v.modo !== "referencia") {
+      checks.push(v.fundamentacao_corrigida ? chk("bad", "Fundamentação corrigida pelo sistema", `${v.fundamentacao_corrigida} linha(s) com Sim/Em parte sem citar referência`)
+        : chk("ok", "Fundamentação dos relatos conferida", v.fundamentacao_tipo_divergente ? "" : "Sim/Em parte citam uma referência"));
+      if (v.fundamentacao_tipo_divergente) checks.push(chk("warn", "Tipo de referência não confere", "documento oficial × produção científica"));
+    }
+    if (v.modo === "experiencia") checks.push(v.aviso_experiencia_forcado ? chk("warn", "Aviso de “só relatos” inserido pelo sistema", "o modelo não avisou") : chk("ok", "Aviso de “só relatos” declarado", "pelo próprio modelo"));
+    if (v.modo === "referencia+experiencia") {
+      if (v.secao_relatos_ausente) checks.push(chk("warn", "Seção “Relatos de experiência” ausente"));
+      checks.push(v.relatos_fora_da_secao?.length ? chk("warn", "Relato citado fora da seção", `[${v.relatos_fora_da_secao.join("], [")}] em Orientação/Atividade/Acompanhamento`)
+        : chk("ok", "Relatos só na seção própria", "a orientação cita apenas referências"));
+    }
   }
   const cartao = (c) => `
     <div class="trecho${enviado ? "" : " fora"}" data-n="${c.n}">

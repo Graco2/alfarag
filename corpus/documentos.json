@@ -1,6 +1,7 @@
 [
   {
     "id": "BNCC",
+    "grupo": "oficial",
     "arquivo": "pdf/bncc_2018.pdf",
     "titulo": "Base Nacional Comum Curricular — Linguagens / Língua Portuguesa (Ensino Fundamental)",
     "rotulo": "BNCC (2018)",
@@ -11,6 +12,7 @@
   },
   {
     "id": "ABC",
+    "grupo": "oficial",
     "arquivo": "pdf/manual_abc.pdf",
     "titulo": "Alfabetização Baseada na Ciência — Manual do Curso ABC (MEC/CAPES, 2021)",
     "rotulo": "Manual ABC (2021)",
@@ -21,6 +23,7 @@
   },
   {
     "id": "RAMLI",
+    "grupo": "cientifico",
     "arquivo": "pdf/ramli_2026.pdf",
     "titulo": "Developmental Dyslexia in Children: A Narrative Review of Evidence-Based Interventions, Parenting Approaches, and Assistive Technologies",
     "rotulo": "Ramli et al. (2026)",
@@ -30,6 +33,7 @@
   },
   {
     "id": "HALL",
+    "grupo": "cientifico",
     "arquivo": "pdf/hall_2022.pdf",
     "titulo": "Forty Years of Reading Intervention Research for Elementary Students with or at Risk for Dyslexia: A Systematic Review and Meta-Analysis",
     "rotulo": "Hall et al. (2023)",
@@ -39,6 +43,7 @@
   },
   {
     "id": "ROSA",
+    "grupo": "cientifico",
     "arquivo": "pdf/rosa_produto_educacional.pdf",
     "titulo": "Guia de orientação para o trabalho pedagógico (Produto Educacional) — A. R. R. da Silva e C. C. da Silva",
     "rotulo": "Silva e Silva (Produto Educacional)",
@@ -48,6 +53,7 @@
   },
   {
     "id": "PNEEI",
+    "grupo": "oficial",
     "arquivo": "pneei_vol10.md",
     "titulo": "Cadernos Pedagógicos PNEEI, vol. 10",
     "rotulo": "Cadernos PNEEI v. 10",
@@ -58,6 +64,7 @@
   },
   {
     "id": "HE1",
+    "grupo": "oficial",
     "arquivo": "pdf/habilidades_essenciais_lp_1ano.pdf",
     "titulo": "Habilidades Essenciais — Língua Portuguesa, 1º ano do Ensino Fundamental (quadro por bimestre)",
     "rotulo": "Habilidades Essenciais LP, 1º ano",
@@ -68,6 +75,7 @@
   },
   {
     "id": "HE2",
+    "grupo": "oficial",
     "arquivo": "pdf/habilidades_essenciais_lp_2ano.pdf",
     "titulo": "Habilidades Essenciais — Língua Portuguesa, 2º ano do Ensino Fundamental (quadro por bimestre)",
     "rotulo": "Habilidades Essenciais LP, 2º ano",
@@ -78,6 +86,7 @@
   },
   {
     "id": "HE3",
+    "grupo": "oficial",
     "arquivo": "pdf/habilidades_essenciais_lp_3ano.pdf",
     "titulo": "Habilidades Essenciais — Língua Portuguesa, 3º ano do Ensino Fundamental (quadro por bimestre)",
     "rotulo": "Habilidades Essenciais LP, 3º ano",
@@ -88,12 +97,13 @@
   },
   {
     "id": "VID",
+    "grupo": "experiencia",
     "arquivo": "videos",
     "titulo": "Resumos de 204 vídeos do YouTube sobre alfabetização e inclusão (produzidos pelo grupo)",
-    "rotulo": "Relato em vídeo (resumo por IA)",
+    "rotulo": "Experiência pessoal (resumo de vídeo)",
     "tipo": "video_resumo",
     "idioma": "pt-BR",
     "licenca": "Material derivado do grupo: legenda automática de vídeos públicos resumida por IA, para uso acadêmico; cada resumo traz canal, URL, data e minutagem",
-    "nota": "Usado só na condição C5 (experimento). São relatos de experiência de profissionais (vídeos do YouTube), resumidos por IA a partir da legenda automática: fonte secundária, fora da base da demonstração (C4)."
+    "nota": "Grupo 'Experiências pessoais': relatos de professores e outros profissionais em vídeos do YouTube, resumidos por IA a partir da legenda automática. Fonte secundária: o sistema sempre procura respaldo nos documentos oficiais."
   }
 ]

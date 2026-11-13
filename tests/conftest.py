@@ -18,6 +18,7 @@ def isolado(tmp_path, monkeypatch):
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr(llm, "_TRANSPORT_REMOTO", None)
+    monkeypatch.setattr(pipeline, "vetor_pergunta", lambda p: None)  # testes não chamam o Ollama para o embedding
 
 
 @pytest.fixture
