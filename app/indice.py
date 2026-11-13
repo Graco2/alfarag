@@ -10,7 +10,7 @@ from functools import lru_cache
 import numpy as np
 from rank_bm25 import BM25Okapi
 
-from .config import CANDIDATOS, INDEX_DIR, MODELO_EMBED, RRF_K
+from .config import CANDIDATOS, CONDICOES, INDEX_DIR, MODELO_EMBED, RAIZ, RRF_K
 from .llm import embed
 
 STOP = set("""a o as os um uma uns umas de do da dos das no na nos nas em por para com sem que se e ou
@@ -33,14 +33,17 @@ class Indice:
     emb: np.ndarray  # (n, d), normalizado
     bm25: BM25Okapi
 
-    def buscar(self, pergunta: str, docs_permitidos: list[str], candidatos: int = CANDIDATOS) -> list[dict]:
-        """Retorna a lista fundida (RRF) com as duas pontuações originais em cada item."""
+    def buscar(self, pergunta: str, docs_permitidos: list[str], candidatos: int = CANDIDATOS,
+               q_vec: np.ndarray | None = None) -> list[dict]:
+        """Retorna a lista fundida (RRF) com as duas pontuações originais em cada item.
+
+        `q_vec`: vetor da pergunta já calculado por `vetor_pergunta`. Permite fazer várias buscas (uma por grupo)
+        com um único embedding. Sem ele, o vetor é calculado aqui, como antes."""
         mascara = np.array([c["doc"] in docs_permitidos for c in self.chunks])
         if not mascara.any():
             return []
         # Densa
-        q = np.array(embed([pergunta])[0], dtype=np.float32)
-        q /= np.linalg.norm(q) + 1e-9
+        q = vetor_pergunta(pergunta) if q_vec is None else q_vec
         cos = self.emb @ q
         cos_m = np.where(mascara, cos, -np.inf)
         ordem_densa = [int(i) for i in np.argsort(-cos_m)[:candidatos] if np.isfinite(cos_m[i])]
@@ -67,6 +70,30 @@ class Indice:
             })
             saida.append(c)
         return saida
+
+
+def vetor_pergunta(pergunta: str) -> np.ndarray:
+    """Embedding normalizado da pergunta (bge-m3 no Ollama local). Calculado uma vez e reaproveitado nas buscas."""
+    q = np.array(embed([pergunta])[0], dtype=np.float32)
+    q /= np.linalg.norm(q) + 1e-9
+    return q
+
+
+@lru_cache(maxsize=1)
+def _grupo_por_doc() -> dict[str, str]:
+    """Lê o campo 'grupo' de corpus/documentos.json: id do documento -> 'oficial' | 'experiencia'."""
+    docs = json.loads((RAIZ / "corpus" / "documentos.json").read_text(encoding="utf-8"))
+    return {d["id"]: d["grupo"] for d in docs}
+
+
+def grupo_do_doc(doc: str) -> str:
+    return _grupo_por_doc()[doc]
+
+
+def docs_do_grupo(grupo: str, condicao: str) -> list[str]:
+    """Documentos da condição que pertencem ao grupo, na ordem da condição.
+    Ex.: docs_do_grupo('experiencia', 'C6') -> ['VID']."""
+    return [d for d in CONDICOES[condicao] if grupo_do_doc(d) == grupo]
 
 
 def _arq_emb(exp: str) -> str:
