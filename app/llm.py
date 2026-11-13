@@ -1,6 +1,6 @@
 """Clientes de modelo: Ollama (local; também embeddings) e provedores OpenAI-compatíveis (remotos, só geração).
 
-O provedor vem do prefixo do modelo (`ollama:...`, `deepseek:...`); nome sem prefixo é Ollama."""
+O provedor vem do prefixo do modelo (`ollama:...`, `deepseek:...`, `gemini:...`); nome sem prefixo é Ollama."""
 from __future__ import annotations
 
 import json
