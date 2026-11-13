@@ -71,6 +71,24 @@ def test_sem_chave_nao_chama_a_rede():
     assert vistas == []
 
 
+def test_resolver_gemini():
+    assert llm.resolver("gemini:gemini-3.5-flash-lite") == ("gemini", "gemini-3.5-flash-lite")
+    assert llm.eh_remoto("gemini:x")
+
+
+def test_stream_gemini_url_e_payload():
+    conexoes.salvar("gemini", nova_chave=CHAVE)
+    vistas = transporte(lambda r: httpx.Response(200, content=sse("Olá", usage=USO)))
+    ev = list(llm.chat_stream("gemini:gemini-3.5-flash-lite", MSG))
+    assert [e["delta"] for e in ev if "delta" in e] == ["Olá"] and ev[-1]["fim"]["resposta_tokens"] == 7
+    req = vistas[0]
+    assert str(req.url) == "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    assert req.headers["authorization"] == f"Bearer {CHAVE}"
+    corpo = json.loads(req.content)
+    assert corpo["model"] == "gemini-3.5-flash-lite" and corpo["reasoning_effort"] == "minimal"
+    assert "thinking" not in corpo  # parâmetro só do DeepSeek
+
+
 def test_chat_nao_streaming(com_chave):
     corpo = {"choices": [{"message": {"content": "resposta"}, "finish_reason": "stop"}], "usage": USO}
     vistas = transporte(lambda r: httpx.Response(200, json=corpo))

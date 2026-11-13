@@ -56,6 +56,18 @@ def test_sanitizar():
     assert CHAVE not in t and "abc.def" not in t and "outraChave" not in t
 
 
+def test_sanitizar_chave_google():
+    t = conexoes.sanitizar("erro com AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUv")
+    assert "AIza" not in t and "[chave]" in t
+
+
+def test_dois_provedores_configurados():
+    conexoes.salvar("deepseek", nova_chave=CHAVE)
+    conexoes.salvar("gemini", nova_chave=CHAVE)
+    assert conexoes.modelos_remotos() == ["deepseek:deepseek-flash", "deepseek:deepseek-v4-pro", "gemini:gemini-3.5-flash-lite"]
+    assert [c["provedor"] for c in conexoes.publico()] == ["deepseek", "gemini"]
+
+
 def _cliente(fn):
     return httpx.Client(transport=httpx.MockTransport(fn))
 
@@ -73,3 +85,16 @@ def test_testar_ok_e_erros():
     assert r["ok"] and r["modelos"] == ["deepseek-flash"] and str(vistos[0].url) == "https://api.deepseek.com/models"
     r = conexoes.testar("deepseek", _cliente(lambda q: httpx.Response(401, text=CHAVE)))
     assert not r["ok"] and "401" in r["mensagem"] and CHAVE not in json.dumps(r)
+
+
+def test_testar_gemini_tira_prefixo_models():
+    conexoes.salvar("gemini", nova_chave=CHAVE)
+    vistos = []
+
+    def ok(r):
+        vistos.append(r)
+        return httpx.Response(200, json={"data": [{"id": "models/gemini-2.5-flash-lite"}, {"id": "models/gemini-2.5-flash"}]})
+
+    r = conexoes.testar("gemini", _cliente(ok))
+    assert r["ok"] and r["modelos"] == ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
+    assert str(vistos[0].url) == "https://generativelanguage.googleapis.com/v1beta/openai/models"

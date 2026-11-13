@@ -16,6 +16,7 @@ def isolado(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline, "TRACOS_DIR", tmp_path / "tracos")
     monkeypatch.setattr(contas, "CONTAS_DB", "")
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr(llm, "_TRANSPORT_REMOTO", None)
 
 

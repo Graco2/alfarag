@@ -24,6 +24,17 @@ PROVEDORES: dict[str, dict] = {
         "extra": {"thinking": {"type": "disabled"}},  # sem raciocínio estendido (vem ligado por padrão na API)
         "pais": "fora do Brasil",
     },
+    "gemini": {
+        "rotulo": "Google Gemini",
+        "url_base": "https://generativelanguage.googleapis.com/v1beta/openai",  # endpoint OpenAI-compatível do Google
+        "env": "GEMINI_API_KEY",
+        # o mais barato. O 2.5-flash-lite ainda aparece em /models, mas devolve 404 para contas novas.
+        "modelos": ["gemini-3.5-flash-lite"],
+        # raciocínio no mínimo: os tokens de raciocínio contam no max_tokens e cortariam a resposta.
+        # A família 3.x recusa "none" (400); "minimal" é o menor valor aceito.
+        "extra": {"reasoning_effort": "minimal"},
+        "pais": "fora do Brasil",
+    },
 }
 
 _LOCK = threading.Lock()
@@ -107,6 +118,7 @@ def sanitizar(texto: object, *extras: str | None) -> str:
         if k:
             t = t.replace(k, "[chave]")
     t = re.sub(r"(?i)bearer\s+[A-Za-z0-9._\-]+", "Bearer [chave]", t)
+    t = re.sub(r"AIza[A-Za-z0-9_\-]{20,}", "[chave]", t)  # formato das chaves do Google
     return re.sub(r"sk-[A-Za-z0-9_\-]{8,}", "[chave]", t)
 
 
@@ -199,7 +211,8 @@ def testar(provedor: str, cliente: httpx.Client | None = None, chave_usuario: st
     if r.status_code != 200:
         return {"ok": False, "mensagem": mensagem_http(r.status_code)}
     try:
-        ids = [m["id"] for m in r.json().get("data", []) if isinstance(m, dict) and "id" in m]
+        # o Gemini devolve 'models/<id>'; o chat espera só '<id>'
+        ids = [str(m["id"]).removeprefix("models/") for m in r.json().get("data", []) if isinstance(m, dict) and "id" in m]
     except ValueError:
         ids = []
     return {"ok": True, "mensagem": "Conexão ok.", "modelos": ids[:50]}

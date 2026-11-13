@@ -72,22 +72,24 @@ docker build -t alfarag . && docker run -p 7860:7860 alfarag
 ## Modelos remotos (opcional)
 
 Por padrão tudo roda local. Também é possível gerar a resposta com um modelo remoto
-OpenAI-compatível; o primeiro provedor é o **DeepSeek** (`deepseek-flash`, `deepseek-v4-pro`).
+OpenAI-compatível. Há dois provedores: **DeepSeek** (`deepseek-flash`, `deepseek-v4-pro`) e **Google Gemini**
+(`gemini-3.5-flash-lite`, o mais barato, pelo endpoint OpenAI-compatível do Google). A lista de modelos de cada um é editável.
 A recuperação, o prompt (`VERSAO_PROMPT`) e o harness não mudam, e os **embeddings continuam locais** (bge-m3).
 
 **Configuração (só no servidor local).** Botão **Conexões** na barra superior: URL base, chave, *Testar* e *Remover*.
-A chave fica em `config/conexoes.json` (permissão 600, fora do git). A variável `DEEPSEEK_API_KEY` tem prioridade sobre o
-arquivo. A interface só mostra a chave mascarada; ela não aparece em traço, log, erro nem em `/api/status`.
+A chave fica em `config/conexoes.json` (permissão 600, fora do git). As variáveis `DEEPSEEK_API_KEY` e `GEMINI_API_KEY` têm
+prioridade sobre o arquivo. A interface só mostra a chave mascarada; ela não aparece em traço, log, erro nem em `/api/status`.
 Sem chave, os modelos remotos nem aparecem no seletor.
 
-**Privacidade.** Com um modelo remoto, a pergunta e os trechos recuperados são enviados a um terceiro (DeepSeek, servidor fora do Brasil).
+**Privacidade.** Com um modelo remoto, a pergunta e os trechos recuperados são enviados a um terceiro (DeepSeek ou Google, servidores fora do Brasil).
+No plano gratuito do Gemini, o Google pode usar o conteúdo enviado para melhorar os próprios produtos.
 A interface avisa isso ao escolher o modelo. Não escreva dados de alunos.
 
 **Limites.**
 - Sem fallback: se o provedor falhar (chave recusada, saldo, timeout), o desfecho é `erro` com a mensagem do motivo.
 - Resposta **não reprodutível**: sem `seed` nem digest. O traço registra `provedor`, `modelo_id`, tokens e `reprodutivel: false`.
-- Raciocínio estendido desligado (`thinking: disabled`); temperatura e limite de tokens vêm de `app/config.py`.
-- O provedor vem do prefixo do modelo (`deepseek:deepseek-flash`); nome sem prefixo continua sendo Ollama.
+- Raciocínio estendido desligado (`thinking: disabled` no DeepSeek, `reasoning_effort: minimal` no Gemini, que não aceita desligar); temperatura e limite de tokens vêm de `app/config.py`.
+- O provedor vem do prefixo do modelo (`deepseek:deepseek-flash`, `gemini:gemini-3.5-flash-lite`); nome sem prefixo continua sendo Ollama.
 - Os números de `resultados/` são todos do modelo local; nenhuma avaliação do modelo remoto foi executada.
 
 ### Servidor aberto na web (contas individuais, chave de cada pessoa)
@@ -110,7 +112,7 @@ docker run -d --name alfarag --restart unless-stopped -p 127.0.0.1:7860:7860 \
 - `-p 127.0.0.1:7860:7860`, **nunca** `-p 7860:7860`: o Docker ignora o ufw nas portas que publica. Só o Caddy, no próprio host,
   fala com o container. A porta 11434 do Ollama não é publicada.
 - `-v alfarag-dados:/data`: contas e sessões (SQLite) ficam no volume e sobrevivem à recriação do container.
-- `CHAVE_DO_USUARIO=1`: o servidor **ignora** `DEEPSEEK_API_KEY` e `config/conexoes.json`. Cada pessoa cola a própria chave em
+- `CHAVE_DO_USUARIO=1`: o servidor **ignora** `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` e `config/conexoes.json`. Cada pessoa cola a própria chave em
   **Conexões**; ela fica só no `localStorage` do navegador, sob o nome da conta (`alfarag:chave:<usuario>:<provedor>`), e segue
   no cabeçalho `X-Chave-Remoto` a cada pergunta. O servidor a repassa ao provedor naquela requisição e não a grava nem a põe em
   traço, log ou erro. Quem não tem chave só vê os modelos locais. A tela de Conexões do servidor fica desativada nesse modo.
