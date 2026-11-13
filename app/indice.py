@@ -90,10 +90,12 @@ def grupo_do_doc(doc: str) -> str:
     return _grupo_por_doc()[doc]
 
 
-def docs_do_grupo(grupo: str, condicao: str) -> list[str]:
-    """Documentos da condição que pertencem ao grupo, na ordem da condição.
-    Ex.: docs_do_grupo('experiencia', 'C6') -> ['VID']."""
-    return [d for d in CONDICOES[condicao] if grupo_do_doc(d) == grupo]
+def docs_do_grupo(grupos: str | tuple[str, ...], condicao: str) -> list[str]:
+    """Documentos da condição que pertencem ao(s) grupo(s), na ordem da condição.
+    Ex.: docs_do_grupo('experiencia', 'C6') -> ['VID'];
+         docs_do_grupo(('oficial', 'cientifico'), 'C6') -> as referências."""
+    grupos = (grupos,) if isinstance(grupos, str) else tuple(grupos)
+    return [d for d in CONDICOES[condicao] if grupo_do_doc(d) in grupos]
 
 
 def _arq_emb(exp: str) -> str:

@@ -23,7 +23,7 @@
   },
   {
     "id": "RAMLI",
-    "grupo": "oficial",
+    "grupo": "cientifico",
     "arquivo": "pdf/ramli_2026.pdf",
     "titulo": "Developmental Dyslexia in Children: A Narrative Review of Evidence-Based Interventions, Parenting Approaches, and Assistive Technologies",
     "rotulo": "Ramli et al. (2026)",
@@ -33,7 +33,7 @@
   },
   {
     "id": "HALL",
-    "grupo": "oficial",
+    "grupo": "cientifico",
     "arquivo": "pdf/hall_2022.pdf",
     "titulo": "Forty Years of Reading Intervention Research for Elementary Students with or at Risk for Dyslexia: A Systematic Review and Meta-Analysis",
     "rotulo": "Hall et al. (2023)",
@@ -43,7 +43,7 @@
   },
   {
     "id": "ROSA",
-    "grupo": "oficial",
+    "grupo": "cientifico",
     "arquivo": "pdf/rosa_produto_educacional.pdf",
     "titulo": "Guia de orientação para o trabalho pedagógico (Produto Educacional) — A. R. R. da Silva e C. C. da Silva",
     "rotulo": "Silva e Silva (Produto Educacional)",

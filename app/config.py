@@ -55,13 +55,16 @@ CONDICOES = {
 CONDICAO = os.getenv("CONDICAO", "C6")
 
 # Grupos de documentos (campo "grupo" em corpus/documentos.json).
-GRUPOS = {"oficial": "Documentos oficiais", "experiencia": "Experiências pessoais"}
+GRUPOS = {"oficial": "Documentos oficiais", "cientifico": "Produção científica",
+          "experiencia": "Experiências pessoais"}
+# "Referências": grupos que servem de base para a resposta (e para fundamentar os relatos de experiência).
+REFERENCIAS = ("oficial", "cientifico")
 # CASCATA=0 volta ao fluxo antigo (todos os documentos numa busca só), para comparar no benchmark.
 CASCATA = os.getenv("CASCATA", "1") == "1"
 # Limiares da tabela de decisão (similaridade de cosseno do melhor trecho). Provisórios: calibrados no Passo 8.
 LIMIAR_EXPERIENCIA = float(os.getenv("LIMIAR_EXPERIENCIA", "0.60"))  # um relato cobre a pergunta?
-LIMIAR_RESPALDO = float(os.getenv("LIMIAR_RESPALDO", "0.55"))  # busca de confirmação nos oficiais
-TOP_K_GRUPO = {"oficial": 3, "experiencia": 3}  # trechos de cada grupo na janela, no modo misto
+LIMIAR_RESPALDO = float(os.getenv("LIMIAR_RESPALDO", "0.55"))  # busca de confirmação nas referências
+TOP_K_GRUPO = {"referencia": 3, "experiencia": 3}  # trechos de referência e de relato na janela, no modo misto
 
 # Context engineering: orçamento da janela.
 NUM_CTX = int(os.getenv("NUM_CTX", "8192"))

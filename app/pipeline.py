@@ -9,8 +9,8 @@ from typing import Iterator
 
 from . import conexoes, harness
 from .config import (CASCATA, CONDICAO, CONDICOES, EXPERIMENTO, EXPERIMENTOS, GRUPOS, LIMIAR_EXPERIENCIA,
-                     LIMIAR_RESPALDO, MODELO_EMBED, MODELO_LLM, NUM_CTX, ORCAMENTO_CONTEXTO, RAIZ, TEMPERATURA,
-                     TOP_K_GRUPO, TRACOS_DIR, aprox_tokens)
+                     LIMIAR_RESPALDO, MODELO_EMBED, MODELO_LLM, NUM_CTX, ORCAMENTO_CONTEXTO, RAIZ, REFERENCIAS,
+                     TEMPERATURA, TOP_K_GRUPO, TRACOS_DIR, aprox_tokens)
 from .indice import carregar, docs_do_grupo, grupo_do_doc, rotulo_pagina, vetor_pergunta
 from .llm import chat_stream, digest, resolver
 from .prompts import PROMPT_SISTEMA, VERSAO_PROMPT, montar_mensagens
@@ -45,12 +45,13 @@ def _cob_dict(cob: harness.Cobertura) -> dict:
     return {"melhor_cos": cob.melhor_cos, "limiar": cob.limiar, "coberta": cob.coberta}
 
 
-def decidir_modo(of_coberta: bool, exp_coberta: bool) -> str:
-    """Tabela de decisão: o documento oficial é a base quando existe; o relato entra junto ou sozinho."""
-    if of_coberta and exp_coberta:
-        return "oficial+experiencia"
-    if of_coberta:
-        return "oficial"
+def decidir_modo(ref_coberta: bool, exp_coberta: bool) -> str:
+    """Tabela de decisão: as referências (documentos oficiais + produção científica) são a base quando existem;
+    o relato de experiência entra junto ou sozinho."""
+    if ref_coberta and exp_coberta:
+        return "referencia+experiencia"
+    if ref_coberta:
+        return "referencia"
     if exp_coberta:
         return "experiencia"
     return "sem_cobertura"
@@ -110,26 +111,26 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     # 2) Recuperação híbrida por grupo + tabela de decisão
     cfg = EXPERIMENTOS[exp]
     indice = carregar(exp)
-    of_docs, exp_docs = docs_do_grupo("oficial", condicao), docs_do_grupo("experiencia", condicao)
+    ref_docs, exp_docs = docs_do_grupo(REFERENCIAS, condicao), docs_do_grupo("experiencia", condicao)
     por_grupo = CASCATA and bool(exp_docs)  # sem vídeos na condição (C1–C4) ou CASCATA=0: busca única, como antes
     confirmacao = None
     try:
         if por_grupo:
             q = vetor_pergunta(pergunta)  # um embedding só, reaproveitado nas duas buscas
-            c_of = indice.buscar(pergunta, of_docs, q_vec=q)
+            c_ref = indice.buscar(pergunta, ref_docs, q_vec=q)
             c_exp = indice.buscar(pergunta, exp_docs, q_vec=q)
         else:
-            c_of, c_exp = indice.buscar(pergunta, CONDICOES[condicao]), []
-        cob_of = harness.checar_cobertura(c_of)
+            c_ref, c_exp = indice.buscar(pergunta, CONDICOES[condicao]), []
+        cob_ref = harness.checar_cobertura(c_ref)
         cob_exp = _cobertura(c_exp, LIMIAR_EXPERIENCIA)
-        if por_grupo and not cob_of.coberta and cob_exp.coberta:
-            # Busca de confirmação: antes de dizer "sem respaldo", procura nos oficiais a PRÁTICA do melhor relato.
+        if por_grupo and not cob_ref.coberta and cob_exp.coberta:
+            # Busca de confirmação: antes de dizer "não encontrado nas referências", procura nelas a PRÁTICA do melhor relato.
             relato = max(c_exp, key=lambda c: c["cos"])
-            c_conf = indice.buscar(pergunta + "\n" + relato["texto"][:600], of_docs)
+            c_conf = indice.buscar(pergunta + "\n" + relato["texto"][:600], ref_docs)
             cob_conf = _cobertura(c_conf, LIMIAR_RESPALDO)
             confirmacao = {**_cob_dict(cob_conf), "relato": relato["id"]}
             if cob_conf.coberta:
-                c_of, cob_of = c_conf, cob_conf
+                c_ref, cob_ref = c_conf, cob_conf
     except Exception as e:  # embeddings são sempre locais (Ollama/bge-m3), mesmo com modelo de geração remoto
         msg = (f"A busca nos documentos falhou ({type(e).__name__}): o embedding da pergunta ({MODELO_EMBED}) "
                "roda no Ollama local, mesmo com modelo remoto. Verifique se o Ollama está rodando. Nenhuma resposta foi gerada.")
@@ -137,24 +138,24 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
         salvar_traco(traco)
         yield {"tipo": "final", "desfecho": "erro", "resposta": msg, "traco": traco}
         return
-    modo = decidir_modo(cob_of.coberta, cob_exp.coberta) if por_grupo else ("unico" if cob_of.coberta else "sem_cobertura")
+    modo = decidir_modo(cob_ref.coberta, cob_exp.coberta) if por_grupo else ("unico" if cob_ref.coberta else "sem_cobertura")
 
-    # Janela: oficiais primeiro (numerados [1..k]), relatos depois.
-    if modo == "oficial+experiencia":
-        orc_of = ORCAMENTO_CONTEXTO * 2 // 3  # o documento oficial é a base; os relatos ficam com o restante
-        d_of, f_of = selecionar_janela(c_of, TOP_K_GRUPO["oficial"], orc_of)
+    # Janela: referências primeiro (numeradas [1..k]), relatos depois.
+    if modo == "referencia+experiencia":
+        orc_ref = ORCAMENTO_CONTEXTO * 2 // 3  # as referências são a base; os relatos ficam com o restante
+        d_ref, f_ref = selecionar_janela(c_ref, TOP_K_GRUPO["referencia"], orc_ref)
         d_exp, f_exp = selecionar_janela(c_exp, TOP_K_GRUPO["experiencia"],
-                                         ORCAMENTO_CONTEXTO - sum(c["tokens"] for c in d_of))
-        dentro, fora = d_of + d_exp, f_of + f_exp
+                                         ORCAMENTO_CONTEXTO - sum(c["tokens"] for c in d_ref))
+        dentro, fora = d_ref + d_exp, f_ref + f_exp
     elif modo == "experiencia":
         dentro, fora = selecionar_janela(c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
-    else:  # "oficial", "unico" (fluxo antigo) e "sem_cobertura" (só para mostrar o que ficou abaixo do limiar)
-        dentro, fora = selecionar_janela(c_of or c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
+    else:  # "referencia", "unico" (fluxo antigo) e "sem_cobertura" (só para mostrar o que ficou abaixo do limiar)
+        dentro, fora = selecionar_janela(c_ref or c_exp, cfg["top_k"], ORCAMENTO_CONTEXTO)
     coberta = modo != "sem_cobertura"
-    melhor_cos = max(cob_of.melhor_cos, cob_exp.melhor_cos)
+    melhor_cos = max(cob_ref.melhor_cos, cob_exp.melhor_cos)
     decisao = {
         "modo": modo,
-        "oficial": _cob_dict(cob_of),
+        "referencia": _cob_dict(cob_ref),
         "experiencia": _cob_dict(cob_exp) if por_grupo else None,
         "confirmacao": confirmacao,
     }
@@ -174,7 +175,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
             "dados do aluno: o sistema bloqueia CPF, telefone e e-mail",
         ],
         "modo_ressalva": ent.pede_diagnostico,
-        "cobertura": {"melhor_cos": melhor_cos, "limiar": cob_of.limiar, "coberta": coberta},
+        "cobertura": {"melhor_cos": melhor_cos, "limiar": cob_ref.limiar, "coberta": coberta},
         "decisao": decisao,
     }
     traco["janela"] = janela  # completo (inclui o texto dos trechos): o traço reabre a resposta inteira no modo replay
