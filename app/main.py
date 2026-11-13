@@ -405,6 +405,29 @@ def traco(tid: str):
     raise HTTPException(404, "traço não encontrado")
 
 
+class _StreamQueFecha(StreamingResponse):
+    """StreamingResponse que fecha o gerador quando a resposta termina por qualquer motivo.
+
+    O Starlette só para de ler o gerador quando o cliente desconecta (botão Parar, aba
+    fechada) e não o fecha. Sem o close(), o finally de gerar() não roda: a trava
+    _GERACAO fica presa e o próximo usuário recebe "ocupado". Fechar o gerador também
+    encerra o httpx.stream do Ollama, que então para de gerar.
+    """
+
+    def __init__(self, gerador, **kw):
+        super().__init__(gerador, **kw)
+        self._gerador = gerador
+
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            try:
+                self._gerador.close()
+            except ValueError:  # ainda executando numa thread: não deveria ocorrer (o anyio espera a thread)
+                pass
+
+
 @app.post("/api/perguntar")
 def perguntar(p: Pergunta, chave: str | None = Depends(chave_do_cabecalho)):
     modelo = p.modelo or MODELO_LLM
@@ -435,7 +458,7 @@ def perguntar(p: Pergunta, chave: str | None = Depends(chave_do_cabecalho)):
         finally:
             _GERACAO.release()
 
-    return StreamingResponse(gerar(), media_type="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
+    return _StreamQueFecha(gerar(), media_type="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
 
 
 @app.get("/")

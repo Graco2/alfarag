@@ -188,6 +188,12 @@ body.sem-painel .painel { display: none; }
 .btn-primario svg { width: 18px; height: 18px; }
 .btn-primario:hover { background: var(--brand-strong); }
 .btn-primario:disabled { background: var(--muted-3); cursor: wait; }
+.btn-primario .ico-parar { display: none; }
+.btn-primario.parar { background: var(--bad); }
+.btn-primario.parar:hover { background: #991B1B; }
+.btn-primario.parar .ico-parar { display: block; }
+.btn-primario.parar .ico-enviar { display: none; }
+.nota-interrompida { color: var(--muted-2); font-size: 13px; font-style: italic; }
 .rodape { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 8px 4px 0; font-size: 12px; color: var(--muted-2); }
 
 /* ---------- Painel de contexto ---------- */
