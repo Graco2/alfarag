@@ -4,7 +4,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const estado = { status: null, ocupado: false, respostas: [], selecionada: null };
+const estado = { status: null, ocupado: false, controle: null, respostas: [], selecionada: null };
 
 // Preferências do navegador (só conveniência; a página funciona sem elas).
 const pref = {
@@ -46,7 +46,8 @@ function markdown(md) {
 // ---------- Inicialização ----------
 async function init() {
   $$(".aba").forEach((b) => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
-  $("#form").addEventListener("submit", (e) => { e.preventDefault(); enviar(); });
+  // Enquanto uma resposta chega, o mesmo botão vira "Parar".
+  $("#form").addEventListener("submit", (e) => { e.preventDefault(); if (estado.ocupado) parar(); else enviar(); });
   const campo = $("#entrada");
   campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); enviar(); } });
   campo.addEventListener("input", ajustarAltura);
@@ -347,7 +348,7 @@ async function enviar() {
   const campo = $("#entrada");
   const pergunta = campo.value.trim();
   if (!pergunta || estado.ocupado) return;
-  estado.ocupado = true; $("#enviar").disabled = true; campo.value = ""; ajustarAltura();
+  estado.ocupado = true; estado.controle = new AbortController(); botaoParar(true); campo.value = ""; ajustarAltura();
   const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = pergunta;
   const reg = novaResposta(pergunta);
   const t0 = performance.now();
@@ -356,7 +357,7 @@ async function enviar() {
   reg.timer = setInterval(() => { const t = $(".tempo", reg.el); if (t) t.textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
   try {
     const modelo = $("#modelo").value;
-    const r = await api("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }) });
+    const r = await api("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }), signal: estado.controle.signal });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
     const leitor = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
     for (;;) {
@@ -368,15 +369,38 @@ async function enviar() {
     }
     if (buf.trim()) tratar(reg, JSON.parse(buf));
   } catch (err) {
+    if (err.name === "AbortError") { interrompida(reg, pergunta); return; }
     $(".progresso", reg.el)?.remove();
     reg.el.classList.add("erro");
     $(".texto", reg.el).innerHTML = `<p>Falha de conexão com o servidor (${esc(err.message)}).</p>`;
   } finally {
     clearInterval(reg.timer);
-    estado.ocupado = false; $("#enviar").disabled = false; campo.focus();
+    estado.ocupado = false; estado.controle = null; botaoParar(false); campo.focus();
     const m = $(".meta", reg.el);
     if (!m.textContent) m.textContent = `${((performance.now() - t0) / 1000).toFixed(1)} s`;
   }
+}
+
+// ---------- Parar uma resposta em andamento ----------
+function parar() { estado.controle?.abort(); }
+
+function botaoParar(sim) {
+  const b = $("#enviar");
+  b.classList.toggle("parar", sim);
+  b.setAttribute("aria-label", sim ? "Parar a resposta" : "Perguntar");
+  $("span", b).textContent = sim ? "Parar" : "Perguntar";
+}
+
+// O texto parcial não passou pelo harness de saída (citações e códigos BNCC não foram
+// verificados), por isso fica marcado. A pergunta volta ao campo para ser completada.
+function interrompida(reg, pergunta) {
+  if (reg.final) return;  // a resposta já tinha terminado: nada a interromper
+  $(".progresso", reg.el)?.remove();
+  reg.el.classList.add("interrompida");
+  $(".texto", reg.el).innerHTML = (reg.bruto ? markdown(reg.bruto) : "") +
+    '<p class="nota-interrompida">Resposta interrompida. O trecho acima não foi verificado pelo sistema. A pergunta voltou para o campo de texto.</p>';
+  const campo = $("#entrada");
+  if (!campo.value.trim()) { campo.value = pergunta; ajustarAltura(); }
 }
 
 function etapa(reg, nome, classe, rotulo) {
