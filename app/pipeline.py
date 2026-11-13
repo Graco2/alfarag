@@ -7,11 +7,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Iterator
 
-from . import harness
+from . import conexoes, harness
 from .config import (CONDICAO, CONDICOES, EXPERIMENTO, EXPERIMENTOS, MODELO_EMBED, MODELO_LLM, NUM_CTX,
                      ORCAMENTO_CONTEXTO, RAIZ, TEMPERATURA, TRACOS_DIR, aprox_tokens)
 from .indice import carregar, rotulo_pagina
-from .llm import chat_stream, digest
+from .llm import chat_stream, digest, resolver
 from .prompts import PROMPT_SISTEMA, VERSAO_PROMPT, montar_mensagens
 
 ROTULOS = {d["id"]: d["rotulo"] for d in json.loads((RAIZ / "corpus" / "documentos.json").read_text(encoding="utf-8"))}
@@ -60,11 +60,15 @@ def salvar_traco(traco: dict) -> None:
 
 
 def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, condicao: str = CONDICAO,
-              temperatura: float | None = None) -> Iterator[dict]:
+              temperatura: float | None = None, chave: str | None = None) -> Iterator[dict]:
+    """`chave`: chave do usuário para modelo remoto (modo CHAVE_DO_USUARIO). Nunca vai para o traço."""
     t0 = time.time()
+    provedor, modelo_id = resolver(modelo)
     traco: dict = {
         "id": uuid.uuid4().hex[:12], "quando": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "pergunta": pergunta, "modelo": modelo, "modelo_digest": digest(modelo), "modelo_embed": MODELO_EMBED,
+        "pergunta": pergunta, "modelo": modelo, "provedor": provedor, "modelo_id": modelo_id,
+        "reprodutivel": provedor == "ollama",  # remoto: sem seed nem digest; a mesma pergunta pode dar outra resposta
+        "modelo_digest": digest(modelo), "modelo_embed": MODELO_EMBED,
         "embed_digest": digest(MODELO_EMBED if ":" in MODELO_EMBED else MODELO_EMBED + ":latest"), "experimento": exp,
         "condicao": condicao, "docs": CONDICOES[condicao], "versao_prompt": VERSAO_PROMPT,
         "num_ctx": NUM_CTX, "temperatura": TEMPERATURA if temperatura is None else temperatura,
@@ -82,7 +86,15 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     # 2) Recuperação híbrida
     cfg = EXPERIMENTOS[exp]
     indice = carregar(exp)
-    candidatos = indice.buscar(pergunta, CONDICOES[condicao])
+    try:
+        candidatos = indice.buscar(pergunta, CONDICOES[condicao])
+    except Exception as e:  # embeddings são sempre locais (Ollama/bge-m3), mesmo com modelo de geração remoto
+        msg = (f"A busca nos documentos falhou ({type(e).__name__}): o embedding da pergunta ({MODELO_EMBED}) "
+               "roda no Ollama local, mesmo com modelo remoto. Verifique se o Ollama está rodando. Nenhuma resposta foi gerada.")
+        traco.update({"desfecho": "erro", "erro": conexoes.sanitizar(e, chave)[:300], "resposta": msg, "latencia_s": round(time.time() - t0, 2)})
+        salvar_traco(traco)
+        yield {"tipo": "final", "desfecho": "erro", "resposta": msg, "traco": traco}
+        return
     cob = harness.checar_cobertura(candidatos)
     dentro, fora = selecionar_janela(candidatos, cfg["top_k"], ORCAMENTO_CONTEXTO)
     janela = {
@@ -117,15 +129,19 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     bruto = ""
     meta: dict = {}
     try:
-        for ev in chat_stream(modelo, mensagens, temperatura):
+        for ev in chat_stream(modelo, mensagens, temperatura, chave):
             if "delta" in ev:
                 bruto += ev["delta"]
                 yield {"tipo": "delta", "texto": ev["delta"]}
             else:
                 meta = ev["fim"]
     except Exception as e:  # modelo indisponível, timeout etc.
-        msg = f"O modelo local não respondeu ({type(e).__name__}). Nenhuma resposta foi gerada."
-        traco.update({"desfecho": "erro", "erro": str(e)[:300], "resposta": msg, "latencia_s": round(time.time() - t0, 2)})
+        detalhe = conexoes.sanitizar(e, chave)[:300]
+        if provedor == "ollama":
+            msg = f"O modelo local não respondeu ({type(e).__name__}). Nenhuma resposta foi gerada."
+        else:
+            msg = f"O modelo remoto ({conexoes.PROVEDORES[provedor]['rotulo']}) não respondeu: {detalhe} Nenhuma resposta foi gerada."
+        traco.update({"desfecho": "erro", "erro": detalhe, "resposta": msg, "latencia_s": round(time.time() - t0, 2)})
         salvar_traco(traco)
         yield {"tipo": "final", "desfecho": "erro", "resposta": msg, "traco": traco}
         return
@@ -134,7 +150,7 @@ def responder(pergunta: str, modelo: str = MODELO_LLM, exp: str = EXPERIMENTO, c
     final, ver = harness.verificar_saida(bruto, dentro, ent.pede_diagnostico, meta.get("done_reason"))
     traco.update({
         "desfecho": "respondida", "resposta_bruta": bruto, "resposta": final, "verificacao": ver.dict(),
-        "ollama": meta, "latencia_s": round(time.time() - t0, 2),
+        ("ollama" if provedor == "ollama" else "remoto"): meta, "latencia_s": round(time.time() - t0, 2),
     })
     salvar_traco(traco)
     yield {"tipo": "final", "desfecho": "respondida", "resposta": final, "verificacao": ver.dict(), "traco": traco}

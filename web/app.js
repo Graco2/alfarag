@@ -51,21 +51,29 @@ async function init() {
   campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); enviar(); } });
   campo.addEventListener("input", ajustarAltura);
   $("#btn-painel").addEventListener("click", () => mostrarPainel(document.body.classList.contains("sem-painel")));
+  $("#modelo").addEventListener("change", atualizarAvisoRemoto);
+  $("#btn-conexoes").addEventListener("click", abrirConexoes);
+  $("#btn-senha").addEventListener("click", abrirTrocaSenha);
+  $("#form-senha").addEventListener("submit", trocarSenha);
+  $("#btn-sair").addEventListener("click", sair);
+  document.addEventListener("click", (e) => { const m = $("#menu-conta"); if (m.open && !m.contains(e.target)) m.open = false; });
 
   const params = new URLSearchParams(location.search);
   mostrarPainel(params.has("painel") ? params.get("painel") !== "0" : pref.get("painel", "1") === "1", false);
 
   try {
-    const s = await (await fetch("api/status")).json();
+    const s = await (await api("api/status")).json();
     estado.status = s;
-    const sel = $("#modelo");
-    const modelos = s.modelos.length ? s.modelos : [s.modelo_padrao];
-    sel.innerHTML = modelos.map((m) => `<option ${m === s.modelo_padrao ? "selected" : ""}>${esc(m)}</option>`).join("");
+    if (s.login_ativo) chaveLocal.limparSemDono();
+    montarConta(s);
+    montarSeletor(s);
+    // Servidor público: a tela nem aparece. No compartilhado (chave por usuário) ela é onde cada pessoa cola a própria chave.
+    $("#btn-conexoes").hidden = !(s.conexoes_editaveis || s.chave_do_usuario);
     status(s.ollama ? "on" : "off", s.ollama ? `Modelo local pronto · ${s.condicao}` : "Modelo offline");
     if (s.documentos?.length) $("#base").innerHTML = `<b>Base consultada:</b> ${s.documentos.map((d) => esc(d.rotulo)).join(" · ")}`;
   } catch { status("off", "API offline"); }
   try {
-    const ex = await (await fetch("api/exemplos")).json();
+    const ex = await (await api("api/exemplos")).json();
     const exemplo = (e) => `<button type="button" class="exemplo" data-q="${esc(e.pergunta)}"><span class="tag">${esc(e.categoria)}</span>${esc(e.pergunta)}</button>`;
     const bench = ["B02", "B03", "B08", "B14", "B16", "B23"], lim = ["L01", "L02", "L03", "L04"];
     $("#exemplos").innerHTML = ex.filter((e) => bench.includes(e.id)).map(exemplo).join("");
@@ -77,6 +85,196 @@ async function init() {
   if (params.get("aba")) trocarAba(params.get("aba"));
   if (params.get("rolar") === "topo") setTimeout(() => { $("#mensagens").scrollTop = 0; }, 50);
 }
+
+// ---------- Conta (servidor aberto na web, login ativo) ----------
+// Com login, qualquer 401 quer dizer sessão encerrada (Sair em outra aba, conta desativada, senha redefinida).
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.replace("entrar"); throw new Error("sessão encerrada: entre de novo"); }
+  return r;
+}
+const detalhe = (d, status) => (typeof d?.detail === "string" ? d.detail : `Falha (${status}).`);
+
+function montarConta(s) {
+  const c = s.conta;
+  $("#menu-conta").hidden = !c;
+  if (!c) return;
+  $("#conta-nome").textContent = c.usuario;
+  $("#link-admin").hidden = !c.admin;
+  $("#senha-usuario").defaultValue = c.usuario;  // para o gerenciador de senhas saber de qual conta é
+}
+
+async function sair() {
+  chaveLocal.limparConta();  // antes da rede: mesmo se a requisição falhar, a chave não fica neste navegador
+  try { await fetch("api/sair", { method: "POST", headers: JSON_HDR, body: "{}" }); } catch { /* a sessão vence no servidor */ }
+  location.replace("entrar");
+}
+
+function abrirTrocaSenha() {
+  $("#menu-conta").open = false;
+  $("#form-senha").reset();
+  avisoSenha("", "");
+  $("#dlg-senha").showModal(); $("#senha-atual").focus();
+}
+function avisoSenha(cls, texto) { const r = $("#senha-res"); r.className = "res " + cls; r.textContent = texto; }
+
+async function trocarSenha(e) {
+  e.preventDefault();
+  const nova = $("#senha-nova").value, confirmacao = $("#senha-conf").value;
+  if (nova !== confirmacao) return avisoSenha("bad", "As senhas novas não conferem.");
+  const b = $("#form-senha button[type=submit]"); b.disabled = true;
+  try {
+    const r = await api("api/senha", { method: "POST", headers: JSON_HDR, body: JSON.stringify({ atual: $("#senha-atual").value, nova, confirmacao }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return avisoSenha("bad", detalhe(d, r.status));
+    $("#form-senha").reset();
+    avisoSenha("ok", "Senha alterada. As outras sessões desta conta foram encerradas.");
+  } catch (err) { avisoSenha("bad", `Falha de conexão com o servidor (${err.message}).`); }
+  finally { b.disabled = false; }
+}
+
+// ---------- Chave do usuário (servidor compartilhado): fica só neste navegador ----------
+// Com login, a chave fica sob o nome da conta (alfarag:chave:<usuario>:<provedor>) e o Sair a apaga.
+const PREFIXO_CHAVE = "alfarag:chave:";
+const chaveLocal = {
+  prefixo() { const u = estado.status?.conta?.usuario; return u ? `${PREFIXO_CHAVE}${u}:` : PREFIXO_CHAVE; },
+  get(p) { try { return localStorage.getItem(this.prefixo() + p) || ""; } catch { return ""; } },
+  set(p, k) { try { localStorage.setItem(this.prefixo() + p, k); return true; } catch { return false; } },
+  del(p) { try { localStorage.removeItem(this.prefixo() + p); } catch { /* sem armazenamento */ } },
+  limpar(filtro) {  // filtro recebe o que vem depois de "alfarag:chave:"
+    try { Object.keys(localStorage).filter((n) => n.startsWith(PREFIXO_CHAVE) && filtro(n.slice(PREFIXO_CHAVE.length))).forEach((n) => localStorage.removeItem(n)); } catch { /* sem armazenamento */ }
+  },
+  limparConta() { const u = estado.status?.conta?.usuario; if (u) this.limpar((resto) => resto.startsWith(u + ":")); },
+  limparSemDono() { this.limpar((resto) => !resto.includes(":")); },  // chaves de antes do login (alfarag:chave:<provedor>)
+};
+const mascara = (k) => (k.length >= 16 ? `${k.slice(0, 3)}…${k.slice(-4)}` : "••••••••");
+const provedorDe = (m) => m.split(":")[0];
+function cabecalhoChave(modelo) {
+  const k = estado.status?.chave_do_usuario && ehRemoto(modelo) ? chaveLocal.get(provedorDe(modelo)) : "";
+  return k ? { "X-Chave-Remoto": k } : {};
+}
+
+// ---------- Modelos locais e remotos ----------
+const ehRemoto = (m) => /^[a-z0-9_-]+:/.test(m || "") && (estado.status?.modelos_remotos || []).includes(m);
+const rotuloProvedor = (m) => (estado.status?.remoto || []).find((r) => m.startsWith(r.provedor + ":"));
+
+function montarSeletor(s) {
+  const sel = $("#modelo"), atual = sel.value;
+  // servidor compartilhado: o modelo remoto só aparece para quem já guardou a própria chave
+  const remotos = (s.modelos_remotos || []).filter((m) => !s.chave_do_usuario || chaveLocal.get(provedorDe(m)));
+  const locais = s.modelos.filter((m) => !(s.modelos_remotos || []).includes(m));
+  const opt = (m, rot) => `<option value="${esc(m)}" ${m === (atual || s.modelo_padrao) ? "selected" : ""}>${esc(rot || m)}</option>`;
+  const locaisHtml = (locais.length ? locais : [s.modelo_padrao]).map((m) => opt(m)).join("");
+  sel.innerHTML = remotos.length
+    ? `<optgroup label="Local (Ollama)">${locaisHtml}</optgroup><optgroup label="Remoto">${remotos.map((m) => opt(m, m.replace(":", " · "))).join("")}</optgroup>`
+    : locaisHtml;
+  atualizarAvisoRemoto();
+}
+
+function atualizarAvisoRemoto() {
+  const m = $("#modelo").value, remoto = ehRemoto(m), p = remoto ? rotuloProvedor(m) : null;
+  const av = $("#aviso-remoto");
+  av.hidden = !remoto;
+  if (remoto) av.textContent = `Modelo remoto: a pergunta e os trechos recuperados serão enviados à ${p?.rotulo || "um terceiro"} (${p?.pais || "fora do seu controle"}), com a sua chave.`
+    + (estado.status?.chave_do_usuario ? " A chave fica só neste navegador e passa pelo servidor sem ser gravada." : "")
+    + " Não escreva dados de alunos. A resposta pode variar entre execuções.";
+  const g = $("#garantia-local span:last-child");
+  if (g) g.textContent = remoto ? "Modelo remoto: dados saem desta máquina" : "Roda localmente, sem internet";
+}
+
+// ---------- Diálogo de conexões (somente servidor local) ----------
+const JSON_HDR = { "Content-Type": "application/json" };
+
+async function abrirConexoes() {
+  await renderConexoes();
+  $("#dlg-conexoes").showModal();
+}
+
+function renderChavesUsuario(msg) {
+  const box = $("#lista-conexoes");
+  box.innerHTML = (estado.status.remoto || []).map((c) => {
+    const k = chaveLocal.get(c.provedor), m = msg?.p === c.provedor ? msg : null;
+    return `<section class="conexao" data-p="${esc(c.provedor)}" data-usuario="1">
+      <h3>${esc(c.rotulo)} <span class="selo ${k ? "ok" : "info"}">${k ? "chave neste navegador" : "sem chave"}</span></h3>
+      <label for="chave-${esc(c.provedor)}">Sua chave de API</label>
+      <input id="chave-${esc(c.provedor)}" class="f-chave" type="password" autocomplete="off" spellcheck="false" placeholder="${k ? esc(mascara(k)) : "cole a sua chave aqui"}">
+      <p class="dica-chave">A chave fica só no armazenamento deste navegador. A cada pergunta ela é enviada ao servidor (use HTTPS) e repassada à ${esc(c.rotulo)}; o servidor não a grava. Servidor da ${esc(c.rotulo)}: ${esc(c.pais)}.</p>
+      <div class="linha">
+        <button type="button" class="btn-sec a-salvar">Salvar</button>
+        <button type="button" class="btn-sec a-testar" ${k ? "" : "disabled"}>Testar</button>
+        <button type="button" class="btn-sec btn-perigo a-remover" ${k ? "" : "disabled"}>Remover</button>
+      </div>
+      <p class="res ${m ? m.cls : ""}" role="status">${m ? esc(m.texto) : ""}</p></section>`;
+  }).join("");
+}
+
+async function renderConexoes(msg) {
+  const box = $("#lista-conexoes");
+  if (estado.status?.chave_do_usuario) return renderChavesUsuario(msg);
+  try {
+    const r = await api("api/conexoes");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const { conexoes } = await r.json();
+    box.innerHTML = conexoes.map((c) => `
+      <section class="conexao" data-p="${esc(c.provedor)}">
+        <h3>${esc(c.rotulo)} <span class="selo ${c.configurada ? "ok" : "info"}">${c.configurada ? "configurada" : "desligada"}</span></h3>
+        <label for="url-${esc(c.provedor)}">URL base</label>
+        <input id="url-${esc(c.provedor)}" class="f-url" value="${esc(c.url_base)}" autocomplete="off" spellcheck="false">
+        <label for="chave-${esc(c.provedor)}">Chave de API</label>
+        <input id="chave-${esc(c.provedor)}" class="f-chave" type="password" autocomplete="off" spellcheck="false"
+               placeholder="${c.configurada ? esc(c.chave_mascarada) : "cole a chave aqui"}">
+        <p class="dica-chave">${c.origem === "ambiente" ? "Chave vinda da variável de ambiente (tem prioridade sobre a salva)." : c.configurada ? "Chave salva neste computador (config/conexoes.json). Deixe em branco para manter." : "Fica salva só neste computador, fora do repositório."}</p>
+        <p class="dica-chave">Modelos: ${c.modelos.map(esc).join(", ")} · servidor ${esc(c.pais)}</p>
+        <div class="linha">
+          <button type="button" class="btn-sec a-salvar">Salvar</button>
+          <button type="button" class="btn-sec a-testar" ${c.configurada ? "" : "disabled"}>Testar</button>
+          <button type="button" class="btn-sec btn-perigo a-remover" ${c.configurada || c.origem ? "" : "disabled"}>Remover</button>
+        </div>
+        <p class="res ${msg?.p === c.provedor ? msg.cls : ""}" role="status">${msg?.p === c.provedor ? esc(msg.texto) : ""}</p>
+      </section>`).join("");
+  } catch (e) { box.innerHTML = `<p class="vazio">Conexões indisponíveis neste servidor (${esc(e.message)}).</p>`; }
+}
+
+$("#lista-conexoes").addEventListener("click", async (e) => {
+  const sec = e.target.closest(".conexao"), b = e.target.closest("button");
+  if (!sec || !b) return;
+  const p = sec.dataset.p, aviso = (cls, texto) => renderConexoes({ p, cls, texto });
+  b.disabled = true;
+  try {
+    if (sec.dataset.usuario) {  // servidor compartilhado: tudo acontece neste navegador
+      if (b.classList.contains("a-salvar")) {
+        const k = $(".f-chave", sec).value.trim();
+        if (!k) { await aviso("bad", "Cole a chave para salvar."); return; }
+        if (k.length < 8 || /\s/.test(k)) { await aviso("bad", "Chave inválida."); return; }
+        if (!chaveLocal.set(p, k)) { await aviso("bad", "O navegador bloqueou o armazenamento: a chave não foi salva."); return; }
+        montarSeletor(estado.status);
+        await aviso("ok", "Salva neste navegador.");
+      } else if (b.classList.contains("a-testar")) {
+        const t = await (await api(`api/remoto/${p}/testar`, { method: "POST", headers: { "X-Chave-Remoto": chaveLocal.get(p) } })).json();
+        await aviso(t.ok ? "ok" : "bad", t.mensagem);
+      } else if (b.classList.contains("a-remover")) {
+        chaveLocal.del(p); montarSeletor(estado.status);
+        await aviso("ok", "Chave removida deste navegador.");
+      }
+      return;
+    }
+    if (b.classList.contains("a-salvar")) {
+      const corpo = { url_base: $(".f-url", sec).value };
+      const k = $(".f-chave", sec).value.trim(); if (k) corpo.chave = k;
+      const r = await api(`api/conexoes/${p}`, { method: "PUT", headers: JSON_HDR, body: JSON.stringify(corpo) });
+      if (!r.ok) { await aviso("bad", (await r.json().catch(() => ({}))).detail || `Falha (${r.status}).`); return; }
+      await aviso("ok", "Salvo.");
+    } else if (b.classList.contains("a-testar")) {
+      const t = await (await api(`api/conexoes/${p}/testar`, { method: "POST", headers: JSON_HDR, body: "{}" })).json();
+      await aviso(t.ok ? "ok" : "bad", t.mensagem);
+    } else if (b.classList.contains("a-remover")) {
+      await api(`api/conexoes/${p}`, { method: "DELETE", headers: JSON_HDR });
+      await aviso("ok", "Conexão removida.");
+    }
+  } catch (err) { await aviso("bad", `Falha de conexão com o servidor (${err.message}).`); }
+  // o seletor de modelos depende de quais conexões estão configuradas
+  try { const s = await (await api("api/status")).json(); estado.status = s; montarSeletor(s); } catch { /* mantém o seletor atual */ }
+});
 
 function status(cls, texto) {
   const p = $("#pill");
@@ -120,7 +318,7 @@ function rolar(forcar = false) {
 
 function novaResposta(pergunta) {
   const a = adicionar("#tpl-msg-assistente");
-  const reg = { pergunta, janela: null, final: null, el: a, bruto: "", timer: null };
+  const reg = { pergunta, janela: null, final: null, el: a, bruto: "", timer: null, modelo: $("#modelo").value };
   estado.respostas.push(reg);
   a.addEventListener("click", (e) => {
     const c = e.target.closest(".cita");
@@ -135,7 +333,7 @@ function novaResposta(pergunta) {
 
 async function replay(id) {
   try {
-    const r = await fetch(`api/traco/${encodeURIComponent(id)}`);
+    const r = await api(`api/traco/${encodeURIComponent(id)}`);
     if (!r.ok) return;
     const t = await r.json();
     const u = adicionar("#tpl-msg-usuario"); $(".bolha", u).textContent = t.pergunta;
@@ -157,8 +355,9 @@ async function enviar() {
   setTimeout(() => { if (!reg.janela && !reg.final) { etapa(reg, "entrada", "feita", "Pergunta verificada"); etapa(reg, "busca", "ativa"); } }, 500);
   reg.timer = setInterval(() => { const t = $(".tempo", reg.el); if (t) t.textContent = `${Math.round((performance.now() - t0) / 1000)} s`; }, 500);
   try {
-    const r = await fetch("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pergunta, modelo: $("#modelo").value }) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const modelo = $("#modelo").value;
+    const r = await api("api/perguntar", { method: "POST", headers: { "Content-Type": "application/json", ...cabecalhoChave(modelo) }, body: JSON.stringify({ pergunta, modelo }) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
     const leitor = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
     for (;;) {
       const { value, done } = await leitor.read();
@@ -195,7 +394,7 @@ function tratar(reg, ev) {
     etapa(reg, "entrada", "feita", j.modo_ressalva ? "Pergunta verificada · modo ressalva ligado" : "Pergunta verificada");
     if (j.cobertura.coberta) {
       etapa(reg, "busca", "feita", `${j.trechos.length} trechos selecionados nos documentos`);
-      etapa(reg, "modelo", "ativa", "Escrevendo a resposta com o modelo local");
+      etapa(reg, "modelo", "ativa", ehRemoto(reg.modelo) ? `Escrevendo a resposta com ${reg.modelo.split(":")[0]} (remoto)` : "Escrevendo a resposta com o modelo local");
     } else {
       etapa(reg, "busca", "feita", "Documentos consultados");
       etapa(reg, "modelo", "pulada", "Modelo não chamado: as fontes não cobrem a pergunta");
@@ -213,10 +412,11 @@ function tratar(reg, ev) {
     a.classList.toggle("erro", ev.desfecho === "erro" || ev.desfecho === "ocupado");
     $(".texto", a).innerHTML = markdown(ev.resposta) + dica(ev, reg.pergunta);
     renderSelos(reg); renderFontes(reg);
-    const o = ev.traco?.ollama;
+    const o = ev.traco?.ollama, rm = ev.traco?.remoto;
     $(".meta", a).textContent = [
       ev.desfecho === "respondida" ? ev.traco?.modelo : "modelo não chamado",
       o ? `${o.resposta_tokens} tokens · ${o.tok_s} tok/s` : null,
+      rm ? `${rm.resposta_tokens ?? "?"} tokens (remoto, não reprodutível)` : null,
       ev.traco?.latencia_s != null ? `${ev.traco.latencia_s} s` : null,
       ev.traco?.id ? `traço ${ev.traco.id}` : null,
     ].filter(Boolean).join(" · ");
@@ -241,6 +441,7 @@ function renderSelos(reg) {
   if (d === "bloqueada") s.push(["bad", "bloqueada antes da busca"]);
   if (d === "sem_cobertura") s.push(["warn", "recusa sem chamar o modelo"]);
   if (d === "erro" || d === "ocupado") s.push(["bad", d === "erro" ? "erro do modelo" : "servidor ocupado"]);
+  if (f.traco?.provedor && f.traco.provedor !== "ollama") s.push(["warn", `modelo remoto (${f.traco.provedor})`]);
   if (v) {
     if (v.citacoes_validas.length) s.push(["ok", `${v.citacoes_validas.length} fonte(s) citada(s) e conferida(s)`]);
     if (v.sem_citacao) s.push(["warn", "sem citação"]);
@@ -295,7 +496,7 @@ function renderPainel(reg) {
   const j = reg.janela, f = reg.final;
   if (!j) {
     p.innerHTML = f
-      ? `<div class="bloco"><h3>Harness de entrada</h3><ul class="checks">${chk("bad", "Pergunta bloqueada antes da busca", f.resposta)}</ul><p class="vazio" style="margin:10px 0 0">Nada foi recuperado nem enviado ao modelo.</p></div>`
+      ? `<div class="bloco"><h3>Harness de entrada</h3><ul class="checks">${chk("bad", "Pergunta bloqueada antes da busca", f.resposta)}</ul><p class="vazio nada-enviado">Nada foi recuperado nem enviado ao modelo.</p></div>`
       : `<div class="vazio-painel"><p>Verificando a pergunta…</p></div>`;
     return;
   }
@@ -326,8 +527,8 @@ function renderPainel(reg) {
     </div>`;
   p.innerHTML = `
     <div class="bloco"><h3>Orçamento da janela</h3>
-      <div class="barra" title="tokens aproximados"><span class="s" style="width:${pct(sis)}"></span><span class="q" style="width:${pct(q)}"></span><span class="t" style="width:${pct(t)}"></span></div>
-      <div class="legenda"><span><i style="background:var(--muted-3)"></i>prompt ${esc(j.sistema.versao)} · ~${sis}</span><span><i style="background:var(--info)"></i>pergunta · ~${q}</span><span><i style="background:var(--brand)"></i>trechos · ~${t} de ${j.orcamento}</span></div>
+      <div class="barra" title="tokens aproximados"><span class="s"></span><span class="q"></span><span class="t"></span></div>
+      <div class="legenda"><span><i class="s"></i>prompt ${esc(j.sistema.versao)} · ~${sis}</span><span><i class="q"></i>pergunta · ~${q}</span><span><i class="t"></i>trechos · ~${t} de ${j.orcamento}</span></div>
     </div>
     <div class="bloco"><h3>Verificações do harness</h3><ul class="checks">${checks.join("")}</ul></div>
     <div class="bloco"><h3>${enviado ? `Entrou na janela · top-${j.top_k}` : "Recuperados, mas não enviados"}</h3>
@@ -339,6 +540,8 @@ function renderPainel(reg) {
         <div class="trecho fora"><div class="cab"><span class="tit">${esc(c.rotulo)} · ${esc(c.pagina)}</span><span class="pts">cos ${c.cos}</span></div><span class="mot">${esc(c.motivo)}</span></div>`).join("")}</div>
     </details>
     <details class="bloco"><summary>Nunca entra na janela</summary><ul class="lista-simples">${j.nao_entra.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
+  // Largura pelo CSSOM: a CSP do servidor aberto na web bloqueia atributo style="" vindo de HTML.
+  for (const [cls, x] of [["s", sis], ["q", q], ["t", t]]) $(`.barra .${cls}`, p).style.width = pct(x);
 }
 
 // ---------- Aba de avaliação ----------
@@ -346,7 +549,7 @@ let avaliacaoCarregada = false;
 async function carregarAvaliacao() {
   if (avaliacaoCarregada) return; avaliacaoCarregada = true;
   try {
-    const pr = await (await fetch("api/prompt")).json();
+    const pr = await (await api("api/prompt")).json();
     $("#prompt").textContent = `[${pr.versao}]\n\n${pr.sistema}`;
   } catch { $("#prompt").textContent = "indisponível"; }
   const s = estado.status;
@@ -355,7 +558,7 @@ async function carregarAvaliacao() {
     `corpus ${s.condicao}: ${s.documentos.map((d) => d.id).join(", ")}`, `orçamento: ${s.orcamento_contexto} tokens`, `limiar de cobertura: ${s.limiar_cobertura}`,
   ].map((x) => `<span>${esc(x)}</span>`).join("");
   try {
-    const a = await (await fetch("api/avaliacao")).json();
+    const a = await (await api("api/avaliacao")).json();
     if (a.disponivel === false) { $("#avaliacao").innerHTML = '<p class="vazio">A avaliação ainda não foi executada neste servidor.</p>'; return; }
     $("#avaliacao").innerHTML = renderAvaliacao(a);
   } catch { $("#avaliacao").innerHTML = '<p class="vazio">indisponível</p>'; }

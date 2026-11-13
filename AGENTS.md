@@ -17,6 +17,7 @@ e **não faz diagnóstico** de transtornos. Modelo local via Ollama (CPU).
 | `app/indice.py` | Busca híbrida BM25 + embeddings (bge-m3) com RRF. |
 | `app/harness.py` | Regras determinísticas antes e depois do modelo. |
 | `app/pipeline.py` | Orquestra um turno e grava o traço JSONL. |
+| `app/contas.py` | Contas e sessões do servidor aberto na web (só com `CONTAS_DB`); CLI `python -m app.contas`. |
 | `scripts/` | Preparação do corpus e avaliação (retrieval, respostas, juiz). |
 | `benchmark/` | 24 perguntas gold + casos-limite. |
 | `resultados/` | Saídas das execuções. Nunca editar à mão. |

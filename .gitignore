@@ -5,3 +5,4 @@ __pycache__/
 resultados/tracos/
 .env
 resultados/anterior/
+config/conexoes.json

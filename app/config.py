@@ -11,6 +11,22 @@ TRACOS_DIR = Path(os.getenv("TRACOS_DIR", RAIZ / "resultados" / "tracos"))
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
 
+# Modelos remotos (opt-in). A chave fica fora do repositório: config/conexoes.json (permissão 600) ou variável de ambiente.
+CONEXOES_ARQ = Path(os.getenv("CONEXOES_ARQ", RAIZ / "config" / "conexoes.json"))
+# CONEXOES_LOCAL=1: trata o servidor como local mesmo quando o cliente chega por IP da ponte (docker run -p). Nunca no deploy público.
+CONEXOES_LOCAL = os.getenv("CONEXOES_LOCAL") == "1"
+TIMEOUT_REMOTO_S = float(os.getenv("TIMEOUT_REMOTO_S", "120"))
+# CHAVE_DO_USUARIO=1 (servidor compartilhado): cada pessoa traz a própria chave, enviada a cada pergunta no cabeçalho
+# X-Chave-Remoto. O servidor ignora DEEPSEEK_API_KEY e config/conexoes.json e nunca grava a chave recebida.
+CHAVE_DO_USUARIO = os.getenv("CHAVE_DO_USUARIO") == "1"
+# CONTAS_DB (servidor aberto na web): caminho do SQLite com contas e sessões (ex.: /data/contas.db). Definida, todo o
+# servidor exige login com conta individual aprovada por um admin. Vazia (uso local, HF Spaces), tudo fica aberto.
+CONTAS_DB = os.getenv("CONTAS_DB", "")
+# Falha fechada: a senha única antiga foi substituída pelas contas. Um ambiente antigo não pode deixar o servidor aberto.
+if "ACESSO_SENHA" in os.environ:
+    raise SystemExit("ACESSO_SENHA não é mais usada: o acesso agora é por contas individuais. Remova ACESSO_SENHA do "
+                     "ambiente e defina CONTAS_DB (ex.: /data/contas.db). Veja 'Servidor aberto na web' no README.")
+
 # Modelos fixos durante cada comparação (Etapa 2 do projeto).
 MODELO_LLM = os.getenv("MODELO_LLM", "qwen3.5:4b-q4_K_M")
 MODELO_EMBED = os.getenv("MODELO_EMBED", "bge-m3")
